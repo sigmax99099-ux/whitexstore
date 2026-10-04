@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "White X Store - Premium Gaming Cheats and Keys Selling Platform",
   "type": "module",
-  "main": "api/index.js",
   "scripts": {
     "dev": "node dev-server.js",
     "start": "node dev-server.js"
