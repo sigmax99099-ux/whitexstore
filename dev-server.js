@@ -41,38 +41,8 @@ const server = http.createServer(async (req, res) => {
     return res;
   };
 
-  // 1. API Route Handler
-  if (pathname.startsWith('/api/')) {
-    const apiPath = pathname.substring(5); // strip '/api/'
-    let modulePath = null;
-    const queryParams = { ...parsedUrl.query };
-
-    // Direct match: e.g. api/auth/login.js
-    const directFile = path.join(API_DIR, apiPath + '.js');
-    if (fs.existsSync(directFile)) {
-      modulePath = directFile;
-    } else {
-      // Check for index.js
-      const indexFile = path.join(API_DIR, apiPath, 'index.js');
-      if (fs.existsSync(indexFile)) {
-        modulePath = indexFile;
-      } else {
-        // Check for parameterized route: e.g. products/[id].js
-        const parts = apiPath.split('/');
-        if (parts.length === 2 && parts[0] === 'products') {
-          const paramFile = path.join(API_DIR, 'products', '[id].js');
-          if (fs.existsSync(paramFile)) {
-            modulePath = paramFile;
-            queryParams.id = parts[1];
-          }
-        }
-      }
-    }
-
-    if (!modulePath) {
-      return res.status(404).json({ success: false, message: `API route not found: ${pathname}` });
-    }
-
+  // 1. API Route Handler (delegates to consolidated api/index.js)
+  if (pathname.startsWith('/api')) {
     // Parse body for POST / PUT / PATCH
     let bodyData = null;
     if (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH') {
@@ -95,16 +65,16 @@ const server = http.createServer(async (req, res) => {
     }
 
     req.body = bodyData;
-    req.query = queryParams;
+    req.query = { ...parsedUrl.query };
 
     try {
-      // Dynamic import of ES Module
+      const modulePath = path.resolve('api', 'index.js');
       const moduleUrl = url.pathToFileURL(modulePath).href + `?t=${Date.now()}`;
       const { default: handler } = await import(moduleUrl);
       if (typeof handler === 'function') {
         await handler(req, res);
       } else {
-        res.status(500).json({ success: false, message: 'Invalid serverless function export' });
+        res.status(500).json({ success: false, message: 'Invalid API handler export' });
       }
     } catch (err) {
       console.error(`[API Error] ${pathname}:`, err);
