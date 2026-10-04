@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout & Instant Key Delivery — White X Store</title>
+  <meta name="description" content="Confirm your cheat license order with your NPR wallet balance and receive your license key in under 3 seconds.">
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22 font-family=%22Rajdhani%22 font-weight=%22900%22 fill=%22%23ef4444%22>X</text></svg>">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <div class="container">
+      <a href="/index.html" class="nav-brand">
+        <div class="brand-logo-icon">X</div>
+        <div class="brand-text">WHITE <span>X</span> STORE</div>
+      </a>
+
+      <ul class="nav-links">
+        <li><a href="/index.html" class="nav-link">Home</a></li>
+        <li><a href="/products.html" class="nav-link">Cheats & Keys</a></li>
+        <li><a href="/wallet.html" class="nav-link">Wallet Topup</a></li>
+        <li><a href="/dashboard.html" class="nav-link">Dashboard</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <div id="nav-auth-container"></div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Checkout Container -->
+  <main class="section">
+    <div class="container" style="max-width: 680px;">
+      
+      <!-- Checkout Card -->
+      <div class="product-card" id="checkout-card" style="padding: 2.2rem;">
+        <h2 style="margin-bottom: 0.4rem; color: #fff;">// ORDER CONFIRMATION</h2>
+        <p style="color: var(--text-muted); margin-bottom: 1.8rem; font-size: 0.92rem;">
+          Review your selection. Payment is automatically deducted from your account wallet balance.
+        </p>
+
+        <!-- Login Prompt If Guest -->
+        <div id="auth-warning" style="display: none; padding: 1.25rem; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: var(--radius-md); margin-bottom: 1.5rem; text-align: center;">
+          <h4 style="color: #fff; margin-bottom: 0.4rem;">Authentication Required</h4>
+          <p style="font-size: 0.9rem; margin-bottom: 1rem;">You must be logged in to complete orders and view purchased license keys.</p>
+          <div style="display: flex; justify-content: center; gap: 0.75rem;">
+            <a href="/login.html" id="btn-login-redirect" class="btn btn-primary btn-sm">Login to Continue</a>
+            <a href="/register.html" class="btn btn-outline btn-sm">Create Free Account</a>
+          </div>
+        </div>
+
+        <!-- Product Summary Box -->
+        <div style="background: #0d0d15; border: 1px solid var(--bg-card-border); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.5rem;">
+          <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem;">
+            <img id="item-image" src="" alt="Cheat Preview" style="width: 70px; height: 70px; border-radius: var(--radius-sm); object-fit: cover;">
+            <div>
+              <div id="item-category" style="font-size: 0.75rem; color: var(--primary); text-transform: uppercase; font-weight: bold;">Category</div>
+              <h3 id="item-name" style="color: #fff; font-size: 1.25rem;">Product Name</h3>
+              <div id="item-plan" style="color: var(--text-muted); font-size: 0.88rem;">Plan Duration</div>
+            </div>
+          </div>
+
+          <div style="border-top: 1px solid var(--bg-card-border); padding-top: 0.9rem; display: flex; justify-content: space-between; align-items: center;">
+            <span style="color: var(--text-muted); font-size: 0.95rem;">Order Total (USD):</span>
+            <span id="price-usd" style="font-family: var(--font-heading); font-size: 1.4rem; color: #fff; font-weight: 800;">$0.00</span>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.35rem;">
+            <span style="color: var(--text-muted); font-size: 0.95rem;">Deduction in NPR:</span>
+            <span id="price-npr" style="font-family: var(--font-heading); font-size: 1.4rem; color: var(--primary); font-weight: 800;">NPR 0</span>
+          </div>
+        </div>
+
+        <!-- Wallet Status Box -->
+        <div id="wallet-status-box" style="background: #11111c; border: 1px solid var(--bg-card-border); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.5rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">Your Wallet Balance</div>
+              <div id="user-balance-npr" style="font-family: var(--font-heading); font-size: 1.5rem; color: #fff; font-weight: 800;">NPR 0.00</div>
+            </div>
+            <div id="balance-badge">
+              <span class="badge badge-undetected">Checking...</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Button -->
+        <div id="checkout-action-area">
+          <button id="btn-submit-order" class="btn btn-primary btn-block btn-lg btn-glow">
+            Confirm & Pay with Wallet ⚡
+          </button>
+        </div>
+
+        <div id="insufficient-funds-area" style="display: none; text-align: center; margin-top: 1rem;">
+          <p style="color: var(--danger); font-size: 0.9rem; margin-bottom: 1rem;">
+            Your wallet balance is insufficient for this purchase.
+          </p>
+          <a href="/wallet.html" class="btn btn-primary btn-block">
+            Topup Wallet Now (Instant) 💳
+          </a>
+        </div>
+      </div>
+
+      <!-- Success / Key Delivered Overlay -->
+      <div class="product-card" id="key-success-card" style="display: none; padding: 2.5rem; text-align: center;">
+        <div style="font-size: 3rem; margin-bottom: 0.5rem;">🎉</div>
+        <h2 style="color: #34d399; margin-bottom: 0.5rem;">ORDER COMPLETED & KEY DELIVERED!</h2>
+        <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.5rem;">
+          Thank you for choosing White X Store. Your license key is ready to use immediately:
+        </p>
+
+        <div style="margin: 1.5rem 0;">
+          <div class="license-key-pill" id="delivered-key-text" style="font-size: 1.25rem; padding: 0.85rem 1.5rem;">
+            WHITEX-XXXX-XXXX-XXXX
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: center; gap: 0.75rem; margin-bottom: 2rem;">
+          <button id="btn-copy-key" class="btn btn-primary btn-sm">📋 Copy License Key</button>
+          <a href="/dashboard.html" class="btn btn-outline btn-sm">View in Dashboard</a>
+        </div>
+
+        <div style="background: #0d0d15; border: 1px solid var(--bg-card-border); border-radius: var(--radius-md); padding: 1.25rem; text-align: left; font-size: 0.88rem;">
+          <strong style="color: #fff;">Quick Activation Steps:</strong>
+          <ol style="margin-left: 1.2rem; margin-top: 0.5rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 0.35rem;">
+            <li>Disable Real-time Protection and Vanguard/Faceit if running.</li>
+            <li>Download the official White X Cheat Loader from the client dashboard.</li>
+            <li>Run the loader as Administrator and paste your license key above.</li>
+            <li>Start your game when prompted and enjoy your match!</li>
+          </ol>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="/assets/js/app.js"></script>
+  <script>
+    let productId = null;
+    let planId = null;
+    let productData = null;
+    let planData = null;
+    let requiredNpr = 0;
+    let deliveredKey = null;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      productId = urlParams.get('product_id');
+      planId = urlParams.get('plan_id');
+
+      if (!productId || !planId) {
+        showToast('Please select a product and plan first.', 'warning');
+        setTimeout(() => window.location.href = '/products.html', 1500);
+        return;
+      }
+
+      // Check Auth
+      const userRes = await fetch('/api/auth/me');
+      const authData = await userRes.json();
+
+      if (!authData.authenticated || !authData.user) {
+        document.getElementById('auth-warning').style.display = 'block';
+        document.getElementById('checkout-action-area').style.display = 'none';
+        document.getElementById('btn-login-redirect').href = `/login.html?redirect=${encodeURIComponent(window.location.href)}`;
+      } else {
+        Store.user = authData.user;
+      }
+
+      await loadOrderDetails();
+
+      document.getElementById('btn-submit-order').addEventListener('click', submitOrder);
+      document.getElementById('btn-copy-key').addEventListener('click', () => {
+        if (deliveredKey) copyToClipboard(deliveredKey, 'License key copied!');
+      });
+    });
+
+    async function loadOrderDetails() {
+      try {
+        const res = await fetch(`/api/products/${productId}`);
+        const data = await res.json();
+
+        if (!data.success || !data.product) {
+          showToast('Product not found.', 'error');
+          return;
+        }
+
+        productData = data.product;
+        planData = (data.plans || []).find(p => p.id === parseInt(planId, 10));
+
+        if (!planData) {
+          showToast('Plan not found.', 'error');
+          return;
+        }
+
+        // Render Product Info
+        document.getElementById('item-image').src = productData.image;
+        document.getElementById('item-category').textContent = productData.category;
+        document.getElementById('item-name').textContent = productData.name;
+        document.getElementById('item-plan').textContent = `${planData.plan_name} (${planData.days} ${planData.duration_type})`;
+        document.getElementById('price-usd').textContent = `$${planData.final_price_usd.toFixed(2)}`;
+
+        const nprRate = data.rates?.NPR || 134.50;
+        requiredNpr = parseFloat((planData.final_price_usd * nprRate).toFixed(2));
+        document.getElementById('price-npr').textContent = `NPR ${requiredNpr.toLocaleString()}`;
+
+        // Verify user balance if logged in
+        if (Store.user) {
+          const userBalance = parseFloat(Store.user.wallet_balance || 0);
+          document.getElementById('user-balance-npr').textContent = `NPR ${userBalance.toLocaleString()}`;
+
+          const badgeEl = document.getElementById('balance-badge');
+          if (userBalance >= requiredNpr) {
+            badgeEl.innerHTML = `<span class="badge badge-undetected">✓ Balance Sufficient</span>`;
+            document.getElementById('checkout-action-area').style.display = 'block';
+            document.getElementById('insufficient-funds-area').style.display = 'none';
+          } else {
+            const missing = Math.round(requiredNpr - userBalance);
+            badgeEl.innerHTML = `<span class="badge badge-danger">Needs NPR ${missing.toLocaleString()} more</span>`;
+            document.getElementById('checkout-action-area').style.display = 'none';
+            document.getElementById('insufficient-funds-area').style.display = 'block';
+          }
+        }
+
+      } catch (err) {
+        console.error('Checkout load error:', err);
+      }
+    }
+
+    async function submitOrder() {
+      const btn = document.getElementById('btn-submit-order');
+      btn.disabled = true;
+      btn.textContent = 'Processing Transaction...';
+
+      try {
+        const res = await fetch('/api/orders/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            product_id: parseInt(productId, 10),
+            plan_id: parseInt(planId, 10)
+          })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+          showToast(data.message || 'Failed to place order.', 'error');
+          btn.disabled = false;
+          btn.textContent = 'Confirm & Pay with Wallet ⚡';
+          return;
+        }
+
+        // Show Success Screen
+        document.getElementById('checkout-card').style.display = 'none';
+        const successCard = document.getElementById('key-success-card');
+        successCard.style.display = 'block';
+
+        if (data.license_key) {
+          deliveredKey = data.license_key;
+          document.getElementById('delivered-key-text').textContent = data.license_key;
+        } else {
+          document.getElementById('delivered-key-text').textContent = 'Key dispatched to your dashboard';
+          document.getElementById('btn-copy-key').style.display = 'none';
+        }
+
+        showToast('Order successful! Your key is ready.', 'success');
+
+      } catch (err) {
+        console.error('Order error:', err);
+        showToast('Server error while placing order.', 'error');
+        btn.disabled = false;
+        btn.textContent = 'Confirm & Pay with Wallet ⚡';
+      }
+    }
+  </script>
+</body>
+</html>

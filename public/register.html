@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Account — White X Store</title>
+  <meta name="description" content="Register for a free White X Store account. Instant cheat key delivery, secure wallet balance, and reseller opportunities.">
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22 font-family=%22Rajdhani%22 font-weight=%22900%22 fill=%22%23ef4444%22>X</text></svg>">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <div class="container">
+      <a href="/index.html" class="nav-brand">
+        <div class="brand-logo-icon">X</div>
+        <div class="brand-text">WHITE <span>X</span> STORE</div>
+      </a>
+      <ul class="nav-links">
+        <li><a href="/index.html" class="nav-link">Home</a></li>
+        <li><a href="/products.html" class="nav-link">Cheats & Keys</a></li>
+      </ul>
+      <div class="nav-actions">
+        <a href="/login.html" class="btn btn-outline btn-sm">Sign In</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Register Form Main -->
+  <main class="section" style="min-height: calc(100vh - 180px); display: flex; align-items: center;">
+    <div class="container" style="max-width: 480px;">
+      
+      <div class="product-card" style="padding: 2.2rem;">
+        <div style="text-align: center; margin-bottom: 1.8rem;">
+          <div class="brand-logo-icon" style="margin: 0 auto 0.75rem; width: 44px; height: 44px; font-size: 1.7rem;">X</div>
+          <h2 style="font-size: 1.8rem; color: #fff;">REGISTER ACCOUNT</h2>
+          <p style="color: var(--text-muted); font-size: 0.9rem;">Join thousands of competitive gamers & resellers</p>
+        </div>
+
+        <form id="register-form">
+          <div class="form-group">
+            <label class="form-label" for="reg-name">Full Name or Gamer Tag</label>
+            <input type="text" id="reg-name" class="form-input" placeholder="e.g. ShadowViper" required autocomplete="name">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="reg-email">Email Address</label>
+            <input type="email" id="reg-email" class="form-input" placeholder="permanent@gmail.com" required autocomplete="email">
+            <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: 0.25rem;">
+              * Note: Disposable/temporary email providers are prohibited.
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="reg-phone">Phone Number (with country code)</label>
+            <input type="tel" id="reg-phone" class="form-input" placeholder="+977 9800000000 or +91 9800000000" required autocomplete="tel">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="reg-password">Password (min 6 characters)</label>
+            <input type="password" id="reg-password" class="form-input" placeholder="••••••••" required autocomplete="new-password">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="reg-confirm-password">Confirm Password</label>
+            <input type="password" id="reg-confirm-password" class="form-input" placeholder="••••••••" required autocomplete="new-password">
+          </div>
+
+          <!-- Fake Captcha Widget -->
+          <div id="captcha-slot"></div>
+
+          <button type="submit" id="btn-register-submit" class="btn btn-primary btn-block btn-lg btn-glow">
+            Create Free Account ⚡
+          </button>
+        </form>
+
+        <div style="text-align: center; margin-top: 1.5rem; font-size: 0.88rem; color: var(--text-muted);">
+          Already have an account? <a href="/login.html" style="color: var(--primary); font-weight: 600;">Login Here</a>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="/assets/js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      setupCaptcha('captcha-slot');
+
+      const form = document.getElementById('register-form');
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        if (!Store.isCaptchaPassed) {
+          showToast('Please check the human verification box before proceeding.', 'warning');
+          return;
+        }
+
+        const name = document.getElementById('reg-name').value.trim();
+        const email = document.getElementById('reg-email').value.trim();
+        const phone = document.getElementById('reg-phone').value.trim();
+        const password = document.getElementById('reg-password').value;
+        const confirmPass = document.getElementById('reg-confirm-password').value;
+        const btn = document.getElementById('btn-register-submit');
+
+        if (password !== confirmPass) {
+          showToast('Passwords do not match.', 'error');
+          return;
+        }
+
+        if (password.length < 6) {
+          showToast('Password must be at least 6 characters long.', 'warning');
+          return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = 'Creating Account...';
+
+        try {
+          const res = await fetch('/api/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, email, phone, password })
+          });
+
+          const data = await res.json();
+
+          if (!res.ok || !data.success) {
+            showToast(data.message || 'Registration failed.', 'error');
+            btn.disabled = false;
+            btn.textContent = 'Create Free Account ⚡';
+            return;
+          }
+
+          showToast('Account registered successfully! Welcome to White X.', 'success');
+
+          setTimeout(() => {
+            window.location.href = '/dashboard.html';
+          }, 700);
+
+        } catch (err) {
+          console.error('Registration error:', err);
+          showToast('Server error while registering. Please try again.', 'error');
+          btn.disabled = false;
+          btn.textContent = 'Create Free Account ⚡';
+        }
+      });
+    });
+  </script>
+</body>
+</html>

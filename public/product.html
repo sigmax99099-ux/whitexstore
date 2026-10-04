@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Details — White X Store</title>
+  <meta name="description" content="View cheat features, plan durations, compatibility specs, and instant key purchase options on White X Store.">
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22 font-family=%22Rajdhani%22 font-weight=%22900%22 fill=%22%23ef4444%22>X</text></svg>">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar" id="main-navbar">
+    <div class="container">
+      <a href="/index.html" class="nav-brand">
+        <div class="brand-logo-icon">X</div>
+        <div class="brand-text">WHITE <span>X</span> STORE</div>
+      </a>
+
+      <ul class="nav-links">
+        <li><a href="/index.html" class="nav-link">Home</a></li>
+        <li><a href="/products.html" class="nav-link active">Cheats & Keys</a></li>
+        <li><a href="/wallet.html" class="nav-link">Wallet Topup</a></li>
+        <li><a href="/dashboard.html" class="nav-link">Dashboard</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <div class="currency-selector" title="Select Currency">
+          <button type="button" class="currency-btn active" data-currency="USD">USD</button>
+          <button type="button" class="currency-btn" data-currency="NPR">NPR</button>
+          <button type="button" class="currency-btn" data-currency="INR">INR</button>
+        </div>
+
+        <div id="nav-auth-container">
+          <a href="/login.html" class="btn btn-outline btn-sm">Login</a>
+          <a href="/register.html" class="btn btn-primary btn-sm">Register</a>
+        </div>
+
+        <button class="mobile-toggle" aria-label="Toggle Navigation">☰</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Product Main Content -->
+  <main class="section" id="product-details-container">
+    <div class="container">
+      <div id="loading-state" style="text-align: center; padding: 4rem;">
+        <h2>Loading Product Details...</h2>
+      </div>
+
+      <div id="product-view" style="display: none;">
+        <!-- Breadcrumb -->
+        <div style="font-size: 0.85rem; color: var(--text-dim); margin-bottom: 1.5rem;">
+          <a href="/index.html">Home</a> / <a href="/products.html">Products</a> / <span id="bread-product-name" style="color: var(--text-main);">Product</span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 2.5rem; align-items: start;" class="product-layout-grid">
+          
+          <!-- Left Column: Media & Features -->
+          <div>
+            <div style="position: relative; border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--bg-card-border); margin-bottom: 2rem;">
+              <img id="detail-img" src="" alt="Cheat Preview" style="width: 100%; height: 380px; object-fit: cover;">
+              <div style="position: absolute; top: 15px; left: 15px; display: flex; gap: 0.5rem;">
+                <span class="badge badge-undetected"><span class="pulse-dot"></span> 100% Undetected</span>
+                <span class="badge" id="detail-cat-badge" style="background: rgba(0,0,0,0.8); color: #fff;">FPS</span>
+              </div>
+            </div>
+
+            <!-- Features Card -->
+            <div class="product-card" style="padding: 1.8rem; margin-bottom: 2rem;">
+              <h3 style="margin-bottom: 1rem; color: #fff;">// INCLUDED FEATURES & CAPABILITIES</h3>
+              <ul id="detail-features-list" style="list-style: none; display: flex; flex-direction: column; gap: 0.65rem;">
+                <!-- Populated dynamically -->
+              </ul>
+            </div>
+
+            <!-- System Requirements / Compatibility -->
+            <div class="product-card" style="padding: 1.8rem;">
+              <h3 style="margin-bottom: 1rem; color: #fff;">// SYSTEM COMPATIBILITY</h3>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; font-size: 0.9rem;">
+                <div>
+                  <span style="color: var(--text-dim); font-size: 0.75rem; text-transform: uppercase;">Operating System</span>
+                  <div style="color: #fff; font-weight: 600;">Windows 10 & 11 (All Builds)</div>
+                </div>
+                <div>
+                  <span style="color: var(--text-dim); font-size: 0.75rem; text-transform: uppercase;">Processor</span>
+                  <div style="color: #fff; font-weight: 600;">Intel & AMD Supported</div>
+                </div>
+                <div>
+                  <span style="color: var(--text-dim); font-size: 0.75rem; text-transform: uppercase;">Overlay Mode</span>
+                  <div style="color: #fff; font-weight: 600;">Borderless / Windowed</div>
+                </div>
+                <div>
+                  <span style="color: var(--text-dim); font-size: 0.75rem; text-transform: uppercase;">Stream Proof</span>
+                  <div style="color: #10b981; font-weight: 600;">Yes (OBS, Discord, ShadowPlay)</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column: Purchasing & Plan Selection -->
+          <div>
+            <div class="product-card" style="padding: 2rem; position: sticky; top: 90px;">
+              <div class="product-cat" id="detail-cat">Category</div>
+              <h1 id="detail-title" style="font-size: 2rem; margin-bottom: 0.8rem;">Game Title</h1>
+              <p id="detail-desc" style="font-size: 0.95rem; margin-bottom: 1.5rem;">Description</p>
+
+              <!-- Stock Alert -->
+              <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: var(--radius-md); margin-bottom: 1.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.5rem; color: #34d399; font-weight: 600; font-size: 0.88rem;">
+                  <span>⚡</span> Instant Delivery Active
+                </div>
+                <div style="font-size: 0.82rem; color: var(--text-muted);">
+                  Stock: <strong id="detail-stock-count" style="color: #fff;">In Stock</strong>
+                </div>
+              </div>
+
+              <!-- Plan Selector -->
+              <label class="form-label" style="font-size: 0.95rem;">Select Duration / Subscription Plan:</label>
+              <div class="plans-grid" id="plans-container" style="margin-top: 0.5rem; margin-bottom: 1.5rem;">
+                <!-- Dynamically rendered plans -->
+              </div>
+
+              <!-- Selected Plan Summary Card -->
+              <div style="background: #0d0d15; border: 1px solid var(--bg-card-border); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.5rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                  <span style="color: var(--text-muted); font-size: 0.9rem;">Selected Plan:</span>
+                  <strong id="summary-plan-name" style="color: #fff;">1 Day Access</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="color: var(--text-muted); font-size: 0.9rem;">Total Due:</span>
+                  <span id="summary-plan-price" class="price-amount" style="font-size: 1.7rem; color: var(--primary);">
+                    $0.00
+                  </span>
+                </div>
+              </div>
+
+              <!-- Action Buttons -->
+              <button id="btn-proceed-checkout" class="btn btn-primary btn-block btn-lg btn-glow" style="margin-bottom: 0.8rem;">
+                Proceed to Checkout ⚡
+              </button>
+
+              <div style="text-align: center; font-size: 0.78rem; color: var(--text-dim);">
+                🔒 Payment is debited from your NPR wallet balance. Keys are provided immediately.
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-bottom" style="border: none; padding: 0; justify-content: space-between;">
+        <div>&copy; 2025 White X Store. Elite Undetected Software.</div>
+        <div>24/7 Discord & WhatsApp Customer Support</div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/assets/js/app.js"></script>
+  <script>
+    let currentProduct = null;
+    let selectedPlan = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const prodId = urlParams.get('id');
+
+      if (!prodId) {
+        window.location.href = '/products.html';
+        return;
+      }
+
+      loadProduct(prodId);
+
+      document.getElementById('btn-proceed-checkout').addEventListener('click', () => {
+        if (!selectedPlan) {
+          showToast('Please select a plan duration first.', 'warning');
+          return;
+        }
+        window.location.href = `/checkout.html?product_id=${currentProduct.id}&plan_id=${selectedPlan.id}`;
+      });
+
+      window.addEventListener('currencyChanged', () => {
+        if (currentProduct) renderPlans();
+      });
+    });
+
+    async function loadProduct(id) {
+      try {
+        const res = await fetch(`/api/products/${id}`);
+        const data = await res.json();
+
+        if (!data.success || !data.product) {
+          document.getElementById('loading-state').innerHTML = `
+            <h2>Product Not Found</h2>
+            <p style="margin-top: 1rem;"><a href="/products.html" class="btn btn-primary">Browse All Cheats</a></p>
+          `;
+          return;
+        }
+
+        currentProduct = data.product;
+        currentProduct.plans = data.plans || [];
+
+        // Update DOM
+        document.title = `${currentProduct.name} — White X Store`;
+        document.getElementById('bread-product-name').textContent = currentProduct.name;
+        document.getElementById('detail-title').textContent = currentProduct.name;
+        document.getElementById('detail-cat').textContent = currentProduct.category;
+        document.getElementById('detail-cat-badge').textContent = currentProduct.category;
+        document.getElementById('detail-desc').textContent = currentProduct.description;
+        document.getElementById('detail-img').src = currentProduct.image;
+        document.getElementById('detail-stock-count').textContent = `${data.available_stock || 'Instant'} Available`;
+
+        // Render Features
+        const featList = document.getElementById('detail-features-list');
+        featList.innerHTML = (currentProduct.features_list || []).map(f => `
+          <li style="display: flex; align-items: center; gap: 0.65rem; color: var(--text-main); font-size: 0.92rem;">
+            <span style="color: var(--primary); font-weight: bold;">✔</span> ${escapeHtml(f)}
+          </li>
+        `).join('');
+
+        // Select first plan by default
+        if (currentProduct.plans.length > 0) {
+          selectedPlan = currentProduct.plans[0];
+        }
+
+        renderPlans();
+
+        document.getElementById('loading-state').style.display = 'none';
+        document.getElementById('product-view').style.display = 'block';
+
+      } catch (err) {
+        console.error('Failed to load product:', err);
+        document.getElementById('loading-state').innerHTML = `<p style="color:var(--danger)">Failed to load product details.</p>`;
+      }
+    }
+
+    function renderPlans() {
+      const container = document.getElementById('plans-container');
+      if (!currentProduct.plans || currentProduct.plans.length === 0) {
+        container.innerHTML = `<p style="color:var(--text-dim)">No subscription plans currently active.</p>`;
+        return;
+      }
+
+      container.innerHTML = currentProduct.plans.map(p => {
+        const isSelected = selectedPlan && selectedPlan.id === p.id;
+        const formatted = formatPrice(p.final_price_usd);
+
+        return `
+          <div class="plan-item ${isSelected ? 'selected' : ''}" onclick="selectPlanById(${p.id})">
+            ${p.discount_percent > 0 ? `<div class="plan-discount-tag">-${p.discount_percent}%</div>` : ''}
+            ${p.custom_reseller_applied ? `<div class="plan-discount-tag" style="background:#f59e0b;">RESELLER</div>` : ''}
+            <div class="plan-duration">${escapeHtml(p.plan_name)}</div>
+            <div class="plan-price">${formatted}</div>
+            <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: 0.25rem;">
+              Instant Key Delivery
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      updateSummary();
+    }
+
+    function selectPlanById(planId) {
+      selectedPlan = currentProduct.plans.find(p => p.id === planId);
+      renderPlans();
+    }
+
+    function updateSummary() {
+      if (!selectedPlan) return;
+      document.getElementById('summary-plan-name').textContent = selectedPlan.plan_name;
+      document.getElementById('summary-plan-price').textContent = formatPrice(selectedPlan.final_price_usd);
+    }
+  </script>
+</body>
+</html>

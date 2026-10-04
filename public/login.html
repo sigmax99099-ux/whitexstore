@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login — White X Store</title>
+  <meta name="description" content="Sign in to your White X Store account to manage your gaming cheat licenses and top up your wallet.">
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22 font-family=%22Rajdhani%22 font-weight=%22900%22 fill=%22%23ef4444%22>X</text></svg>">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <div class="container">
+      <a href="/index.html" class="nav-brand">
+        <div class="brand-logo-icon">X</div>
+        <div class="brand-text">WHITE <span>X</span> STORE</div>
+      </a>
+      <ul class="nav-links">
+        <li><a href="/index.html" class="nav-link">Home</a></li>
+        <li><a href="/products.html" class="nav-link">Cheats & Keys</a></li>
+      </ul>
+      <div class="nav-actions">
+        <a href="/register.html" class="btn btn-primary btn-sm">Create Account</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Login Form Main -->
+  <main class="section" style="min-height: calc(100vh - 180px); display: flex; align-items: center;">
+    <div class="container" style="max-width: 440px;">
+      
+      <div class="product-card" style="padding: 2.2rem;">
+        <div style="text-align: center; margin-bottom: 2rem;">
+          <div class="brand-logo-icon" style="margin: 0 auto 1rem; width: 48px; height: 48px; font-size: 1.8rem;">X</div>
+          <h2 style="font-size: 1.8rem; color: #fff;">CLIENT LOGIN</h2>
+          <p style="color: var(--text-muted); font-size: 0.9rem;">Sign in to access your keys & wallet</p>
+        </div>
+
+        <form id="login-form">
+          <div class="form-group">
+            <label class="form-label" for="login-email">Email Address</label>
+            <input type="email" id="login-email" class="form-input" placeholder="player@domain.com" required autocomplete="email">
+          </div>
+
+          <div class="form-group">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+              <label class="form-label" for="login-password" style="margin-bottom: 0;">Password</label>
+              <a href="/forgot-password.html" style="font-size: 0.78rem; color: var(--primary);">Forgot Password?</a>
+            </div>
+            <input type="password" id="login-password" class="form-input" placeholder="••••••••" required autocomplete="current-password">
+          </div>
+
+          <!-- Fake Captcha Widget -->
+          <div id="captcha-slot"></div>
+
+          <button type="submit" id="btn-login-submit" class="btn btn-primary btn-block btn-lg btn-glow">
+            Sign In to Account ⚡
+          </button>
+        </form>
+
+        <div style="text-align: center; margin-top: 1.5rem; font-size: 0.88rem; color: var(--text-muted);">
+          Don't have an account? <a href="/register.html" style="color: var(--primary); font-weight: 600;">Register Here</a>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="/assets/js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Setup Fake Captcha Widget
+      setupCaptcha('captcha-slot');
+
+      const form = document.getElementById('login-form');
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        if (!Store.isCaptchaPassed) {
+          showToast('Please verify that you are human by clicking the shield checkbox.', 'warning');
+          return;
+        }
+
+        const email = document.getElementById('login-email').value.trim();
+        const password = document.getElementById('login-password').value;
+        const btn = document.getElementById('btn-login-submit');
+
+        btn.disabled = true;
+        btn.textContent = 'Authenticating...';
+
+        try {
+          const res = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+          });
+
+          const data = await res.json();
+
+          if (!res.ok || !data.success) {
+            showToast(data.message || 'Login failed. Please check credentials.', 'error');
+            btn.disabled = false;
+            btn.textContent = 'Sign In to Account ⚡';
+            return;
+          }
+
+          showToast('Login successful! Redirecting...', 'success');
+
+          // Check if there was a redirect URL
+          const urlParams = new URLSearchParams(window.location.search);
+          const redirect = urlParams.get('redirect') || '/dashboard.html';
+
+          setTimeout(() => {
+            window.location.href = redirect;
+          }, 600);
+
+        } catch (err) {
+          console.error('Login error:', err);
+          showToast('Server connection error. Please try again.', 'error');
+          btn.disabled = false;
+          btn.textContent = 'Sign In to Account ⚡';
+        }
+      });
+    });
+  </script>
+</body>
+</html>

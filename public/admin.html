@@ -1,0 +1,1576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Command Center — White X Store</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22 font-family=%22Rajdhani%22 font-weight=%22900%22 fill=%22%23ef4444%22>X</text></svg>">
+  <style>
+    .admin-card {
+      background: var(--bg-card);
+      border: 1px solid var(--bg-card-border);
+      border-radius: var(--radius-lg);
+      padding: 1.75rem;
+      margin-bottom: 2rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Admin Login Modal if Unauthenticated -->
+  <div id="admin-login-overlay" class="modal-backdrop show" style="display: flex;">
+    <div class="modal-box" style="max-width: 420px; text-align: center;">
+      <div class="brand-logo-icon" style="margin: 0 auto 1rem; width: 48px; height: 48px; font-size: 1.8rem;">X</div>
+      <h2 style="color: #fff; margin-bottom: 0.35rem;">ADMIN PORTAL</h2>
+      <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 1.5rem;">White X Store System Administration</p>
+
+      <form id="admin-login-form">
+        <div class="form-group" style="text-align: left;">
+          <label class="form-label" for="admin-user">Admin Username</label>
+          <input type="text" id="admin-user" class="form-input" placeholder="admin" required autocomplete="username">
+        </div>
+        <div class="form-group" style="text-align: left;">
+          <label class="form-label" for="admin-pass">Password</label>
+          <input type="password" id="admin-pass" class="form-input" placeholder="••••••••" required autocomplete="current-password">
+        </div>
+        <button type="submit" id="btn-admin-login-submit" class="btn btn-primary btn-block btn-lg btn-glow">
+          Access Admin Console ⚡
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Top Admin Navbar -->
+  <nav class="navbar" id="admin-top-nav">
+    <div class="container" style="max-width: 100%; padding: 0 1.5rem;">
+      <div style="display: flex; align-items: center; gap: 1rem;">
+        <a href="/index.html" class="nav-brand">
+          <div class="brand-logo-icon">X</div>
+          <div class="brand-text">WHITE <span>X</span> ADMIN</div>
+        </a>
+        <span class="badge badge-undetected">COMMAND CENTER</span>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 1rem;">
+        <span style="font-size: 0.85rem; color: var(--text-muted);">
+          Logged in as: <strong id="admin-name-display" style="color: #fff;">admin</strong>
+        </span>
+        <a href="/index.html" class="btn btn-outline btn-sm" target="_blank">View Live Store ↗</a>
+        <button onclick="handleAdminLogout()" class="btn btn-outline btn-sm" style="color: var(--danger);">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Admin Main Layout -->
+  <div class="admin-layout">
+    
+    <!-- Sidebar Navigation -->
+    <aside class="admin-sidebar">
+      <ul class="admin-nav" id="admin-nav-tabs">
+        <li class="admin-nav-item"><button class="active" data-tab="tab-dashboard">📊 Dashboard</button></li>
+        <li class="admin-nav-item"><button data-tab="tab-orders">📦 Orders</button></li>
+        <li class="admin-nav-item"><button data-tab="tab-wallets">💳 Wallets & Deposits</button></li>
+        <li class="admin-nav-item"><button data-tab="tab-products">🎮 Products</button></li>
+        <li class="admin-nav-item"><button data-tab="tab-plans">⏱️ Plans & Pricing</button></li>
+        <li class="admin-nav-item"><button data-tab="tab-keys">🔑 License Keys</button></li>
+        <li class="admin-nav-item"><button data-tab="tab-users">👥 Users & Resellers</button></li>
+        <li class="admin-nav-item"><button data-tab="tab-reseller-prices">🏷️ Reseller Prices</button></li>
+        <li class="admin-nav-item"><button data-tab="tab-settings">⚙️ Settings & API</button></li>
+        <li class="admin-nav-item"><button data-tab="tab-resets">🔄 Password Resets</button></li>
+      </ul>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="admin-main">
+      
+      <!-- TAB 1: DASHBOARD -->
+      <section id="tab-dashboard" class="admin-tab-content active">
+        <h2 style="color: #fff; margin-bottom: 1.5rem;">// STORE OVERVIEW & METRICS</h2>
+
+        <div class="admin-stats-grid">
+          <div class="admin-stat-card">
+            <div style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">Total Revenue (USD)</div>
+            <div class="stat-val" id="kpi-revenue" style="font-size: 2rem; margin-top: 0.25rem;">$0.00</div>
+          </div>
+          <div class="admin-stat-card">
+            <div style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">Pending Orders</div>
+            <div class="stat-val" id="kpi-pending-orders" style="font-size: 2rem; margin-top: 0.25rem; color: var(--warning);">0</div>
+          </div>
+          <div class="admin-stat-card">
+            <div style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">Pending Wallet Topups</div>
+            <div class="stat-val" id="kpi-pending-wallets" style="font-size: 2rem; margin-top: 0.25rem; color: var(--primary);">0</div>
+          </div>
+          <div class="admin-stat-card">
+            <div style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">Registered Users</div>
+            <div class="stat-val" id="kpi-users" style="font-size: 2rem; margin-top: 0.25rem;">0</div>
+          </div>
+          <div class="admin-stat-card">
+            <div style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">Available Keys in Stock</div>
+            <div class="stat-val" id="kpi-keys" style="font-size: 2rem; margin-top: 0.25rem; color: #34d399;">0</div>
+          </div>
+          <div class="admin-stat-card">
+            <div style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">Active Products</div>
+            <div class="stat-val" id="kpi-products" style="font-size: 2rem; margin-top: 0.25rem;">0</div>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;" class="product-layout-grid">
+          <div class="admin-card">
+            <h3 style="color: #fff; margin-bottom: 1rem;">Recent Pending Orders</h3>
+            <div id="dash-pending-orders-list">
+              <p style="color: var(--text-dim);">No pending orders currently.</p>
+            </div>
+          </div>
+
+          <div class="admin-card">
+            <h3 style="color: #fff; margin-bottom: 1rem;">Recent Pending Wallet Topups</h3>
+            <div id="dash-pending-wallets-list">
+              <p style="color: var(--text-dim);">No pending wallet deposits.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: ORDERS -->
+      <section id="tab-orders" class="admin-tab-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+          <h2 style="color: #fff;">// CLIENT ORDERS</h2>
+          <div style="display: flex; gap: 0.75rem;">
+            <select id="orders-filter-status" class="form-select" style="width: auto;">
+              <option value="all">All Statuses</option>
+              <option value="pending" selected>Pending Only</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
+            </select>
+            <input type="text" id="orders-search-input" class="form-input" placeholder="Search order code or email..." style="width: 250px;">
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table-custom">
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Client</th>
+                <th>Product & Plan</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>License Key</th>
+                <th>Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="admin-orders-tbody">
+              <tr><td colspan="8" style="text-align: center; padding: 2rem;">Loading orders...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- TAB 3: WALLETS & TOPUPS -->
+      <section id="tab-wallets" class="admin-tab-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+          <h2 style="color: #fff;">// WALLET TOPUP REQUESTS</h2>
+          <select id="wallets-filter-status" class="form-select" style="width: auto;">
+            <option value="all">All Topups</option>
+            <option value="pending" selected>Pending Only</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+          </select>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table-custom">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>User</th>
+                <th>Amount & Currency</th>
+                <th>Gateway & Remarks</th>
+                <th>Proof Screenshot</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="admin-wallets-tbody">
+              <tr><td colspan="8" style="text-align: center; padding: 2rem;">Loading wallet requests...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- TAB 4: PRODUCTS -->
+      <section id="tab-products" class="admin-tab-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+          <h2 style="color: #fff;">// MANAGE PRODUCTS</h2>
+          <button class="btn btn-primary btn-sm" onclick="openAddProductModal()">+ Add New Cheat Software</button>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table-custom">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Image</th>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Plans</th>
+                <th>Keys in Stock</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="admin-products-tbody">
+              <tr><td colspan="8" style="text-align: center; padding: 2rem;">Loading products...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- TAB 5: PLANS & PRICING -->
+      <section id="tab-plans" class="admin-tab-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+          <h2 style="color: #fff;">// SUBSCRIPTION PLANS</h2>
+          <button class="btn btn-primary btn-sm" onclick="openAddPlanModal()">+ Add Plan to Product</button>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table-custom">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Product</th>
+                <th>Plan Name</th>
+                <th>Duration</th>
+                <th>Price (USD)</th>
+                <th>Discount</th>
+                <th>Supplier Variant</th>
+                <th>Stock</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="admin-plans-tbody">
+              <tr><td colspan="9" style="text-align: center; padding: 2rem;">Loading plans...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- TAB 6: LICENSE KEYS -->
+      <section id="tab-keys" class="admin-tab-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+          <h2 style="color: #fff;">// LICENSE KEYS INVENTORY</h2>
+          <button class="btn btn-primary btn-sm" onclick="openAddKeysModal()">+ Bulk Import Keys</button>
+        </div>
+
+        <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+          <select id="keys-filter-product" class="form-select" style="width: auto;">
+            <option value="all">All Products</option>
+          </select>
+          <select id="keys-filter-status" class="form-select" style="width: auto;">
+            <option value="all">All Statuses</option>
+            <option value="available" selected>Available in Stock</option>
+            <option value="sold">Sold</option>
+            <option value="revoked">Revoked</option>
+          </select>
+          <input type="text" id="keys-search-input" class="form-input" placeholder="Search key or order..." style="width: 250px;">
+        </div>
+
+        <div class="table-responsive">
+          <table class="table-custom">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Product</th>
+                <th>License Key</th>
+                <th>Duration</th>
+                <th>Status</th>
+                <th>Assigned Order</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="admin-keys-tbody">
+              <tr><td colspan="7" style="text-align: center; padding: 2rem;">Loading keys...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- TAB 7: USERS & RESELLERS -->
+      <section id="tab-users" class="admin-tab-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+          <h2 style="color: #fff;">// USERS & RESELLERS</h2>
+          <div style="display: flex; gap: 0.75rem;">
+            <select id="users-filter-type" class="form-select" style="width: auto;">
+              <option value="all">All Tiers</option>
+              <option value="customer">Customers</option>
+              <option value="reseller">Resellers Only</option>
+            </select>
+            <input type="text" id="users-search-input" class="form-input" placeholder="Search name or email..." style="width: 250px;">
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table-custom">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Tier</th>
+                <th>Reseller Discount</th>
+                <th>Wallet Balance</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="admin-users-tbody">
+              <tr><td colspan="8" style="text-align: center; padding: 2rem;">Loading users...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- TAB 8: RESELLER PRICES -->
+      <section id="tab-reseller-prices" class="admin-tab-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+          <h2 style="color: #fff;">// CUSTOM RESELLER OVERRIDE PRICING</h2>
+          <button class="btn btn-primary btn-sm" onclick="openAddResellerPriceModal()">+ Add Custom Reseller Price</button>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table-custom">
+            <thead>
+              <tr>
+                <th>Reseller</th>
+                <th>Product</th>
+                <th>Plan</th>
+                <th>Normal Price</th>
+                <th>Custom Override (USD)</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="admin-reseller-prices-tbody">
+              <tr><td colspan="6" style="text-align: center; padding: 2rem;">Loading custom prices...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- TAB 9: SETTINGS -->
+      <section id="tab-settings" class="admin-tab-content">
+        <h2 style="color: #fff; margin-bottom: 1.5rem;">// STORE & INTEGRATION SETTINGS</h2>
+
+        <div class="admin-card" style="max-width: 780px;">
+          <form id="admin-settings-form">
+            <h3 style="color: var(--primary); margin-bottom: 1rem;">Discord Notifications</h3>
+            <div class="form-group">
+              <label class="form-label" for="setting-discord-webhook">Discord Webhook URL</label>
+              <input type="url" id="setting-discord-webhook" class="form-input" placeholder="https://discord.com/api/webhooks/...">
+              <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 0.25rem;">
+                Receive instant alerts for new deposits, orders, auto-deliveries, and password resets.
+              </div>
+            </div>
+
+            <button type="button" class="btn btn-outline btn-sm" onclick="testDiscordWebhook()" style="margin-bottom: 1.5rem;">
+              🔔 Send Test Notification to Discord
+            </button>
+
+            <h3 style="color: var(--primary); margin-bottom: 1rem;">KeyLicense Supplier API</h3>
+            <div class="form-group">
+              <label class="form-label" for="setting-kl-token">KeyLicense API Token (KL_API_TOKEN)</label>
+              <input type="text" id="setting-kl-token" class="form-input" placeholder="X-API-Token value">
+            </div>
+
+            <button type="button" class="btn btn-outline btn-sm" onclick="testKeyLicenseApi()" style="margin-bottom: 1.5rem;">
+              ⚡ Test KeyLicense Balance & Connectivity
+            </button>
+            <div id="kl-test-result" style="display:none; font-size: 0.85rem; padding: 0.75rem; background: #0d0d15; border-radius: 4px; margin-bottom: 1.5rem;"></div>
+
+            <h3 style="color: var(--primary); margin-bottom: 1rem;">Exchange Rates & Thresholds</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div class="form-group">
+                <label class="form-label" for="setting-npr-rate">1 USD in NPR</label>
+                <input type="number" id="setting-npr-rate" class="form-input" step="any" placeholder="134.50">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="setting-inr-rate">1 USD in INR</label>
+                <input type="number" id="setting-inr-rate" class="form-input" step="any" placeholder="84.00">
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div class="form-group">
+                <label class="form-label" for="setting-min-topup">Minimum Topup (NPR)</label>
+                <input type="number" id="setting-min-topup" class="form-input" placeholder="200">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="setting-whatsapp">WhatsApp Support Number</label>
+                <input type="text" id="setting-whatsapp" class="form-input" placeholder="+9779800000000">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="setting-notice">Site Notice / Announcement Banner</label>
+              <input type="text" id="setting-notice" class="form-input" placeholder="⚡ Instant 24/7 Auto Delivery Active...">
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg btn-glow">
+              Save All Settings 💾
+            </button>
+          </form>
+        </div>
+      </section>
+
+      <!-- TAB 10: PASSWORD RESETS -->
+      <section id="tab-resets" class="admin-tab-content">
+        <h2 style="color: #fff; margin-bottom: 1.5rem;">// PASSWORD RESET REQUESTS</h2>
+        <div class="table-responsive">
+          <table class="table-custom">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Account Email</th>
+                <th>User Name</th>
+                <th>Verification Token</th>
+                <th>Status</th>
+                <th>Expires At</th>
+                <th>Created</th>
+              </tr>
+            </thead>
+            <tbody id="admin-resets-tbody">
+              <tr><td colspan="7" style="text-align: center; padding: 2rem;">Loading resets...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- MODALS -->
+
+  <!-- 1. Add Product Modal -->
+  <div id="modal-add-product" class="modal-backdrop">
+    <div class="modal-box" style="max-width: 540px;">
+      <button class="modal-close" onclick="closeModal('modal-add-product')">✕</button>
+      <h3 style="color: #fff; margin-bottom: 1.25rem;">+ Add Cheat Software</h3>
+      <form id="form-add-product">
+        <div class="form-group">
+          <label class="form-label">Cheat / Product Name</label>
+          <input type="text" id="prod-name" class="form-input" required placeholder="e.g. Apex Legends - Phantom VIP">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Game Category</label>
+          <input type="text" id="prod-cat" class="form-input" required placeholder="e.g. Apex Legends">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea id="prod-desc" class="form-textarea" required placeholder="Description of the bypass..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Features (one per line)</label>
+          <textarea id="prod-features" class="form-textarea" placeholder="Prediction Aimbot&#10;Visible Check ESP&#10;Stream Proof"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Product Image (File or Cloudinary/URL)</label>
+          <input type="file" id="prod-img-file" class="form-input" accept="image/*" style="padding: 0.5rem; margin-bottom: 0.5rem;">
+          <input type="url" id="prod-img-url" class="form-input" placeholder="Or paste image URL...">
+        </div>
+        <div style="display: flex; gap: 1rem; margin-bottom: 1.25rem;">
+          <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.88rem; cursor: pointer;">
+            <input type="checkbox" id="prod-featured"> Featured on Homepage
+          </label>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Create Product ⚡</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. Add Plan Modal -->
+  <div id="modal-add-plan" class="modal-backdrop">
+    <div class="modal-box" style="max-width: 480px;">
+      <button class="modal-close" onclick="closeModal('modal-add-plan')">✕</button>
+      <h3 style="color: #fff; margin-bottom: 1.25rem;">+ Add Plan to Product</h3>
+      <form id="form-add-plan">
+        <div class="form-group">
+          <label class="form-label">Product</label>
+          <select id="plan-product-select" class="form-select" required></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Plan Name</label>
+          <input type="text" id="plan-name" class="form-input" required placeholder="e.g. 7 Days Access">
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label class="form-label">Duration Type</label>
+            <select id="plan-duration-type" class="form-select">
+              <option value="days">Days</option>
+              <option value="hours">Hours</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Number of Days/Hours</label>
+            <input type="number" id="plan-days" class="form-input" required min="1" value="7">
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label class="form-label">Price USD</label>
+            <input type="number" id="plan-price" class="form-input" step="any" required placeholder="19.99">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Discount %</label>
+            <input type="number" id="plan-discount" class="form-input" min="0" max="100" value="0">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">KeyLicense Supplier Variant ID (Optional)</label>
+          <input type="text" id="plan-supplier-variant" class="form-input" placeholder="e.g. 1024">
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Add Plan ⚡</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 3. Add Keys Modal -->
+  <div id="modal-add-keys" class="modal-backdrop">
+    <div class="modal-box" style="max-width: 520px;">
+      <button class="modal-close" onclick="closeModal('modal-add-keys')">✕</button>
+      <h3 style="color: #fff; margin-bottom: 1.25rem;">+ Bulk Import License Keys</h3>
+      <form id="form-add-keys">
+        <div class="form-group">
+          <label class="form-label">Product</label>
+          <select id="keys-import-product" class="form-select" required></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Key Duration Days</label>
+          <input type="number" id="keys-import-days" class="form-input" value="1" min="1" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">License Keys (One per line)</label>
+          <textarea id="keys-import-text" class="form-textarea" style="min-height: 180px; font-family: monospace;" required placeholder="WHITEX-APEX-1D-XXXX&#10;WHITEX-APEX-1D-YYYY&#10;WHITEX-APEX-1D-ZZZZ"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Import License Keys ⚡</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 4. Approve Order Modal -->
+  <div id="modal-approve-order" class="modal-backdrop">
+    <div class="modal-box" style="max-width: 480px;">
+      <button class="modal-close" onclick="closeModal('modal-approve-order')">✕</button>
+      <h3 style="color: #fff; margin-bottom: 0.5rem;">Approve & Dispatch Order</h3>
+      <p id="approve-order-desc" style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 1.5rem;">...</p>
+      <form id="form-approve-order">
+        <input type="hidden" id="approve-order-id">
+        <div class="form-group">
+          <label class="form-label">Custom License Key (Leave blank to auto-pick from stock):</label>
+          <input type="text" id="approve-manual-key" class="form-input" placeholder="e.g. WHITEX-PRO-KEY-XXXX" style="font-family: monospace;">
+        </div>
+        <button type="submit" class="btn btn-success btn-block">Approve Order & Deliver Key ⚡</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 5. Reject Order Modal -->
+  <div id="modal-reject-order" class="modal-backdrop">
+    <div class="modal-box" style="max-width: 440px;">
+      <button class="modal-close" onclick="closeModal('modal-reject-order')">✕</button>
+      <h3 style="color: var(--danger); margin-bottom: 0.5rem;">Reject Order & Refund Wallet</h3>
+      <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 1.25rem;">
+        This will mark the order as rejected and automatically refund the debited NPR amount to the user's wallet.
+      </p>
+      <form id="form-reject-order">
+        <input type="hidden" id="reject-order-id">
+        <div class="form-group">
+          <label class="form-label">Reason for Rejection</label>
+          <input type="text" id="reject-order-reason" class="form-input" placeholder="e.g. Key out of stock / Game updating" required>
+        </div>
+        <button type="submit" class="btn btn-danger btn-block">Reject & Refund ✕</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 6. View Screenshot Proof Modal -->
+  <div id="modal-view-proof" class="modal-backdrop">
+    <div class="modal-box" style="max-width: 600px; text-align: center;">
+      <button class="modal-close" onclick="closeModal('modal-view-proof')">✕</button>
+      <h3 style="color: #fff; margin-bottom: 1rem;">Payment Screenshot Proof</h3>
+      <img id="proof-img-display" src="" alt="Proof" style="max-width: 100%; max-height: 500px; border-radius: var(--radius-md); border: 1px solid var(--bg-card-border);">
+    </div>
+  </div>
+
+  <script src="/assets/js/app.js"></script>
+  <script>
+    let globalProducts = [];
+    let globalPlans = [];
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      initAdminAuth();
+      initTabNavigation();
+    });
+
+    async function initAdminAuth() {
+      try {
+        const res = await fetch('/api/admin/me');
+        const data = await res.json();
+
+        if (data.authenticated && data.admin) {
+          document.getElementById('admin-login-overlay').style.display = 'none';
+          document.getElementById('admin-name-display').textContent = data.admin.username;
+          loadDashboardData();
+        } else {
+          document.getElementById('admin-login-overlay').style.display = 'flex';
+        }
+      } catch (err) {
+        document.getElementById('admin-login-overlay').style.display = 'flex';
+      }
+
+      document.getElementById('admin-login-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = document.getElementById('admin-user').value.trim();
+        const password = document.getElementById('admin-pass').value;
+        const btn = document.getElementById('btn-admin-login-submit');
+
+        btn.disabled = true;
+        btn.textContent = 'Verifying...';
+
+        try {
+          const res = await fetch('/api/admin/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+          });
+
+          const data = await res.json();
+          if (!res.ok || !data.success) {
+            showToast(data.message || 'Invalid admin credentials.', 'error');
+            btn.disabled = false;
+            btn.textContent = 'Access Admin Console ⚡';
+            return;
+          }
+
+          showToast('Welcome, Administrator!', 'success');
+          document.getElementById('admin-login-overlay').style.display = 'none';
+          document.getElementById('admin-name-display').textContent = data.admin.username;
+          loadDashboardData();
+
+        } catch (err) {
+          showToast('Server connection failed.', 'error');
+          btn.disabled = false;
+          btn.textContent = 'Access Admin Console ⚡';
+        }
+      });
+    }
+
+    async function handleAdminLogout() {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      window.location.reload();
+    }
+
+    function initTabNavigation() {
+      const buttons = document.querySelectorAll('#admin-nav-tabs button');
+      buttons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          buttons.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+
+          const tabId = btn.getAttribute('data-tab');
+          document.querySelectorAll('.admin-tab-content').forEach(c => c.classList.remove('active'));
+          document.getElementById(tabId).classList.add('active');
+
+          // Trigger tab-specific loader
+          if (tabId === 'tab-dashboard') loadDashboardData();
+          if (tabId === 'tab-orders') loadAdminOrders();
+          if (tabId === 'tab-wallets') loadAdminWallets();
+          if (tabId === 'tab-products') loadAdminProducts();
+          if (tabId === 'tab-plans') loadAdminPlans();
+          if (tabId === 'tab-keys') loadAdminKeys();
+          if (tabId === 'tab-users') loadAdminUsers();
+          if (tabId === 'tab-reseller-prices') loadAdminResellerPrices();
+          if (tabId === 'tab-settings') loadAdminSettings();
+          if (tabId === 'tab-resets') loadAdminResets();
+        });
+      });
+
+      // Filter events
+      document.getElementById('orders-filter-status').addEventListener('change', loadAdminOrders);
+      document.getElementById('orders-search-input').addEventListener('input', loadAdminOrders);
+      document.getElementById('wallets-filter-status').addEventListener('change', loadAdminWallets);
+      document.getElementById('keys-filter-product').addEventListener('change', loadAdminKeys);
+      document.getElementById('keys-filter-status').addEventListener('change', loadAdminKeys);
+      document.getElementById('keys-search-input').addEventListener('input', loadAdminKeys);
+      document.getElementById('users-filter-type').addEventListener('change', loadAdminUsers);
+      document.getElementById('users-search-input').addEventListener('input', loadAdminUsers);
+
+      // Forms
+      document.getElementById('form-add-product').addEventListener('submit', handleAddProductSubmit);
+      document.getElementById('form-add-plan').addEventListener('submit', handleAddPlanSubmit);
+      document.getElementById('form-add-keys').addEventListener('submit', handleAddKeysSubmit);
+      document.getElementById('form-approve-order').addEventListener('submit', handleApproveOrderSubmit);
+      document.getElementById('form-reject-order').addEventListener('submit', handleRejectOrderSubmit);
+      document.getElementById('admin-settings-form').addEventListener('submit', handleSettingsSubmit);
+    }
+
+    /* ==============================================================
+       1. DASHBOARD OVERVIEW
+       ============================================================== */
+    async function loadDashboardData() {
+      try {
+        const res = await fetch('/api/admin/stats');
+        const data = await res.json();
+
+        if (data.success && data.stats) {
+          const s = data.stats;
+          document.getElementById('kpi-revenue').textContent = `$${s.total_revenue_usd}`;
+          document.getElementById('kpi-pending-orders').textContent = s.pending_orders;
+          document.getElementById('kpi-pending-wallets').textContent = s.pending_wallets;
+          document.getElementById('kpi-users').textContent = s.total_users;
+          document.getElementById('kpi-keys').textContent = s.available_keys;
+          document.getElementById('kpi-products').textContent = s.active_products;
+        }
+
+        // Load small pending lists
+        loadDashboardPendingLists();
+      } catch (err) {
+        console.error('Stats error:', err);
+      }
+    }
+
+    async function loadDashboardPendingLists() {
+      // Pending orders
+      try {
+        const oRes = await fetch('/api/admin/orders?status=pending');
+        const oData = await oRes.json();
+        const oList = document.getElementById('dash-pending-orders-list');
+        if (oData.orders && oData.orders.length > 0) {
+          oList.innerHTML = oData.orders.slice(0, 5).map(o => `
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.65rem 0; border-bottom: 1px solid var(--bg-card-border);">
+              <div>
+                <strong>#${escapeHtml(o.order_code)}</strong> (${escapeHtml(o.user_name)})
+                <div style="font-size: 0.78rem; color: var(--text-dim);">${escapeHtml(o.product_name)} - ${escapeHtml(o.plan_name)}</div>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="promptApproveOrder(${o.id}, '${escapeHtml(o.order_code)}', '${escapeHtml(o.product_name)}')">Approve</button>
+            </div>
+          `).join('');
+        } else {
+          oList.innerHTML = `<p style="color:var(--text-dim)">No pending orders currently.</p>`;
+        }
+      } catch (e) {}
+
+      // Pending wallets
+      try {
+        const wRes = await fetch('/api/admin/wallets?status=pending');
+        const wData = await wRes.json();
+        const wList = document.getElementById('dash-pending-wallets-list');
+        if (wData.transactions && wData.transactions.length > 0) {
+          wList.innerHTML = wData.transactions.slice(0, 5).map(w => `
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.65rem 0; border-bottom: 1px solid var(--bg-card-border);">
+              <div>
+                <strong>${parseFloat(w.amount).toLocaleString()} ${w.currency}</strong> (${escapeHtml(w.user_name)})
+                <div style="font-size: 0.78rem; color: var(--text-dim);">${escapeHtml(w.description || '')}</div>
+              </div>
+              <button class="btn btn-success btn-sm" onclick="approveWallet(${w.id}, ${w.amount}, '${w.currency}')">Approve</button>
+            </div>
+          `).join('');
+        } else {
+          wList.innerHTML = `<p style="color:var(--text-dim)">No pending wallet deposits.</p>`;
+        }
+      } catch (e) {}
+    }
+
+    /* ==============================================================
+       2. ORDERS
+       ============================================================== */
+    async function loadAdminOrders() {
+      const status = document.getElementById('orders-filter-status').value;
+      const search = document.getElementById('orders-search-input').value.trim();
+      const tbody = document.getElementById('admin-orders-tbody');
+
+      try {
+        const res = await fetch(`/api/admin/orders?status=${status}&search=${encodeURIComponent(search)}`);
+        const data = await res.json();
+
+        if (!data.orders || data.orders.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 2rem; color: var(--text-dim);">No orders found.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = data.orders.map(o => {
+          let statusBadge = '<span class="badge badge-warning">Pending</span>';
+          if (o.status === 'approved') statusBadge = '<span class="badge badge-undetected">Approved</span>';
+          if (o.status === 'rejected') statusBadge = `<span class="badge badge-danger" title="${escapeHtml(o.reject_reason || '')}">Rejected</span>`;
+
+          const keyDisp = o.key_code 
+            ? `<div class="license-key-pill" style="font-size: 0.75rem;">${escapeHtml(o.key_code)}</div>` 
+            : `<span style="color: var(--text-dim);">-</span>`;
+
+          let actions = '-';
+          if (o.status === 'pending') {
+            actions = `
+              <div style="display: flex; gap: 0.4rem;">
+                <button class="btn btn-success btn-sm" onclick="promptApproveOrder(${o.id}, '${escapeHtml(o.order_code)}', '${escapeHtml(o.product_name)}')">Approve</button>
+                <button class="btn btn-danger btn-sm" onclick="promptRejectOrder(${o.id})">Reject</button>
+              </div>
+            `;
+          }
+
+          return `
+            <tr>
+              <td><strong>#${escapeHtml(o.order_code)}</strong></td>
+              <td>${escapeHtml(o.user_name)}<br><small style="color:var(--text-dim)">${escapeHtml(o.user_email)}</small></td>
+              <td>${escapeHtml(o.product_name)}<br><small style="color:var(--primary)">${escapeHtml(o.plan_name)} (${o.days} ${o.duration_type})</small></td>
+              <td>$${parseFloat(o.amount_usd).toFixed(2)}</td>
+              <td>${statusBadge}</td>
+              <td>${keyDisp}</td>
+              <td style="font-size: 0.8rem; color: var(--text-dim);">${new Date(o.created_at).toLocaleDateString()}</td>
+              <td>${actions}</td>
+            </tr>
+          `;
+        }).join('');
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="8" style="color:var(--danger); text-align:center;">Failed to load orders.</td></tr>`;
+      }
+    }
+
+    function promptApproveOrder(id, code, product) {
+      document.getElementById('approve-order-id').value = id;
+      document.getElementById('approve-order-desc').textContent = `Order #${code} for ${product}. You can provide a custom license key or leave it empty to draw an available key from the stock.`;
+      document.getElementById('approve-manual-key').value = '';
+      openModal('modal-approve-order');
+    }
+
+    async function handleApproveOrderSubmit(e) {
+      e.preventDefault();
+      const order_id = parseInt(document.getElementById('approve-order-id').value, 10);
+      const manual_key = document.getElementById('approve-manual-key').value.trim();
+
+      try {
+        const res = await fetch('/api/admin/approve-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ order_id, manual_key })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          showToast(data.message || 'Approval failed.', 'error');
+          return;
+        }
+        showToast('Order approved and key assigned!', 'success');
+        closeModal('modal-approve-order');
+        loadAdminOrders();
+        loadDashboardData();
+      } catch (err) {
+        showToast('Approval error.', 'error');
+      }
+    }
+
+    function promptRejectOrder(id) {
+      document.getElementById('reject-order-id').value = id;
+      document.getElementById('reject-order-reason').value = '';
+      openModal('modal-reject-order');
+    }
+
+    async function handleRejectOrderSubmit(e) {
+      e.preventDefault();
+      const order_id = parseInt(document.getElementById('reject-order-id').value, 10);
+      const reason = document.getElementById('reject-order-reason').value.trim();
+
+      try {
+        const res = await fetch('/api/admin/reject-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ order_id, reason })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          showToast(data.message || 'Rejection failed.', 'error');
+          return;
+        }
+        showToast('Order rejected and refund credited!', 'info');
+        closeModal('modal-reject-order');
+        loadAdminOrders();
+        loadDashboardData();
+      } catch (err) {
+        showToast('Rejection error.', 'error');
+      }
+    }
+
+    /* ==============================================================
+       3. WALLETS & TOPUPS
+       ============================================================== */
+    async function loadAdminWallets() {
+      const status = document.getElementById('wallets-filter-status').value;
+      const tbody = document.getElementById('admin-wallets-tbody');
+
+      try {
+        const res = await fetch(`/api/admin/wallets?status=${status}`);
+        const data = await res.json();
+
+        if (!data.transactions || data.transactions.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 2rem; color: var(--text-dim);">No wallet deposits found.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = data.transactions.map(t => {
+          let statusBadge = '<span class="badge badge-warning">Pending</span>';
+          if (t.status === 'approved') statusBadge = '<span class="badge badge-undetected">Approved</span>';
+          if (t.status === 'rejected') statusBadge = `<span class="badge badge-danger" title="${escapeHtml(t.reject_reason || '')}">Rejected</span>`;
+
+          const proof = t.screenshot 
+            ? `<button class="btn btn-outline btn-sm" onclick="viewProof('${t.screenshot}')">View Proof ↗</button>` 
+            : '<span style="color:var(--text-dim)">None</span>';
+
+          let actions = '-';
+          if (t.status === 'pending') {
+            actions = `
+              <div style="display: flex; gap: 0.4rem;">
+                <button class="btn btn-success btn-sm" onclick="approveWallet(${t.id}, ${t.amount}, '${t.currency}')">Approve</button>
+                <button class="btn btn-danger btn-sm" onclick="rejectWallet(${t.id})">Reject</button>
+              </div>
+            `;
+          }
+
+          return `
+            <tr>
+              <td>#${t.id}</td>
+              <td>${escapeHtml(t.user_name)}<br><small style="color:var(--text-dim)">${escapeHtml(t.user_email)}</small></td>
+              <td><strong style="color: #fff;">${parseFloat(t.amount).toLocaleString()} ${t.currency}</strong></td>
+              <td>${escapeHtml(t.method_name || '')}<br><small style="color:var(--text-dim)">${escapeHtml(t.description || '')}</small></td>
+              <td>${proof}</td>
+              <td>${statusBadge}</td>
+              <td style="font-size: 0.8rem; color: var(--text-dim);">${new Date(t.created_at).toLocaleDateString()}</td>
+              <td>${actions}</td>
+            </tr>
+          `;
+        }).join('');
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="8" style="color:var(--danger); text-align:center;">Failed to load wallet requests.</td></tr>`;
+      }
+    }
+
+    function viewProof(url) {
+      document.getElementById('proof-img-display').src = url;
+      openModal('modal-view-proof');
+    }
+
+    async function approveWallet(id, amount, currency) {
+      let customNpr = prompt(`Approve Deposit #${id} (${amount} ${currency})?\nEnter NPR amount to credit user wallet:`);
+      if (customNpr === null) return;
+
+      try {
+        const res = await fetch('/api/admin/approve-wallet', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ transaction_id: id, custom_npr_amount: customNpr })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          showToast(data.message || 'Approval failed.', 'error');
+          return;
+        }
+        showToast('Wallet deposit approved!', 'success');
+        loadAdminWallets();
+        loadDashboardData();
+      } catch (err) {
+        showToast('Approval error.', 'error');
+      }
+    }
+
+    async function rejectWallet(id) {
+      const reason = prompt('Reason for rejecting this deposit:');
+      if (reason === null) return;
+
+      try {
+        const res = await fetch('/api/admin/reject-wallet', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ transaction_id: id, reason })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          showToast(data.message || 'Rejection failed.', 'error');
+          return;
+        }
+        showToast('Deposit rejected.', 'info');
+        loadAdminWallets();
+        loadDashboardData();
+      } catch (err) {
+        showToast('Rejection error.', 'error');
+      }
+    }
+
+    /* ==============================================================
+       4. PRODUCTS
+       ============================================================== */
+    async function loadAdminProducts() {
+      const tbody = document.getElementById('admin-products-tbody');
+      try {
+        const res = await fetch('/api/admin/products');
+        const data = await res.json();
+        globalProducts = data.products || [];
+
+        // Update product selects in modals
+        updateProductDropdowns();
+
+        if (globalProducts.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 2rem;">No products configured.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = globalProducts.map(p => `
+          <tr>
+            <td>#${p.id}</td>
+            <td><img src="${p.image}" alt="" style="width: 44px; height: 44px; border-radius: 4px; object-fit: cover;"></td>
+            <td><strong style="color: #fff;">${escapeHtml(p.name)}</strong></td>
+            <td>${escapeHtml(p.category)}</td>
+            <td>${p.total_plans || 0}</td>
+            <td><span class="badge badge-undetected">${p.available_keys || 0}</span></td>
+            <td>
+              <button class="btn btn-sm ${p.status === 'active' ? 'btn-success' : 'btn-outline'}" onclick="toggleProductStatus(${p.id}, '${p.status}')">
+                ${p.status}
+              </button>
+            </td>
+            <td>
+              <button class="btn btn-outline btn-sm" onclick="deleteProduct(${p.id})" style="color:var(--danger)">Delete</button>
+            </td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="8" style="color:var(--danger); text-align:center;">Failed to load products.</td></tr>`;
+      }
+    }
+
+    function updateProductDropdowns() {
+      const selects = [
+        document.getElementById('plan-product-select'),
+        document.getElementById('keys-import-product'),
+        document.getElementById('keys-filter-product')
+      ];
+
+      selects.forEach(sel => {
+        if (!sel) return;
+        const isFilter = sel.id === 'keys-filter-product';
+        sel.innerHTML = (isFilter ? '<option value="all">All Products</option>' : '') + 
+          globalProducts.map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
+      });
+    }
+
+    function openAddProductModal() {
+      document.getElementById('form-add-product').reset();
+      openModal('modal-add-product');
+    }
+
+    async function handleAddProductSubmit(e) {
+      e.preventDefault();
+      const name = document.getElementById('prod-name').value.trim();
+      const category = document.getElementById('prod-cat').value.trim();
+      const description = document.getElementById('prod-desc').value.trim();
+      const features = document.getElementById('prod-features').value.trim();
+      const featured = document.getElementById('prod-featured').checked;
+      let imageUrl = document.getElementById('prod-img-url').value.trim();
+
+      const fileInput = document.getElementById('prod-img-file');
+      if (fileInput.files && fileInput.files[0]) {
+        const file = fileInput.files[0];
+        const reader = new FileReader();
+        reader.onload = async (ev) => {
+          imageUrl = ev.target.result;
+          await sendAddProduct({ name, category, description, features, image: imageUrl, featured });
+        };
+        reader.readAsDataURL(file);
+      } else {
+        await sendAddProduct({ name, category, description, features, image: imageUrl, featured });
+      }
+    }
+
+    async function sendAddProduct(payload) {
+      try {
+        const res = await fetch('/api/admin/add-product', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          showToast(data.message || 'Failed to create product', 'error');
+          return;
+        }
+        showToast('Product added successfully!', 'success');
+        closeModal('modal-add-product');
+        loadAdminProducts();
+        loadDashboardData();
+      } catch (err) {
+        showToast('Error adding product', 'error');
+      }
+    }
+
+    async function toggleProductStatus(id, currentStatus) {
+      const newStatus = currentStatus === 'active' ? 'hidden' : 'active';
+      await fetch('/api/admin/products', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status: newStatus })
+      });
+      loadAdminProducts();
+    }
+
+    async function deleteProduct(id) {
+      if (!confirm('Are you sure you want to delete this product? All attached plans will be removed.')) return;
+      await fetch(`/api/admin/products?id=${id}`, { method: 'DELETE' });
+      loadAdminProducts();
+    }
+
+    /* ==============================================================
+       5. PLANS
+       ============================================================== */
+    async function loadAdminPlans() {
+      const tbody = document.getElementById('admin-plans-tbody');
+      try {
+        const res = await fetch('/api/admin/plans');
+        const data = await res.json();
+        globalPlans = data.plans || [];
+
+        if (globalPlans.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding: 2rem;">No plans configured.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = globalPlans.map(pl => `
+          <tr>
+            <td>#${pl.id}</td>
+            <td><strong>${escapeHtml(pl.product_name)}</strong></td>
+            <td>${escapeHtml(pl.plan_name)}</td>
+            <td>${pl.days} ${pl.duration_type}</td>
+            <td>$${parseFloat(pl.price_usd).toFixed(2)}</td>
+            <td>${pl.discount_percent}%</td>
+            <td><code>${pl.supplier_variant_id || '-'}</code></td>
+            <td><span class="badge badge-undetected">${pl.available_keys || 0}</span></td>
+            <td>
+              <button class="btn btn-outline btn-sm" onclick="deletePlan(${pl.id})" style="color:var(--danger)">Delete</button>
+            </td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="9" style="color:var(--danger); text-align:center;">Failed to load plans.</td></tr>`;
+      }
+    }
+
+    function openAddPlanModal() {
+      document.getElementById('form-add-plan').reset();
+      updateProductDropdowns();
+      openModal('modal-add-plan');
+    }
+
+    async function handleAddPlanSubmit(e) {
+      e.preventDefault();
+      const product_id = parseInt(document.getElementById('plan-product-select').value, 10);
+      const plan_name = document.getElementById('plan-name').value.trim();
+      const duration_type = document.getElementById('plan-duration-type').value;
+      const days = parseInt(document.getElementById('plan-days').value, 10);
+      const price_usd = parseFloat(document.getElementById('plan-price').value);
+      const discount_percent = parseFloat(document.getElementById('plan-discount').value || 0);
+      const supplier_variant_id = document.getElementById('plan-supplier-variant').value.trim();
+
+      try {
+        const res = await fetch('/api/admin/add-plan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            product_id,
+            plan_name,
+            duration_type,
+            days,
+            price_usd,
+            discount_percent,
+            supplier_variant_id
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          showToast(data.message || 'Failed to add plan', 'error');
+          return;
+        }
+
+        showToast('Plan added successfully!', 'success');
+        closeModal('modal-add-plan');
+        loadAdminPlans();
+      } catch (err) {
+        showToast('Error adding plan', 'error');
+      }
+    }
+
+    async function deletePlan(id) {
+      if (!confirm('Are you sure you want to delete this plan?')) return;
+      await fetch(`/api/admin/plans?id=${id}`, { method: 'DELETE' });
+      loadAdminPlans();
+    }
+
+    /* ==============================================================
+       6. LICENSE KEYS
+       ============================================================== */
+    async function loadAdminKeys() {
+      const product_id = document.getElementById('keys-filter-product').value;
+      const status = document.getElementById('keys-filter-status').value;
+      const search = document.getElementById('keys-search-input').value.trim();
+      const tbody = document.getElementById('admin-keys-tbody');
+
+      try {
+        const res = await fetch(`/api/admin/keys?product_id=${product_id}&status=${status}&search=${encodeURIComponent(search)}`);
+        const data = await res.json();
+
+        if (!data.keys || data.keys.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 2rem; color: var(--text-dim);">No license keys found.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = data.keys.map(k => {
+          let statusBadge = '<span class="badge badge-undetected">Available</span>';
+          if (k.status === 'sold') statusBadge = '<span class="badge" style="background: rgba(59, 130, 246, 0.2); color: #60a5fa;">Sold</span>';
+          if (k.status === 'revoked') statusBadge = '<span class="badge badge-danger">Revoked</span>';
+
+          const orderRef = k.order_code ? `#${escapeHtml(k.order_code)} (${escapeHtml(k.user_name || '')})` : '-';
+
+          return `
+            <tr>
+              <td>#${k.id}</td>
+              <td>${escapeHtml(k.product_name)}</td>
+              <td><div class="license-key-pill" style="font-size: 0.8rem;">${escapeHtml(k.key_code)}</div></td>
+              <td>${k.days} ${k.duration_type}</td>
+              <td>${statusBadge}</td>
+              <td>${orderRef}</td>
+              <td>
+                ${k.status === 'available' ? `<button class="btn btn-danger btn-sm" onclick="revokeKey(${k.id})">Revoke</button>` : ''}
+              </td>
+            </tr>
+          `;
+        }).join('');
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="7" style="color:var(--danger); text-align:center;">Failed to load keys.</td></tr>`;
+      }
+    }
+
+    function openAddKeysModal() {
+      document.getElementById('form-add-keys').reset();
+      updateProductDropdowns();
+      openModal('modal-add-keys');
+    }
+
+    async function handleAddKeysSubmit(e) {
+      e.preventDefault();
+      const product_id = parseInt(document.getElementById('keys-import-product').value, 10);
+      const days = parseInt(document.getElementById('keys-import-days').value, 10);
+      const keys_text = document.getElementById('keys-import-text').value;
+
+      try {
+        const res = await fetch('/api/admin/add-keys', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ product_id, days, keys_text })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          showToast(data.message || 'Key import failed', 'error');
+          return;
+        }
+
+        showToast(data.message, 'success');
+        closeModal('modal-add-keys');
+        loadAdminKeys();
+        loadDashboardData();
+      } catch (err) {
+        showToast('Error importing keys', 'error');
+      }
+    }
+
+    async function revokeKey(id) {
+      if (!confirm('Revoke this key?')) return;
+      await fetch('/api/admin/keys', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status: 'revoked' })
+      });
+      loadAdminKeys();
+      loadDashboardData();
+    }
+
+    /* ==============================================================
+       7. USERS & RESELLERS
+       ============================================================== */
+    async function loadAdminUsers() {
+      const type = document.getElementById('users-filter-type').value;
+      const search = document.getElementById('users-search-input').value.trim();
+      const tbody = document.getElementById('admin-users-tbody');
+
+      try {
+        const res = await fetch(`/api/admin/users?user_type=${type}&search=${encodeURIComponent(search)}`);
+        const data = await res.json();
+
+        if (!data.users || data.users.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 2rem;">No users found.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = data.users.map(u => {
+          const tierTag = u.user_type === 'reseller' 
+            ? '<span class="badge badge-reseller">Reseller</span>' 
+            : '<span class="badge">Customer</span>';
+
+          const statusBtn = u.status === 'active' 
+            ? `<button class="btn btn-sm btn-outline" style="color:var(--danger)" onclick="setUserStatus('${u.id}', 'blocked')">Block</button>` 
+            : `<button class="btn btn-sm btn-success" onclick="setUserStatus('${u.id}', 'active')">Unblock</button>`;
+
+          return `
+            <tr>
+              <td><strong>${escapeHtml(u.name)}</strong></td>
+              <td>${escapeHtml(u.email)}</td>
+              <td>${escapeHtml(u.phone || '-')}</td>
+              <td>${tierTag}</td>
+              <td>${u.reseller_discount || 0}%</td>
+              <td>NPR ${parseFloat(u.wallet_balance || 0).toLocaleString()}</td>
+              <td>${u.status}</td>
+              <td>
+                <div style="display: flex; gap: 0.35rem;">
+                  <button class="btn btn-outline btn-sm" onclick="editUserTier('${u.id}', '${u.user_type}', ${u.reseller_discount || 0})">Edit Tier</button>
+                  ${statusBtn}
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="8" style="color:var(--danger); text-align:center;">Failed to load users.</td></tr>`;
+      }
+    }
+
+    async function setUserStatus(id, status) {
+      await fetch('/api/admin/users', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status })
+      });
+      loadAdminUsers();
+    }
+
+    async function editUserTier(id, currentType, currentDisc) {
+      const newType = prompt('Enter user tier (customer or reseller):', currentType);
+      if (!newType) return;
+      const newDisc = prompt('Enter reseller discount percentage (0 to 100):', currentDisc);
+      if (newDisc === null) return;
+
+      await fetch('/api/admin/users', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, user_type: newType, reseller_discount: parseFloat(newDisc) })
+      });
+      loadAdminUsers();
+    }
+
+    /* ==============================================================
+       8. RESELLER PRICES
+       ============================================================== */
+    async function loadAdminResellerPrices() {
+      const tbody = document.getElementById('admin-reseller-prices-tbody');
+      try {
+        const res = await fetch('/api/admin/reseller-prices');
+        const data = await res.json();
+
+        if (!data.reseller_prices || data.reseller_prices.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 2rem;">No custom override prices set.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = data.reseller_prices.map(rp => `
+          <tr>
+            <td>${escapeHtml(rp.user_name)} (${escapeHtml(rp.user_email)})</td>
+            <td>${escapeHtml(rp.product_name)}</td>
+            <td>${escapeHtml(rp.plan_name)}</td>
+            <td>$${parseFloat(rp.normal_price_usd).toFixed(2)}</td>
+            <td><strong style="color:var(--primary);">$${parseFloat(rp.custom_price_usd).toFixed(2)}</strong></td>
+            <td>
+              <button class="btn btn-outline btn-sm" onclick="deleteResellerPrice(${rp.id})" style="color:var(--danger)">Remove</button>
+            </td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="6" style="color:var(--danger); text-align:center;">Failed to load reseller prices.</td></tr>`;
+      }
+    }
+
+    async function openAddResellerPriceModal() {
+      const email = prompt('Enter reseller user email address:');
+      if (!email) return;
+
+      // Find user
+      const uRes = await fetch(`/api/admin/users?search=${encodeURIComponent(email)}`);
+      const uData = await uRes.json();
+      const user = (uData.users || []).find(u => u.email.toLowerCase() === email.toLowerCase());
+      if (!user) {
+        showToast('Reseller user not found.', 'error');
+        return;
+      }
+
+      const planId = prompt('Enter Plan ID:');
+      if (!planId) return;
+
+      const customPrice = prompt('Enter custom price in USD:');
+      if (!customPrice) return;
+
+      await fetch('/api/admin/reseller-prices', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: user.id, plan_id: parseInt(planId, 10), custom_price_usd: parseFloat(customPrice) })
+      });
+
+      showToast('Custom reseller price saved!', 'success');
+      loadAdminResellerPrices();
+    }
+
+    async function deleteResellerPrice(id) {
+      if (!confirm('Remove this custom price override?')) return;
+      await fetch(`/api/admin/reseller-prices?id=${id}`, { method: 'DELETE' });
+      loadAdminResellerPrices();
+    }
+
+    /* ==============================================================
+       9. SETTINGS & TEST DISCORD
+       ============================================================== */
+    async function loadAdminSettings() {
+      try {
+        const res = await fetch('/api/admin/settings');
+        const data = await res.json();
+        if (data.settings) {
+          const s = data.settings;
+          document.getElementById('setting-discord-webhook').value = s.discord_webhook || '';
+          document.getElementById('setting-kl-token').value = s.kl_api_token || '';
+          document.getElementById('setting-npr-rate').value = s.npr_usd_rate || '134.50';
+          document.getElementById('setting-inr-rate').value = s.inr_usd_rate || '84.00';
+          document.getElementById('setting-min-topup').value = s.min_topup_npr || '200';
+          document.getElementById('setting-whatsapp').value = s.whatsapp_number || '+9779800000000';
+          document.getElementById('setting-notice').value = s.site_notice || '';
+        }
+      } catch (err) {}
+    }
+
+    async function handleSettingsSubmit(e) {
+      e.preventDefault();
+      const payload = {
+        discord_webhook: document.getElementById('setting-discord-webhook').value.trim(),
+        kl_api_token: document.getElementById('setting-kl-token').value.trim(),
+        npr_usd_rate: document.getElementById('setting-npr-rate').value.trim(),
+        inr_usd_rate: document.getElementById('setting-inr-rate').value.trim(),
+        min_topup_npr: document.getElementById('setting-min-topup').value.trim(),
+        whatsapp_number: document.getElementById('setting-whatsapp').value.trim(),
+        site_notice: document.getElementById('setting-notice').value.trim()
+      };
+
+      try {
+        const res = await fetch('/api/admin/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('Settings saved successfully!', 'success');
+        } else {
+          showToast('Failed to save settings', 'error');
+        }
+      } catch (err) {
+        showToast('Error saving settings', 'error');
+      }
+    }
+
+    async function testDiscordWebhook() {
+      showToast('Sending test notification to Discord...', 'info');
+      try {
+        const res = await fetch('/api/notify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: 'Test Notification',
+            description: 'White X Store Discord integration is fully functional and responsive! 🚀',
+            color: 'success'
+          })
+        });
+        const data = await res.json();
+        if (data.delivered) {
+          showToast('Test notification delivered to Discord!', 'success');
+        } else {
+          showToast('Webhook dispatch failed. Check your webhook URL.', 'warning');
+        }
+      } catch (err) {
+        showToast('Failed to dispatch webhook', 'error');
+      }
+    }
+
+    async function testKeyLicenseApi() {
+      const box = document.getElementById('kl-test-result');
+      box.style.display = 'block';
+      box.innerHTML = 'Connecting to KeyLicense API...';
+
+      try {
+        const res = await fetch('/api/admin/keylicense-check');
+        const data = await res.json();
+
+        box.innerHTML = `
+          <strong>KeyLicense Balance Response:</strong>
+          <pre style="margin-top: 4px; overflow-x: auto;">${JSON.stringify(data.balance_check, null, 2)}</pre>
+          <strong style="margin-top: 6px; display: block;">Products Response:</strong>
+          <pre style="margin-top: 4px; overflow-x: auto;">${JSON.stringify(data.products_check, null, 2)}</pre>
+        `;
+      } catch (err) {
+        box.innerHTML = `<span style="color:var(--danger)">Error: ${err.message}</span>`;
+      }
+    }
+
+    /* ==============================================================
+       10. PASSWORD RESETS
+       ============================================================== */
+    async function loadAdminResets() {
+      const tbody = document.getElementById('admin-resets-tbody');
+      try {
+        const res = await fetch('/api/admin/resets');
+        const data = await res.json();
+
+        if (!data.resets || data.resets.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 2rem;">No password resets requested.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = data.resets.map(r => `
+          <tr>
+            <td>#${r.id}</td>
+            <td><strong>${escapeHtml(r.email)}</strong></td>
+            <td>${escapeHtml(r.user_name || 'Unregistered')}</td>
+            <td><div class="license-key-pill">${escapeHtml(r.token)}</div></td>
+            <td><span class="badge ${r.status === 'pending' ? 'badge-warning' : 'badge-undetected'}">${r.status}</span></td>
+            <td>${new Date(r.expires_at).toLocaleString()}</td>
+            <td>${new Date(r.created_at).toLocaleString()}</td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="7" style="color:var(--danger); text-align:center;">Failed to load resets.</td></tr>`;
+      }
+    }
+
+    /* ==============================================================
+       MODAL CONTROLLERS
+       ============================================================== */
+    function openModal(id) {
+      const m = document.getElementById(id);
+      if (m) m.classList.add('show');
+    }
+
+    function closeModal(id) {
+      const m = document.getElementById(id);
+      if (m) m.classList.remove('show');
+    }
+  </script>
+</body>
+</html>

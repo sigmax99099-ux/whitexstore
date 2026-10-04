@@ -1,0 +1,20 @@
+{
+  "name": "white-x-store",
+  "version": "1.0.0",
+  "description": "White X Store - Premium Gaming Cheats and Keys Selling Platform",
+  "type": "module",
+  "main": "api/index.js",
+  "scripts": {
+    "dev": "node dev-server.js",
+    "start": "node dev-server.js"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^0.10.4",
+    "bcryptjs": "^2.4.3",
+    "cloudinary": "^2.5.1",
+    "cookie": "^1.0.2",
+    "dotenv": "^16.4.7",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.13.1"
+  }
+}

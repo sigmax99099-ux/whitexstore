@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Client Dashboard — White X Store</title>
+  <meta name="description" content="Manage your purchased gaming cheat keys, view live order history, check wallet balance, and download loaders on White X Store.">
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22 font-family=%22Rajdhani%22 font-weight=%22900%22 fill=%22%23ef4444%22>X</text></svg>">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <div class="container">
+      <a href="/index.html" class="nav-brand">
+        <div class="brand-logo-icon">X</div>
+        <div class="brand-text">WHITE <span>X</span> STORE</div>
+      </a>
+
+      <ul class="nav-links">
+        <li><a href="/index.html" class="nav-link">Home</a></li>
+        <li><a href="/products.html" class="nav-link">Cheats & Keys</a></li>
+        <li><a href="/wallet.html" class="nav-link">Wallet Topup</a></li>
+        <li><a href="/dashboard.html" class="nav-link active">Dashboard</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <div id="nav-auth-container"></div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Dashboard Main Container -->
+  <main class="section">
+    <div class="container">
+      
+      <!-- User Profile & Balance Header -->
+      <div class="product-card" style="padding: 2rem; margin-bottom: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
+          <div>
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.35rem;">
+              <h1 id="dash-user-name" style="font-size: 1.8rem; color: #fff;">User Profile</h1>
+              <span id="dash-user-tier" class="badge badge-undetected">Customer</span>
+            </div>
+            <div style="color: var(--text-muted); font-size: 0.88rem;">
+              Email: <span id="dash-user-email" style="color: var(--text-main);">...</span> • 
+              Phone: <span id="dash-user-phone" style="color: var(--text-main);">...</span>
+            </div>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+            <div style="background: #0d0d15; border: 1px solid var(--bg-card-border); border-radius: var(--radius-md); padding: 0.75rem 1.4rem; text-align: right;">
+              <div style="font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase;">Wallet Balance</div>
+              <div id="dash-wallet-bal" style="font-family: var(--font-heading); font-size: 1.6rem; color: var(--primary); font-weight: 800; line-height: 1.1;">
+                NPR 0.00
+              </div>
+            </div>
+
+            <a href="/wallet.html" class="btn btn-primary btn-sm btn-glow">
+              + Topup Balance
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Download Loader Banner -->
+      <div style="background: linear-gradient(90deg, rgba(220, 38, 38, 0.15), rgba(16, 185, 129, 0.1)); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <div style="font-size: 2.2rem;">💾</div>
+          <div>
+            <h4 style="color: #fff; margin-bottom: 0.2rem;">Official White X Cheat Loader (v4.8.2)</h4>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">
+              Universal bypass loader with automated key validation, HWID spoofing, and driver injection.
+            </p>
+          </div>
+        </div>
+        <a href="https://github.com" target="_blank" class="btn btn-outline btn-sm">
+          Download Loader (.exe) ⬇
+        </a>
+      </div>
+
+      <!-- Active License Keys Section -->
+      <div class="product-card" style="padding: 2rem; margin-bottom: 2rem;">
+        <div class="section-head" style="margin-bottom: 1.25rem;">
+          <div>
+            <h3 style="color: #fff;">// MY ACTIVE LICENSE KEYS</h3>
+            <p style="font-size: 0.88rem; color: var(--text-muted);">Click the key to copy it directly to your clipboard</p>
+          </div>
+          <a href="/products.html" class="btn btn-primary btn-sm">+ Buy New Key</a>
+        </div>
+
+        <div id="keys-container">
+          <div style="text-align: center; padding: 2rem; color: var(--text-dim);">
+            Loading keys...
+          </div>
+        </div>
+      </div>
+
+      <!-- Order History Section -->
+      <div class="product-card" style="padding: 2rem;">
+        <div class="section-head" style="margin-bottom: 1.25rem;">
+          <div>
+            <h3 style="color: #fff;">// ORDER HISTORY</h3>
+            <p style="font-size: 0.88rem; color: var(--text-muted);">Complete record of all orders and license key allocations</p>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table-custom">
+            <thead>
+              <tr>
+                <th>Order Code</th>
+                <th>Product</th>
+                <th>Plan Duration</th>
+                <th>Amount (USD)</th>
+                <th>Status</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody id="orders-table-body">
+              <tr>
+                <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-dim);">
+                  Loading orders...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-bottom" style="border: none; padding: 0; justify-content: space-between;">
+        <div>&copy; 2025 White X Store. Elite Undetected Software.</div>
+        <div>24/7 Discord & WhatsApp Customer Support</div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/assets/js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Authenticate
+      const userRes = await fetch('/api/auth/me');
+      const authData = await userRes.json();
+
+      if (!authData.authenticated || !authData.user) {
+        window.location.href = '/login.html?redirect=/dashboard.html';
+        return;
+      }
+
+      renderUserInfo(authData.user);
+      loadUserOrders();
+    });
+
+    function renderUserInfo(user) {
+      document.getElementById('dash-user-name').textContent = user.name;
+      document.getElementById('dash-user-email').textContent = user.email;
+      document.getElementById('dash-user-phone').textContent = user.phone || 'N/A';
+      document.getElementById('dash-wallet-bal').textContent = `NPR ${parseFloat(user.wallet_balance || 0).toLocaleString()}`;
+
+      const tierBadge = document.getElementById('dash-user-tier');
+      if (user.user_type === 'reseller') {
+        tierBadge.className = 'badge badge-reseller';
+        tierBadge.textContent = `RESELLER (${user.reseller_discount || 0}% OFF)`;
+      } else {
+        tierBadge.className = 'badge badge-undetected';
+        tierBadge.textContent = 'STANDARD CUSTOMER';
+      }
+    }
+
+    async function loadUserOrders() {
+      try {
+        const res = await fetch('/api/orders/my-orders');
+        const data = await res.json();
+
+        if (!data.success) return;
+
+        const orders = data.orders || [];
+        const keysContainer = document.getElementById('keys-container');
+        const ordersTbody = document.getElementById('orders-table-body');
+
+        // Extract orders that have license keys
+        const deliveredOrders = orders.filter(o => o.key_code);
+
+        if (deliveredOrders.length === 0) {
+          keysContainer.innerHTML = `
+            <div style="text-align: center; padding: 2.5rem; background: #0d0d15; border-radius: var(--radius-md);">
+              <p style="color: var(--text-dim); margin-bottom: 1rem;">No license keys purchased yet.</p>
+              <a href="/products.html" class="btn btn-outline btn-sm">Explore Cheats & Softwares</a>
+            </div>
+          `;
+        } else {
+          keysContainer.innerHTML = `
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.25rem;">
+              ${deliveredOrders.map(o => `
+                <div style="background: #0d0d15; border: 1px solid var(--bg-card-border); border-radius: var(--radius-md); padding: 1.25rem;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <strong style="color: #fff; font-size: 1.05rem;">${escapeHtml(o.product_name)}</strong>
+                    <span class="badge badge-undetected">${escapeHtml(o.plan_name)}</span>
+                  </div>
+                  <div style="margin: 0.85rem 0;">
+                    <div style="font-size: 0.72rem; color: var(--text-dim); margin-bottom: 0.25rem;">YOUR LICENSE KEY:</div>
+                    <div class="license-key-pill" style="width: 100%; justify-content: space-between; cursor: pointer;" onclick="copyToClipboard('${escapeHtml(o.key_code)}')">
+                      <span>${escapeHtml(o.key_code)}</span>
+                      <span style="font-size: 0.75rem; color: var(--primary);">📋 COPY</span>
+                    </div>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-dim);">
+                    <span>Order: #${escapeHtml(o.order_code)}</span>
+                    <span>Delivered: ${new Date(o.created_at).toLocaleDateString()}</span>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          `;
+        }
+
+        // Render Orders Table
+        if (orders.length === 0) {
+          ordersTbody.innerHTML = `
+            <tr>
+              <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-dim);">
+                No orders placed yet.
+              </td>
+            </tr>
+          `;
+        } else {
+          ordersTbody.innerHTML = orders.map(o => {
+            let statusBadge = '<span class="badge badge-warning">Pending</span>';
+            if (o.status === 'approved') statusBadge = '<span class="badge badge-undetected">Approved</span>';
+            if (o.status === 'rejected') statusBadge = `<span class="badge badge-danger" title="${escapeHtml(o.reject_reason || '')}">Rejected</span>`;
+
+            return `
+              <tr>
+                <td><strong>#${escapeHtml(o.order_code)}</strong></td>
+                <td>${escapeHtml(o.product_name)}</td>
+                <td>${escapeHtml(o.plan_name)} (${o.days} ${o.duration_type})</td>
+                <td>$${parseFloat(o.amount_usd).toFixed(2)}</td>
+                <td>${statusBadge}</td>
+                <td style="color: var(--text-muted); font-size: 0.82rem;">${new Date(o.created_at).toLocaleDateString()}</td>
+              </tr>
+            `;
+          }).join('');
+        }
+
+      } catch (err) {
+        console.error('Dashboard load error:', err);
+      }
+    }
+  </script>
+</body>
+</html>

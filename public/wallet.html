@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wallet Balance & Topup — White X Store</title>
+  <meta name="description" content="Top up your White X Store wallet balance using eSewa, Khalti, Bank Transfer, UPI, or Crypto. Real-time conversion to NPR balance.">
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22 font-family=%22Rajdhani%22 font-weight=%22900%22 fill=%22%23ef4444%22>X</text></svg>">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <div class="container">
+      <a href="/index.html" class="nav-brand">
+        <div class="brand-logo-icon">X</div>
+        <div class="brand-text">WHITE <span>X</span> STORE</div>
+      </a>
+
+      <ul class="nav-links">
+        <li><a href="/index.html" class="nav-link">Home</a></li>
+        <li><a href="/products.html" class="nav-link">Cheats & Keys</a></li>
+        <li><a href="/wallet.html" class="nav-link active">Wallet Topup</a></li>
+        <li><a href="/dashboard.html" class="nav-link">Dashboard</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <div id="nav-auth-container"></div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Wallet Section -->
+  <main class="section">
+    <div class="container" style="max-width: 980px;">
+      
+      <!-- Wallet 3-Currency Display Card -->
+      <div class="wallet-card" style="margin-bottom: 2.5rem;">
+        <div class="wallet-header">
+          <div class="wallet-title">
+            <span style="color: var(--primary); font-size: 1.5rem;">💳</span>
+            <span>STORE WALLET BALANCE</span>
+          </div>
+          <span class="badge badge-undetected">Instant Checkout Active</span>
+        </div>
+
+        <div class="wallet-currencies-grid">
+          <div class="currency-cell primary-currency">
+            <span class="currency-tag">Primary Account Balance (NPR)</span>
+            <div class="currency-val" id="bal-npr">NPR 0.00</div>
+            <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: 0.25rem;">Used directly for all order purchases</div>
+          </div>
+
+          <div class="currency-cell">
+            <span class="currency-tag">Indian Rupee Equivalent (INR)</span>
+            <div class="currency-val" id="bal-inr">₹0.00</div>
+            <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: 0.25rem;">Approximate exchange rate</div>
+          </div>
+
+          <div class="currency-cell">
+            <span class="currency-tag">US Dollar Equivalent (USD)</span>
+            <div class="currency-val" id="bal-usd">$0.00</div>
+            <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: 0.25rem;">Global standard peg</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Topup Section Layout -->
+      <div style="display: grid; grid-template-columns: 1.1fr 1fr; gap: 2rem; align-items: start;" class="product-layout-grid">
+        
+        <!-- Left: Deposit Request Form -->
+        <div class="product-card" style="padding: 2rem;">
+          <h3 style="color: #fff; margin-bottom: 0.4rem;">// SUBMIT DEPOSIT REQUEST</h3>
+          <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 1.5rem;">
+            Transfer the exact amount to the account on the right and upload the receipt screenshot.
+          </p>
+
+          <form id="topup-form">
+            <div class="form-group">
+              <label class="form-label" for="topup-method">Select Payment Method</label>
+              <select id="topup-method" class="form-select" required>
+                <option value="">-- Choose Gateway --</option>
+              </select>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem;">
+              <div class="form-group">
+                <label class="form-label" for="topup-amount">Amount Sent</label>
+                <input type="number" id="topup-amount" class="form-input" placeholder="e.g. 1000" min="1" step="any" required>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Currency</label>
+                <input type="text" id="topup-currency-display" class="form-input" value="NPR" readonly style="background:#0a0a0f; color:var(--primary); font-weight:bold; text-align:center;">
+              </div>
+            </div>
+
+            <!-- Conversion estimation preview -->
+            <div id="conversion-preview" style="display: none; padding: 0.75rem 1rem; background: #0d0d15; border-radius: var(--radius-md); font-size: 0.85rem; margin-bottom: 1.25rem; border: 1px dashed var(--bg-card-border);">
+              <span style="color: var(--text-muted);">Credited to Wallet: </span>
+              <strong id="estimated-npr" style="color: #34d399;">NPR 0</strong>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="topup-ref">Transaction ID / Reference / Remarks</label>
+              <input type="text" id="topup-ref" class="form-input" placeholder="e.g. UPI Ref / Bank TxID" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="topup-screenshot">Transaction Proof (Screenshot / Voucher)</label>
+              <input type="file" id="topup-screenshot" class="form-input" accept="image/jpeg,image/png,image/webp" required style="padding: 0.5rem;">
+              <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: 0.25rem;">
+                * Max file size: 5MB (JPG, PNG, WEBP).
+              </div>
+            </div>
+
+            <!-- Image Preview Box -->
+            <div id="screenshot-preview-box" style="display: none; margin-bottom: 1.25rem; text-align: center;">
+              <img id="screenshot-preview-img" src="" alt="Proof Preview" style="max-height: 160px; max-width: 100%; border-radius: var(--radius-sm); border: 1px solid var(--bg-card-border);">
+            </div>
+
+            <!-- Fake Captcha -->
+            <div id="captcha-slot"></div>
+
+            <button type="submit" id="btn-topup-submit" class="btn btn-primary btn-block btn-lg btn-glow">
+              Submit Deposit for Approval ⚡
+            </button>
+          </form>
+        </div>
+
+        <!-- Right: Active Gateway Details & QR Display -->
+        <div>
+          <div class="product-card" id="gateway-info-card" style="padding: 2rem;">
+            <div style="font-size: 0.75rem; color: var(--primary); text-transform: uppercase; font-weight: bold; margin-bottom: 0.35rem;">
+              Payment Gateway Instructions
+            </div>
+            <h3 id="gw-title" style="color: #fff; margin-bottom: 1rem;">Select a Payment Method</h3>
+
+            <div id="gw-details" style="display: none;">
+              <!-- QR Code if available -->
+              <div id="gw-qr-wrap" style="text-align: center; margin-bottom: 1.25rem; display: none;">
+                <img id="gw-qr-img" src="" alt="Payment QR Code" style="max-width: 200px; border-radius: var(--radius-md); border: 2px solid var(--primary); padding: 5px; background: #fff;">
+                <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 0.35rem;">Scan with your mobile banking app</div>
+              </div>
+
+              <div style="background: #0d0d15; border: 1px solid var(--bg-card-border); border-radius: var(--radius-md); padding: 1.1rem; margin-bottom: 1.25rem;">
+                <div style="margin-bottom: 0.65rem;">
+                  <span style="font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase;">Account / Phone / UPI ID</span>
+                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <strong id="gw-acc-id" style="color: #fff; font-size: 1.15rem; font-family: monospace;">...</strong>
+                    <button type="button" class="btn btn-outline btn-sm" onclick="copyGatewayAccount()" style="padding: 0.25rem 0.65rem; font-size: 0.75rem;">Copy</button>
+                  </div>
+                </div>
+
+                <div>
+                  <span style="font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase;">Account Holder Name</span>
+                  <div id="gw-acc-name" style="color: #fff; font-weight: 600;">...</div>
+                </div>
+              </div>
+
+              <div style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5;" id="gw-instructions">
+                ...
+              </div>
+            </div>
+
+            <div id="gw-placeholder" style="text-align: center; padding: 2rem; color: var(--text-dim);">
+              <p>Select a payment method from the dropdown to view account details, QR code, and transfer instructions.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Transaction History Table -->
+      <div class="product-card" style="padding: 2rem; margin-top: 2.5rem;">
+        <h3 style="color: #fff; margin-bottom: 0.4rem;">// WALLET TRANSACTION HISTORY</h3>
+        <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 1.5rem;">
+          Real-time ledger of your top-up submissions, approvals, and order debit deductions.
+        </p>
+
+        <div class="table-responsive">
+          <table class="table-custom">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Type</th>
+                <th>Amount</th>
+                <th>Gateway / Description</th>
+                <th>Status</th>
+                <th>Proof</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody id="tx-tbody">
+              <tr>
+                <td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-dim);">
+                  Loading transactions...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-bottom" style="border: none; padding: 0; justify-content: space-between;">
+        <div>&copy; 2025 White X Store. Elite Undetected Software.</div>
+        <div>24/7 Discord & WhatsApp Customer Support</div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/assets/js/app.js"></script>
+  <script>
+    let paymentMethods = [];
+    let selectedMethod = null;
+    let screenshotBase64 = null;
+    let rates = { USD: 1, NPR: 134.50, INR: 84.00 };
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      setupCaptcha('captcha-slot');
+
+      // Authenticate
+      const userRes = await fetch('/api/auth/me');
+      const authData = await userRes.json();
+
+      if (!authData.authenticated || !authData.user) {
+        window.location.href = '/login.html?redirect=/wallet.html';
+        return;
+      }
+
+      updateBalanceCards(authData.user.wallet_balance);
+      await loadPaymentMethods();
+      await loadTransactionHistory();
+      initEvents();
+    });
+
+    function updateBalanceCards(nprBalance) {
+      const bal = parseFloat(nprBalance || 0);
+      document.getElementById('bal-npr').textContent = `NPR ${bal.toLocaleString()}`;
+
+      const usdVal = (bal / (rates.NPR || 134.50)).toFixed(2);
+      document.getElementById('bal-usd').textContent = `$${usdVal}`;
+
+      const inrVal = ((bal / (rates.NPR || 134.50)) * (rates.INR || 84.00)).toFixed(2);
+      document.getElementById('bal-inr').textContent = `₹${parseFloat(inrVal).toLocaleString()}`;
+    }
+
+    async function loadPaymentMethods() {
+      try {
+        const res = await fetch('/api/wallet/methods');
+        const data = await res.json();
+
+        if (data.success && data.methods) {
+          paymentMethods = data.methods;
+          if (data.rates) {
+            rates = data.rates;
+          }
+
+          const select = document.getElementById('topup-method');
+          select.innerHTML = '<option value="">-- Choose Gateway --</option>' + 
+            paymentMethods.map(m => `<option value="${m.id}">${escapeHtml(m.method_name)} (${m.currency})</option>`).join('');
+        }
+      } catch (err) {
+        console.error('Methods error:', err);
+      }
+    }
+
+    function initEvents() {
+      const methodSelect = document.getElementById('topup-method');
+      methodSelect.addEventListener('change', () => {
+        const id = parseInt(methodSelect.value, 10);
+        selectedMethod = paymentMethods.find(m => m.id === id);
+
+        if (!selectedMethod) {
+          document.getElementById('gw-details').style.display = 'none';
+          document.getElementById('gw-placeholder').style.display = 'block';
+          document.getElementById('gw-title').textContent = 'Select a Payment Method';
+          document.getElementById('topup-currency-display').value = 'NPR';
+          return;
+        }
+
+        document.getElementById('gw-title').textContent = selectedMethod.method_name;
+        document.getElementById('gw-acc-id').textContent = selectedMethod.account_id;
+        document.getElementById('gw-acc-name').textContent = selectedMethod.account_holder;
+        document.getElementById('gw-instructions').textContent = selectedMethod.instructions;
+        document.getElementById('topup-currency-display').value = selectedMethod.currency;
+
+        if (selectedMethod.qr_image) {
+          document.getElementById('gw-qr-img').src = selectedMethod.qr_image;
+          document.getElementById('gw-qr-wrap').style.display = 'block';
+        } else {
+          document.getElementById('gw-qr-wrap').style.display = 'none';
+        }
+
+        document.getElementById('gw-placeholder').style.display = 'none';
+        document.getElementById('gw-details').style.display = 'block';
+
+        updateEstimatedNpr();
+      });
+
+      // Amount input live conversion preview
+      document.getElementById('topup-amount').addEventListener('input', updateEstimatedNpr);
+
+      // Screenshot file upload preview & base64 conversion
+      document.getElementById('topup-screenshot').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) {
+          screenshotBase64 = null;
+          document.getElementById('screenshot-preview-box').style.display = 'none';
+          return;
+        }
+
+        if (file.size > 5 * 1024 * 1024) {
+          showToast('Image size exceeds 5MB limit.', 'error');
+          e.target.value = '';
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          screenshotBase64 = event.target.result;
+          document.getElementById('screenshot-preview-img').src = screenshotBase64;
+          document.getElementById('screenshot-preview-box').style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+      });
+
+      // Form submission
+      document.getElementById('topup-form').addEventListener('submit', handleTopupSubmit);
+    }
+
+    function updateEstimatedNpr() {
+      const amount = parseFloat(document.getElementById('topup-amount').value || 0);
+      const previewBox = document.getElementById('conversion-preview');
+
+      if (!selectedMethod || amount <= 0) {
+        previewBox.style.display = 'none';
+        return;
+      }
+
+      let nprEquiv = amount;
+      if (selectedMethod.currency === 'USD') {
+        nprEquiv = amount * (rates.NPR || 134.50);
+      } else if (selectedMethod.currency === 'INR') {
+        nprEquiv = (amount / (rates.INR || 84.00)) * (rates.NPR || 134.50);
+      }
+
+      document.getElementById('estimated-npr').textContent = `NPR ${Math.round(nprEquiv).toLocaleString()} (approx)`;
+      previewBox.style.display = 'block';
+    }
+
+    async function handleTopupSubmit(e) {
+      e.preventDefault();
+
+      if (!Store.isCaptchaPassed) {
+        showToast('Please check the human verification shield.', 'warning');
+        return;
+      }
+
+      if (!selectedMethod) {
+        showToast('Please select a payment method.', 'warning');
+        return;
+      }
+
+      if (!screenshotBase64) {
+        showToast('Please upload transaction screenshot.', 'warning');
+        return;
+      }
+
+      const amount = parseFloat(document.getElementById('topup-amount').value);
+      const ref = document.getElementById('topup-ref').value.trim();
+      const btn = document.getElementById('btn-topup-submit');
+
+      btn.disabled = true;
+      btn.textContent = 'Uploading & Submitting...';
+
+      try {
+        const res = await fetch('/api/wallet/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            amount,
+            currency: selectedMethod.currency,
+            payment_method_id: selectedMethod.id,
+            screenshot: screenshotBase64,
+            transaction_ref: ref
+          })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+          showToast(data.message || 'Deposit submission failed.', 'error');
+          btn.disabled = false;
+          btn.textContent = 'Submit Deposit for Approval ⚡';
+          return;
+        }
+
+        showToast('Deposit request submitted! An admin will verify and credit your balance.', 'success');
+        document.getElementById('topup-form').reset();
+        document.getElementById('screenshot-preview-box').style.display = 'none';
+        screenshotBase64 = null;
+        btn.disabled = false;
+        btn.textContent = 'Submit Deposit for Approval ⚡';
+
+        // Refresh transaction list
+        await loadTransactionHistory();
+
+      } catch (err) {
+        console.error('Submit error:', err);
+        showToast('Server error while submitting request.', 'error');
+        btn.disabled = false;
+        btn.textContent = 'Submit Deposit for Approval ⚡';
+      }
+    }
+
+    async function loadTransactionHistory() {
+      try {
+        const res = await fetch('/api/wallet/history');
+        const data = await res.json();
+
+        if (!data.success) return;
+
+        if (data.balance_npr !== undefined) {
+          updateBalanceCards(data.balance_npr);
+        }
+
+        const tbody = document.getElementById('tx-tbody');
+        const transactions = data.transactions || [];
+
+        if (transactions.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-dim);">
+                No wallet transactions recorded yet.
+              </td>
+            </tr>
+          `;
+          return;
+        }
+
+        tbody.innerHTML = transactions.map(t => {
+          let statusBadge = '<span class="badge badge-warning">Pending</span>';
+          if (t.status === 'approved') statusBadge = '<span class="badge badge-undetected">Approved</span>';
+          if (t.status === 'rejected') statusBadge = `<span class="badge badge-danger" title="${escapeHtml(t.reject_reason || '')}">Rejected</span>`;
+
+          const typeTag = t.type === 'credit' 
+            ? `<span style="color: #34d399; font-weight: bold;">+ CREDIT</span>` 
+            : `<span style="color: var(--danger); font-weight: bold;">- DEBIT</span>`;
+
+          const proofLink = t.screenshot 
+            ? `<a href="${t.screenshot}" target="_blank" style="color: var(--primary); font-size: 0.82rem;">View Proof ↗</a>` 
+            : `<span style="color: var(--text-dim);">-</span>`;
+
+          return `
+            <tr>
+              <td>#${t.id}</td>
+              <td>${typeTag}</td>
+              <td><strong>${parseFloat(t.amount).toLocaleString()} ${t.currency}</strong></td>
+              <td style="max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                ${escapeHtml(t.description || t.method_name || 'Wallet Transfer')}
+              </td>
+              <td>${statusBadge}</td>
+              <td>${proofLink}</td>
+              <td style="font-size: 0.82rem; color: var(--text-dim);">${new Date(t.created_at).toLocaleDateString()}</td>
+            </tr>
+          `;
+        }).join('');
+
+      } catch (err) {
+        console.error('History error:', err);
+      }
+    }
+
+    function copyGatewayAccount() {
+      if (selectedMethod) {
+        copyToClipboard(selectedMethod.account_id, 'Account details copied!');
+      }
+    }
+  </script>
+</body>
+</html>

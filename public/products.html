@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>All Gaming Cheats & VIP Software — White X Store</title>
+  <meta name="description" content="Explore our catalog of undetected game cheats, aimbot hacks, ESP radar, and private slots for Apex Legends, Valorant, PUBG, Call of Duty, and Fortnite.">
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22 font-family=%22Rajdhani%22 font-weight=%22900%22 fill=%22%23ef4444%22>X</text></svg>">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar" id="main-navbar">
+    <div class="container">
+      <a href="/index.html" class="nav-brand">
+        <div class="brand-logo-icon">X</div>
+        <div class="brand-text">WHITE <span>X</span> STORE</div>
+      </a>
+
+      <ul class="nav-links">
+        <li><a href="/index.html" class="nav-link">Home</a></li>
+        <li><a href="/products.html" class="nav-link active">Cheats & Keys</a></li>
+        <li><a href="/wallet.html" class="nav-link">Wallet Topup</a></li>
+        <li><a href="/dashboard.html" class="nav-link">Dashboard</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <div class="currency-selector" title="Select Currency">
+          <button type="button" class="currency-btn active" data-currency="USD">USD</button>
+          <button type="button" class="currency-btn" data-currency="NPR">NPR</button>
+          <button type="button" class="currency-btn" data-currency="INR">INR</button>
+        </div>
+
+        <div id="nav-auth-container">
+          <a href="/login.html" class="btn btn-outline btn-sm">Login</a>
+          <a href="/register.html" class="btn btn-primary btn-sm">Register</a>
+        </div>
+
+        <button class="mobile-toggle" aria-label="Toggle Navigation">☰</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Page Header -->
+  <header style="padding: 3rem 0 1.5rem; text-align: center;">
+    <div class="container">
+      <h1 style="font-size: 2.8rem; margin-bottom: 0.5rem;">
+        GAMING CHEATS & <span style="color: var(--primary);">LICENSE KEYS</span>
+      </h1>
+      <p style="max-width: 600px; margin: 0 auto; color: var(--text-muted);">
+        Select your game below. All licenses feature 100% automated instant dispatch to your client dashboard upon confirmation.
+      </p>
+
+      <!-- Category Filter Pills & Search Bar -->
+      <div style="margin-top: 2rem; display: flex; flex-direction: column; align-items: center; gap: 1.25rem;">
+        <div style="max-width: 450px; width: 100%;">
+          <input type="text" id="product-search-input" class="form-input" placeholder="🔍 Search game or cheat name..." style="text-align: center; border-radius: var(--radius-full);">
+        </div>
+
+        <div id="category-pills-container" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem;">
+          <button class="btn btn-primary btn-sm cat-pill" data-category="All">All Games</button>
+          <button class="btn btn-outline btn-sm cat-pill" data-category="Apex Legends">Apex Legends</button>
+          <button class="btn btn-outline btn-sm cat-pill" data-category="Valorant">Valorant</button>
+          <button class="btn btn-outline btn-sm cat-pill" data-category="PUBG Mobile">PUBG Mobile</button>
+          <button class="btn btn-outline btn-sm cat-pill" data-category="Warzone">Warzone</button>
+          <button class="btn btn-outline btn-sm cat-pill" data-category="Fortnite">Fortnite</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Products Grid -->
+  <main class="section">
+    <div class="container">
+      <div class="cards-grid" id="products-grid">
+        <div style="grid-column: 1/-1; text-align: center; padding: 4rem; color: var(--text-dim);">
+          Loading game software catalog...
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-bottom" style="border: none; padding: 0; justify-content: space-between;">
+        <div>&copy; 2025 White X Store. Elite Undetected Software.</div>
+        <div>Support: WhatsApp & Discord Active 24/7</div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/assets/js/app.js"></script>
+  <script>
+    let allProducts = [];
+    let currentCategory = 'All';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Check query param for initial category filter
+      const urlParams = new URLSearchParams(window.location.search);
+      const catParam = urlParams.get('cat');
+      if (catParam) {
+        currentCategory = catParam;
+      }
+      
+      initCategoryPills();
+      initSearch();
+      fetchProducts();
+    });
+
+    function initCategoryPills() {
+      const pills = document.querySelectorAll('.cat-pill');
+      pills.forEach(pill => {
+        const cat = pill.getAttribute('data-category');
+        if (cat.toLowerCase() === currentCategory.toLowerCase()) {
+          pill.className = 'btn btn-primary btn-sm cat-pill';
+        } else {
+          pill.className = 'btn btn-outline btn-sm cat-pill';
+        }
+
+        pill.addEventListener('click', () => {
+          currentCategory = cat;
+          pills.forEach(p => p.className = 'btn btn-outline btn-sm cat-pill');
+          pill.className = 'btn btn-primary btn-sm cat-pill';
+          filterAndRenderProducts();
+        });
+      });
+    }
+
+    function initSearch() {
+      const input = document.getElementById('product-search-input');
+      input.addEventListener('input', () => {
+        filterAndRenderProducts();
+      });
+    }
+
+    async function fetchProducts() {
+      try {
+        const res = await fetch('/api/products/list');
+        const data = await res.json();
+        if (data.success && data.products) {
+          allProducts = data.products;
+          filterAndRenderProducts();
+        }
+      } catch (err) {
+        document.getElementById('products-grid').innerHTML = `
+          <div style="grid-column:1/-1; text-align:center; color: var(--danger);">
+            Failed to connect to backend server.
+          </div>
+        `;
+      }
+    }
+
+    function filterAndRenderProducts() {
+      const query = (document.getElementById('product-search-input').value || '').toLowerCase().trim();
+      const grid = document.getElementById('products-grid');
+
+      let filtered = allProducts;
+
+      if (currentCategory !== 'All') {
+        filtered = filtered.filter(p => p.category.toLowerCase() === currentCategory.toLowerCase());
+      }
+
+      if (query) {
+        filtered = filtered.filter(p => 
+          p.name.toLowerCase().includes(query) || 
+          p.category.toLowerCase().includes(query) ||
+          p.description.toLowerCase().includes(query)
+        );
+      }
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `
+          <div style="grid-column: 1/-1; text-align: center; padding: 4rem; color: var(--text-dim);">
+            <h3>No products found matching your search.</h3>
+            <p style="margin-top: 0.5rem;">Try selecting "All Games" or clear your search term.</p>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = filtered.map(p => `
+        <div class="product-card" id="product-${p.id}">
+          <div class="product-card-img-wrap">
+            <img src="${p.image}" alt="${escapeHtml(p.name)}" class="product-card-img" loading="lazy">
+            <div class="product-card-badges">
+              <span class="badge badge-undetected"><span class="pulse-dot"></span> Undetected</span>
+              <span class="badge" style="background: rgba(0,0,0,0.7); color: #fff;">${escapeHtml(p.category)}</span>
+            </div>
+          </div>
+          <div class="product-card-body">
+            <div class="product-cat">${escapeHtml(p.category)}</div>
+            <h3 class="product-title">${escapeHtml(p.name)}</h3>
+            <p style="font-size: 0.88rem; margin-bottom: 0.6rem;">${escapeHtml(p.description.slice(0, 95))}...</p>
+            
+            <ul class="product-features-preview">
+              ${p.features_list.slice(0, 3).map(f => `<li>${escapeHtml(f)}</li>`).join('')}
+            </ul>
+
+            <div class="product-card-footer">
+              <div class="price-box">
+                <span class="price-lbl">Starting at</span>
+                <span class="price-amount" data-usd-price="${p.lowest_price_usd}">
+                  ${formatPrice(p.lowest_price_usd)}
+                </span>
+              </div>
+              <a href="/product.html?id=${p.id}" class="btn btn-primary btn-sm btn-glow">
+                Select Plan ⚡
+              </a>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+  </script>
+</body>
+</html>
