@@ -37,7 +37,7 @@ export default async function handler(req, res) {
 
     const insertRes = await query(
       `INSERT INTO products (name, category, description, features, image, status, featured, sort_order)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, COALESCE(NULLIF($8::int, 0), (SELECT COALESCE(MAX(sort_order), 0) + 1 FROM products)))
        RETURNING id, name, category, description, features, image, status, featured, sort_order, created_at`,
       [
         String(name).trim(),

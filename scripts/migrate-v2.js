@@ -14,6 +14,23 @@ async function migrate() {
     await client.connect();
     console.log('Connected to Neon PostgreSQL for migration...');
 
+    // 0. Products sort_order column
+    await client.query(`
+      ALTER TABLE products ADD COLUMN IF NOT EXISTS sort_order INT DEFAULT 0;
+    `);
+    // Backfill: assign sequential sort_order to existing products that have 0 or NULL
+    await client.query(`
+      WITH ranked AS (
+        SELECT id, ROW_NUMBER() OVER (ORDER BY id ASC) AS rn
+        FROM products
+        WHERE sort_order IS NULL OR sort_order = 0
+      )
+      UPDATE products SET sort_order = ranked.rn
+      FROM ranked
+      WHERE products.id = ranked.id;
+    `);
+    console.log('✅ products.sort_order column ready and backfilled.');
+
     // 1. Payment Methods additional columns
     await client.query(`
       ALTER TABLE payment_methods ADD COLUMN IF NOT EXISTS logo_url TEXT;
