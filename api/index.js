@@ -94,6 +94,16 @@ const routes = {
 };
 
 export default async function handler(req, res) {
+  // 1. CORS & Response helper headers
+  res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Cookie');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   // Ensure helper methods on res for environments where they may be missing
   if (!res.status) {
     res.status = (code) => {
@@ -116,13 +126,24 @@ export default async function handler(req, res) {
   // Attach and merge query params
   req.query = { ...parsedUrl.query, ...(req.query || {}) };
 
-  // Resolve target pathname from query param (__path), x-matched-path header, or URL
+  // Resolve target pathname using multiple strategies
   let pathname = '';
-  if (req.query.__path !== undefined && req.query.__path !== '') {
+
+  // Strategy A: Vercel catch-all [...path] param (array or string)
+  if (req.query.path) {
+    const pathSegments = Array.isArray(req.query.path) ? req.query.path.join('/') : req.query.path;
+    pathname = '/api/' + pathSegments;
+  }
+  // Strategy B: Rewrite query param (__path)
+  else if (req.query.__path !== undefined && req.query.__path !== '') {
     pathname = '/api/' + req.query.__path;
-  } else if (req.headers['x-matched-path'] && req.headers['x-matched-path'] !== '/api/index') {
+  }
+  // Strategy C: Vercel x-matched-path header (when not matching dynamic pattern literally)
+  else if (req.headers['x-matched-path'] && !req.headers['x-matched-path'].includes('[...path]') && req.headers['x-matched-path'] !== '/api/index') {
     pathname = req.headers['x-matched-path'];
-  } else {
+  }
+  // Strategy D: Direct URL path
+  else {
     pathname = parsedUrl.pathname || '/api';
   }
 
@@ -133,7 +154,7 @@ export default async function handler(req, res) {
   }
 
   // Health check
-  if (pathname === '/api' || pathname === '/api/index' || pathname === '/api/index.js') {
+  if (pathname === '/api' || pathname === '/api/index' || pathname === '/api/index.js' || pathname === '/api/[...path]') {
     return res.status(200).json({
       status: 'online',
       service: 'White X Store API',
@@ -145,14 +166,24 @@ export default async function handler(req, res) {
   // Check static route match
   const matchedHandler = routes[pathname];
   if (matchedHandler) {
-    return matchedHandler(req, res);
+    try {
+      return await matchedHandler(req, res);
+    } catch (err) {
+      console.error(`Handler error for ${pathname}:`, err);
+      return res.status(500).json({ success: false, message: err.message || 'Internal Server Error' });
+    }
   }
 
   // Check dynamic route: /api/products/:id
   const productMatch = pathname.match(/^\/api\/products\/([^/]+)$/);
   if (productMatch) {
     req.query.id = productMatch[1];
-    return productDetail(req, res);
+    try {
+      return await productDetail(req, res);
+    } catch (err) {
+      console.error(`Product detail error for ${pathname}:`, err);
+      return res.status(500).json({ success: false, message: err.message || 'Failed to load product' });
+    }
   }
 
   return res.status(404).json({
