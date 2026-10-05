@@ -112,25 +112,34 @@ export default async function handler(req, res) {
   req.headers = req.headers || {};
 
   const parsedUrl = url.parse(req.url, true);
-  let pathname = parsedUrl.pathname || '/api';
-  // Strip trailing slash if present
+
+  // Attach and merge query params
+  req.query = { ...parsedUrl.query, ...(req.query || {}) };
+
+  // Resolve target pathname from query param (__path), x-matched-path header, or URL
+  let pathname = '';
+  if (req.query.__path !== undefined && req.query.__path !== '') {
+    pathname = '/api/' + req.query.__path;
+  } else if (req.headers['x-matched-path'] && req.headers['x-matched-path'] !== '/api/index') {
+    pathname = req.headers['x-matched-path'];
+  } else {
+    pathname = parsedUrl.pathname || '/api';
+  }
+
+  // Clean trailing slashes, duplicate slashes, and query remnants
+  pathname = pathname.split('?')[0].replace(/\/+/g, '/');
   if (pathname.length > 1 && pathname.endsWith('/')) {
     pathname = pathname.slice(0, -1);
   }
 
   // Health check
-  if (pathname === '/api' || pathname === '/api/') {
+  if (pathname === '/api' || pathname === '/api/index' || pathname === '/api/index.js') {
     return res.status(200).json({
       status: 'online',
       service: 'White X Store API',
       functions: 'consolidated-single-lambda',
       timestamp: new Date().toISOString()
     });
-  }
-
-  // Attach query params if not already attached
-  if (!req.query) {
-    req.query = { ...parsedUrl.query };
   }
 
   // Check static route match
