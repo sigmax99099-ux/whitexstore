@@ -1,25 +1,104 @@
 /**
  * WHITE X STORE — CLIENT APPLICATION LOGIC
- * Manages Auth State, Currency Conversion, Toasts, Intro, and Widgets
+ * Manages Auth State, Theme Switcher, Currency Conversion, Toasts, 3D Tilt, Intro, and Widgets
  */
 
 const Store = {
+  theme: localStorage.getItem('wx_theme') || 'dark',
   currency: localStorage.getItem('wx_currency') || 'USD',
   rates: { USD: 1, NPR: 134.50, INR: 84.00 },
   user: null,
   isCaptchaPassed: false,
-  siteSettings: {}
+  siteSettings: {
+    whatsapp_number: '+9779800000000',
+    site_notice: '',
+    min_topup_npr: 200
+  }
 };
+
+// Apply initial theme immediately before DOM to avoid flicker
+document.documentElement.setAttribute('data-theme', Store.theme);
 
 // Initialize Application
 document.addEventListener('DOMContentLoaded', async () => {
+  initThemeToggle();
   initIntroScreen();
   initCurrencySelector();
   initMobileNav();
+  init3DTilt();
   await checkAuth();
   await loadRatesAndSettings();
   initWhatsAppWidget();
 });
+
+/* ==============================================================
+   DAY / NIGHT THEME TOGGLE (SUN / MOON)
+   ============================================================== */
+function initThemeToggle() {
+  document.documentElement.setAttribute('data-theme', Store.theme);
+  document.body.setAttribute('data-theme', Store.theme);
+
+  // If a theme toggle button already exists, hook it up. Otherwise inject into navbar
+  let btn = document.getElementById('theme-toggle-btn');
+  if (!btn) {
+    const navActions = document.querySelector('.nav-actions');
+    if (navActions) {
+      btn = document.createElement('button');
+      btn.id = 'theme-toggle-btn';
+      btn.className = 'btn-theme-toggle';
+      btn.setAttribute('aria-label', 'Toggle Day/Night Theme');
+      btn.title = 'Switch Day/Night Theme';
+      navActions.insertBefore(btn, navActions.firstChild);
+    }
+  }
+
+  if (btn) {
+    updateThemeToggleUI(btn);
+    btn.addEventListener('click', () => {
+      toggleTheme();
+    });
+  }
+}
+
+function toggleTheme() {
+  Store.theme = Store.theme === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('wx_theme', Store.theme);
+  document.documentElement.setAttribute('data-theme', Store.theme);
+  document.body.setAttribute('data-theme', Store.theme);
+
+  const btn = document.getElementById('theme-toggle-btn');
+  if (btn) updateThemeToggleUI(btn);
+
+  window.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme: Store.theme } }));
+}
+
+function updateThemeToggleUI(btn) {
+  if (Store.theme === 'light') {
+    btn.innerHTML = `
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+      </svg>
+      <span class="theme-lbl-text" style="font-size:0.8rem; font-weight:600; margin-left:4px;">Night</span>
+    `;
+    btn.title = 'Switch to Dark Mode';
+  } else {
+    btn.innerHTML = `
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="5"></circle>
+        <line x1="12" y1="1" x2="12" y2="3"></line>
+        <line x1="12" y1="21" x2="12" y2="23"></line>
+        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+        <line x1="1" y1="12" x2="3" y2="12"></line>
+        <line x1="21" y1="12" x2="23" y2="12"></line>
+        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+      </svg>
+      <span class="theme-lbl-text" style="font-size:0.8rem; font-weight:600; margin-left:4px;">Day</span>
+    `;
+    btn.title = 'Switch to Light Mode';
+  }
+}
 
 /* ==============================================================
    INTRO SCREEN
@@ -100,18 +179,23 @@ function updateAllPricesOnPage() {
 }
 
 /* ==============================================================
-   SETTINGS & RATES LOADER
+   SETTINGS & RATES LOADER (REAL-TIME SYNC)
    ============================================================== */
 async function loadRatesAndSettings() {
   try {
-    const res = await fetch('/api/products/list');
+    const res = await fetch('/api/settings');
     if (res.ok) {
       const data = await res.json();
       if (data.rates) {
         Store.rates = data.rates;
         updateAllPricesOnPage();
       }
+      if (data.whatsapp_number) {
+        Store.siteSettings.whatsapp_number = data.whatsapp_number;
+        updateWhatsAppLinks(data.whatsapp_number);
+      }
       if (data.site_notice) {
+        Store.siteSettings.site_notice = data.site_notice;
         const noticeEl = document.getElementById('site-banner-notice');
         if (noticeEl) {
           noticeEl.textContent = data.site_notice;
@@ -120,7 +204,7 @@ async function loadRatesAndSettings() {
       }
     }
   } catch (err) {
-    console.warn('Could not fetch rates:', err);
+    console.warn('Could not fetch settings:', err);
   }
 }
 
@@ -199,13 +283,17 @@ async function handleLogout() {
 /* ==============================================================
    TOAST NOTIFICATIONS
    ============================================================== */
-function showToast(message, type = 'info', duration = 4000) {
+function showToast(message, type = 'info') {
   let container = document.getElementById('toast-container');
   if (!container) {
     container = document.createElement('div');
     container.id = 'toast-container';
+    container.className = 'toast-container';
     document.body.appendChild(container);
   }
+
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
 
   const icons = {
     success: '✓',
@@ -214,75 +302,73 @@ function showToast(message, type = 'info', duration = 4000) {
     info: 'ℹ'
   };
 
-  const toast = document.createElement('div');
-  toast.className = `toast toast-${type}`;
   toast.innerHTML = `
-    <div style="font-weight: 800; font-size: 1.1rem;">${icons[type] || '•'}</div>
-    <div style="flex: 1;">${escapeHtml(message)}</div>
+    <span class="toast-icon">${icons[type] || 'ℹ'}</span>
+    <div class="toast-msg">${escapeHtml(message)}</div>
   `;
 
   container.appendChild(toast);
 
   setTimeout(() => {
-    toast.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-    toast.style.opacity = '0';
-    toast.style.transform = 'translateX(50px)';
-    setTimeout(() => toast.remove(), 300);
-  }, duration);
+    toast.classList.add('hide');
+    setTimeout(() => {
+      toast.remove();
+    }, 300);
+  }, 4000);
 }
 
 /* ==============================================================
-   FAKE CAPTCHA WIDGET
+   CAPTCHA VERIFICATION COMPONENT
    ============================================================== */
-function setupCaptcha(containerId, onVerified) {
+function setupCaptcha(containerId, onSuccess) {
   const container = document.getElementById(containerId);
   if (!container) return;
 
+  const n1 = Math.floor(Math.random() * 8) + 1;
+  const n2 = Math.floor(Math.random() * 8) + 1;
+  const correct = n1 + n2;
+
   container.innerHTML = `
-    <div class="captcha-box">
-      <div class="captcha-left" id="captcha-trigger">
-        <div class="captcha-check" id="captcha-box-icon"></div>
-        <span class="captcha-label">I am a human gamer</span>
+    <div class="captcha-box" style="display:flex; align-items:center; gap:0.75rem; background:var(--bg-card); border:1px solid var(--bg-card-border); padding:0.6rem 0.85rem; border-radius:var(--radius-md); margin-bottom:1rem;">
+      <div style="font-size:0.9rem; font-weight:600; color:var(--text-main);">
+        Security Check: <span style="color:var(--primary); font-family:var(--font-heading); font-size:1.1rem;">${n1} + ${n2} = ?</span>
       </div>
-      <div class="captcha-right">
-        <span class="captcha-logo-txt">WHITE X</span>
-        <span>Secure Shield</span>
-      </div>
+      <input type="number" id="captcha-input" class="form-input" style="width:70px; padding:0.4rem; text-align:center;" placeholder="Ans" required>
+      <span id="captcha-status" style="font-size:0.85rem;"></span>
     </div>
   `;
 
-  const trigger = document.getElementById('captcha-trigger');
-  const boxIcon = document.getElementById('captcha-box-icon');
-
-  trigger.addEventListener('click', () => {
-    if (Store.isCaptchaPassed) return;
-
-    boxIcon.classList.add('loading');
-
-    setTimeout(() => {
-      boxIcon.classList.remove('loading');
-      boxIcon.classList.add('checked');
-      boxIcon.innerHTML = `<span style="color: #fff; font-size: 12px; font-weight: bold;">✓</span>`;
+  const input = document.getElementById('captcha-input');
+  input.addEventListener('input', () => {
+    const val = parseInt(input.value, 10);
+    const status = document.getElementById('captcha-status');
+    if (val === correct) {
       Store.isCaptchaPassed = true;
-      if (typeof onVerified === 'function') {
-        onVerified(true);
-      }
-    }, 700);
+      status.innerHTML = '<span style="color:var(--success)">✓ Verified</span>';
+      input.disabled = true;
+      if (typeof onSuccess === 'function') onSuccess();
+    } else {
+      Store.isCaptchaPassed = false;
+      status.innerHTML = '';
+    }
   });
 }
 
 /* ==============================================================
-   WHATSAPP FLOATING BUTTON
+   WHATSAPP FLOATING BUTTON (REAL-TIME SYNCED)
    ============================================================== */
 function initWhatsAppWidget() {
+  const phone = Store.siteSettings.whatsapp_number || '+9779800000000';
+  updateWhatsAppLinks(phone);
+
   if (document.getElementById('whatsapp-widget')) return;
 
-  const phone = '+9779800000000';
+  const cleanNumber = phone.replace(/[^0-9]/g, '');
   const message = encodeURIComponent('Hello White X Store, I need assistance with an order/key.');
 
   const widget = document.createElement('a');
   widget.id = 'whatsapp-widget';
-  widget.href = `https://wa.me/${phone.replace(/[^0-9]/g, '')}?text=${message}`;
+  widget.href = `https://wa.me/${cleanNumber}?text=${message}`;
   widget.target = '_blank';
   widget.rel = 'noopener noreferrer';
   widget.className = 'whatsapp-float';
@@ -296,6 +382,59 @@ function initWhatsAppWidget() {
   `;
 
   document.body.appendChild(widget);
+}
+
+function updateWhatsAppLinks(phoneNumber) {
+  if (!phoneNumber) return;
+  const cleanNumber = phoneNumber.replace(/[^0-9]/g, '');
+  const message = encodeURIComponent('Hello White X Store, I need assistance with an order/key.');
+  const waUrl = `https://wa.me/${cleanNumber}?text=${message}`;
+
+  // Update floating widget
+  const widget = document.getElementById('whatsapp-widget');
+  if (widget) {
+    widget.href = waUrl;
+  }
+
+  // Update all in-page links (footer, support cards, modals)
+  document.querySelectorAll('.whatsapp-link, a[href*="wa.me"]').forEach(link => {
+    link.href = waUrl;
+    if (link.classList.contains('whatsapp-text-display')) {
+      link.textContent = phoneNumber;
+    }
+  });
+}
+
+/* ==============================================================
+   3D CARD TILT EFFECT (60FPS SMOOTH PARALLAX)
+   ============================================================== */
+function init3DTilt() {
+  const cards = document.querySelectorAll('.product-card, .feature-card, .tilt-card');
+  cards.forEach(card => {
+    card.addEventListener('mousemove', handleCardTilt);
+    card.addEventListener('mouseleave', resetCardTilt);
+  });
+}
+
+function handleCardTilt(e) {
+  const card = e.currentTarget;
+  const rect = card.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  const centerX = rect.width / 2;
+  const centerY = rect.height / 2;
+
+  const rotateX = ((y - centerY) / centerY) * -7;
+  const rotateY = ((x - centerX) / centerX) * 7;
+
+  card.style.transform = `perspective(1000px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) translateY(-4px)`;
+  card.style.transition = 'transform 0.1s ease-out';
+}
+
+function resetCardTilt(e) {
+  const card = e.currentTarget;
+  card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0px)';
+  card.style.transition = 'transform 0.4s ease-out';
 }
 
 /* ==============================================================
@@ -354,3 +493,6 @@ window.setupCaptcha = setupCaptcha;
 window.copyToClipboard = copyToClipboard;
 window.handleLogout = handleLogout;
 window.escapeHtml = escapeHtml;
+window.toggleTheme = toggleTheme;
+window.updateWhatsAppLinks = updateWhatsAppLinks;
+window.init3DTilt = init3DTilt;

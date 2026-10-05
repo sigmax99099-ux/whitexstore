@@ -48,6 +48,11 @@
           <button type="button" class="currency-btn" data-currency="INR">INR</button>
         </div>
 
+        <!-- Theme Toggle Button -->
+        <button type="button" class="btn-theme-toggle" id="theme-toggle-btn" title="Toggle Day/Night Mode" aria-label="Toggle Theme">
+          🌙
+        </button>
+
         <!-- Auth state dynamic slot -->
         <div id="nav-auth-container">
           <a href="/login.html" class="btn btn-outline btn-sm">Login</a>
@@ -60,7 +65,8 @@
   </nav>
 
   <!-- Hero Section -->
-  <header class="hero" id="hero-section">
+  <header class="hero" id="hero-section" style="position: relative; overflow: hidden;">
+    <canvas id="hero3dCanvas"></canvas>
     <div class="container">
       <div class="hero-content">
         <div class="hero-tag">
@@ -255,6 +261,7 @@
 
   <!-- Scripts -->
   <script src="/assets/js/app.js"></script>
+  <script src="/assets/js/3d-scene.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
       loadFeaturedProducts();

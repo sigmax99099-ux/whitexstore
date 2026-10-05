@@ -51,7 +51,7 @@ export default async function handler(req, res) {
 
     // Also fetch current exchange rates for client currency calculations
     const settingsRes = await query(
-      "SELECT setting_key, setting_value FROM settings WHERE setting_key IN ('npr_usd_rate', 'inr_usd_rate', 'site_notice')"
+      "SELECT setting_key, setting_value FROM settings WHERE setting_key IN ('npr_usd_rate', 'inr_usd_rate', 'site_notice', 'whatsapp_number')"
     );
 
     const settingsMap = {};
@@ -69,6 +69,7 @@ export default async function handler(req, res) {
       success: true,
       rates,
       site_notice: settingsMap.site_notice || '',
+      whatsapp_number: settingsMap.whatsapp_number || '+9779800000000',
       products: productsRes.rows.map(prod => ({
         ...prod,
         lowest_price_usd: parseFloat(prod.lowest_price_usd).toFixed(2),

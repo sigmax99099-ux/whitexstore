@@ -45,8 +45,17 @@ import adminSettings from '../server/admin/settings.js';
 import adminResellerPrices from '../server/admin/reseller-prices.js';
 import adminResets from '../server/admin/resets.js';
 import adminKeyLicenseCheck from '../server/admin/keylicense-check.js';
+import adminPaymentMethods from '../server/admin/payment-methods.js';
+import adminSupplierApis from '../server/admin/supplier-apis.js';
+import adminSupplierVariants from '../server/admin/supplier-variants.js';
+
+// Public Settings
+import publicSettings from '../server/settings.js';
 
 const routes = {
+  // Public Settings
+  '/api/settings': publicSettings,
+
   // Auth
   '/api/auth/register': authRegister,
   '/api/auth/login': authLogin,
@@ -91,6 +100,9 @@ const routes = {
   '/api/admin/reseller-prices': adminResellerPrices,
   '/api/admin/resets': adminResets,
   '/api/admin/keylicense-check': adminKeyLicenseCheck,
+  '/api/admin/payment-methods': adminPaymentMethods,
+  '/api/admin/supplier-apis': adminSupplierApis,
+  '/api/admin/supplier-variants': adminSupplierVariants,
 };
 
 export default async function handler(req, res) {

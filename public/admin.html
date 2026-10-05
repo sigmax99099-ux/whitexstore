@@ -72,9 +72,11 @@
         <li class="admin-nav-item"><button class="active" data-tab="tab-dashboard">📊 Dashboard</button></li>
         <li class="admin-nav-item"><button data-tab="tab-orders">📦 Orders</button></li>
         <li class="admin-nav-item"><button data-tab="tab-wallets">💳 Wallets & Deposits</button></li>
+        <li class="admin-nav-item"><button data-tab="tab-payment-methods">🏦 Payment Gateways</button></li>
         <li class="admin-nav-item"><button data-tab="tab-products">🎮 Products</button></li>
         <li class="admin-nav-item"><button data-tab="tab-plans">⏱️ Plans & Pricing</button></li>
         <li class="admin-nav-item"><button data-tab="tab-keys">🔑 License Keys</button></li>
+        <li class="admin-nav-item"><button data-tab="tab-supplier-apis">🌐 Supplier APIs & Mapping</button></li>
         <li class="admin-nav-item"><button data-tab="tab-users">👥 Users & Resellers</button></li>
         <li class="admin-nav-item"><button data-tab="tab-reseller-prices">🏷️ Reseller Prices</button></li>
         <li class="admin-nav-item"><button data-tab="tab-settings">⚙️ Settings & API</button></li>
@@ -202,6 +204,35 @@
         </div>
       </section>
 
+      <!-- TAB: PAYMENT METHODS -->
+      <section id="tab-payment-methods" class="admin-tab-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+          <h2 style="color: #fff;">// PAYMENT METHODS & GATEWAYS</h2>
+          <button class="btn btn-primary btn-sm" onclick="openAddPaymentMethodModal()">+ Add Payment Method</button>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table-custom">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Logo / QR</th>
+                <th>Name & Identifier</th>
+                <th>API Key / Secret</th>
+                <th>Min Amount</th>
+                <th>Sort</th>
+                <th>Visibility</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="admin-payment-methods-tbody">
+              <tr><td colspan="9" style="text-align: center; padding: 2rem;">Loading payment methods...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
       <!-- TAB 4: PRODUCTS -->
       <section id="tab-products" class="admin-tab-content">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
@@ -294,6 +325,57 @@
             </thead>
             <tbody id="admin-keys-tbody">
               <tr><td colspan="7" style="text-align: center; padding: 2rem;">Loading keys...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- TAB: SUPPLIER APIS & VARIANT MAPPING -->
+      <section id="tab-supplier-apis" class="admin-tab-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+          <h2 style="color: #fff;">// SUPPLIER APIS & LICENSE GATEWAYS</h2>
+          <button class="btn btn-primary btn-sm" onclick="openAddSupplierApiModal()">+ Add Supplier API</button>
+        </div>
+
+        <div class="table-responsive" style="margin-bottom: 2.5rem;">
+          <table class="table-custom">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Supplier Name</th>
+                <th>API Endpoint</th>
+                <th>API Type</th>
+                <th>API Key / Token</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="admin-supplier-apis-tbody">
+              <tr><td colspan="7" style="text-align: center; padding: 2rem;">Loading supplier APIs...</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+          <h2 style="color: #fff;">// PLAN TO SUPPLIER VARIANT MAPPING</h2>
+          <button class="btn btn-primary btn-sm" onclick="openAddVariantMappingModal()">+ Add Variant Mapping</button>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table-custom">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Supplier API</th>
+                <th>Product & Plan</th>
+                <th>Supplier Variant ID</th>
+                <th>Variant Name</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="admin-supplier-variants-tbody">
+              <tr><td colspan="7" style="text-align: center; padding: 2rem;">Loading variant mappings...</td></tr>
             </tbody>
           </table>
         </div>
@@ -453,56 +535,69 @@
 
   <!-- MODALS -->
 
-  <!-- 1. Add Product Modal -->
+  <!-- 1. Add Product Modal (Desktop Responsive) -->
   <div id="modal-add-product" class="modal-backdrop">
-    <div class="modal-box" style="max-width: 540px;">
+    <div class="modal-box" style="max-width: 680px; width: 95%;">
       <button class="modal-close" onclick="closeModal('modal-add-product')">✕</button>
       <h3 style="color: #fff; margin-bottom: 1.25rem;">+ Add Cheat Software</h3>
       <form id="form-add-product">
-        <div class="form-group">
-          <label class="form-label">Cheat / Product Name</label>
-          <input type="text" id="prod-name" class="form-input" required placeholder="e.g. Apex Legends - Phantom VIP">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;" class="admin-modal-grid">
+          <div class="form-group">
+            <label class="form-label">Cheat / Product Name *</label>
+            <input type="text" id="prod-name" class="form-input" required placeholder="e.g. Apex Legends - Phantom VIP">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Game Category *</label>
+            <input type="text" id="prod-cat" class="form-input" required placeholder="e.g. Apex Legends, Valorant">
+          </div>
         </div>
+
         <div class="form-group">
-          <label class="form-label">Game Category</label>
-          <input type="text" id="prod-cat" class="form-input" required placeholder="e.g. Apex Legends">
+          <label class="form-label">Description *</label>
+          <textarea id="prod-desc" class="form-textarea" style="min-height: 80px;" required placeholder="Description of the bypass and features..."></textarea>
         </div>
+
         <div class="form-group">
-          <label class="form-label">Description</label>
-          <textarea id="prod-desc" class="form-textarea" required placeholder="Description of the bypass..."></textarea>
+          <label class="form-label">Features List (One feature per line)</label>
+          <textarea id="prod-features" class="form-textarea" style="min-height: 90px;" placeholder="Prediction Aimbot&#10;Visible Check ESP&#10;Stream Proof / Undetected Driver"></textarea>
         </div>
+
         <div class="form-group">
-          <label class="form-label">Features (one per line)</label>
-          <textarea id="prod-features" class="form-textarea" placeholder="Prediction Aimbot&#10;Visible Check ESP&#10;Stream Proof"></textarea>
+          <label class="form-label">Product Image (Upload File or Paste Image URL)</label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;" class="admin-modal-grid">
+            <input type="file" id="prod-img-file" class="form-input" accept="image/*" style="padding: 0.45rem;">
+            <input type="text" id="prod-img-url" class="form-input" placeholder="https://.../cover.png">
+          </div>
+          <div id="prod-img-preview" style="display: none; margin-top: 0.6rem; text-align: center;">
+            <img id="prod-preview-el" src="" alt="Image Preview" style="max-height: 80px; border-radius: 6px; border: 1px solid var(--border-color); object-fit: cover;">
+          </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Product Image (File or Cloudinary/URL)</label>
-          <input type="file" id="prod-img-file" class="form-input" accept="image/*" style="padding: 0.5rem; margin-bottom: 0.5rem;">
-          <input type="url" id="prod-img-url" class="form-input" placeholder="Or paste image URL...">
-        </div>
-        <div style="display: flex; gap: 1rem; margin-bottom: 1.25rem;">
+
+        <div style="display: flex; gap: 1.5rem; margin-bottom: 1.25rem; align-items: center;">
           <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.88rem; cursor: pointer;">
-            <input type="checkbox" id="prod-featured"> Featured on Homepage
+            <input type="checkbox" id="prod-featured"> ⭐ Featured on Homepage
           </label>
         </div>
-        <button type="submit" class="btn btn-primary btn-block">Create Product ⚡</button>
+        <button type="submit" id="btn-save-product" class="btn btn-primary btn-block btn-lg btn-glow">Create Product ⚡</button>
       </form>
     </div>
   </div>
 
   <!-- 2. Add Plan Modal -->
   <div id="modal-add-plan" class="modal-backdrop">
-    <div class="modal-box" style="max-width: 480px;">
+    <div class="modal-box" style="max-width: 540px; width: 95%;">
       <button class="modal-close" onclick="closeModal('modal-add-plan')">✕</button>
       <h3 style="color: #fff; margin-bottom: 1.25rem;">+ Add Plan to Product</h3>
       <form id="form-add-plan">
         <div class="form-group">
-          <label class="form-label">Product</label>
-          <select id="plan-product-select" class="form-select" required></select>
+          <label class="form-label">Select Target Product *</label>
+          <select id="plan-product-select" class="form-select" required>
+            <option value="">Loading products...</option>
+          </select>
         </div>
         <div class="form-group">
-          <label class="form-label">Plan Name</label>
-          <input type="text" id="plan-name" class="form-input" required placeholder="e.g. 7 Days Access">
+          <label class="form-label">Plan Name *</label>
+          <input type="text" id="plan-name" class="form-input" required placeholder="e.g. 7 Days Access, 30 Days VIP">
         </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
           <div class="form-group">
@@ -513,48 +608,204 @@
             </select>
           </div>
           <div class="form-group">
-            <label class="form-label">Number of Days/Hours</label>
+            <label class="form-label">Duration Count *</label>
             <input type="number" id="plan-days" class="form-input" required min="1" value="7">
           </div>
         </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
           <div class="form-group">
-            <label class="form-label">Price USD</label>
+            <label class="form-label">Price (USD) *</label>
             <input type="number" id="plan-price" class="form-input" step="any" required placeholder="19.99">
           </div>
           <div class="form-group">
-            <label class="form-label">Discount %</label>
+            <label class="form-label">Discount % (Optional)</label>
             <input type="number" id="plan-discount" class="form-input" min="0" max="100" value="0">
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label">KeyLicense Supplier Variant ID (Optional)</label>
-          <input type="text" id="plan-supplier-variant" class="form-input" placeholder="e.g. 1024">
+          <label class="form-label">KeyLicense / Supplier Variant ID (Optional)</label>
+          <input type="text" id="plan-supplier-variant" class="form-input" placeholder="e.g. 1024 or leave blank for stock">
         </div>
-        <button type="submit" class="btn btn-primary btn-block">Add Plan ⚡</button>
+        <button type="submit" id="btn-save-plan" class="btn btn-primary btn-block btn-lg btn-glow">Add Plan ⚡</button>
       </form>
     </div>
   </div>
 
   <!-- 3. Add Keys Modal -->
   <div id="modal-add-keys" class="modal-backdrop">
-    <div class="modal-box" style="max-width: 520px;">
+    <div class="modal-box" style="max-width: 560px; width: 95%;">
       <button class="modal-close" onclick="closeModal('modal-add-keys')">✕</button>
       <h3 style="color: #fff; margin-bottom: 1.25rem;">+ Bulk Import License Keys</h3>
       <form id="form-add-keys">
         <div class="form-group">
-          <label class="form-label">Product</label>
+          <label class="form-label">Select Product *</label>
           <select id="keys-import-product" class="form-select" required></select>
         </div>
         <div class="form-group">
-          <label class="form-label">Key Duration Days</label>
+          <label class="form-label">Key Duration Days *</label>
           <input type="number" id="keys-import-days" class="form-input" value="1" min="1" required>
         </div>
         <div class="form-group">
-          <label class="form-label">License Keys (One per line)</label>
-          <textarea id="keys-import-text" class="form-textarea" style="min-height: 180px; font-family: monospace;" required placeholder="WHITEX-APEX-1D-XXXX&#10;WHITEX-APEX-1D-YYYY&#10;WHITEX-APEX-1D-ZZZZ"></textarea>
+          <label class="form-label">License Keys (One per line) *</label>
+          <textarea id="keys-import-text" class="form-textarea" style="min-height: 160px; font-family: monospace;" required placeholder="WHITEX-KEY-1D-XXXX&#10;WHITEX-KEY-1D-YYYY&#10;WHITEX-KEY-1D-ZZZZ"></textarea>
         </div>
-        <button type="submit" class="btn btn-primary btn-block">Import License Keys ⚡</button>
+        <button type="submit" class="btn btn-primary btn-block btn-lg btn-glow">Import License Keys ⚡</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 4. Payment Method Modal -->
+  <div id="modal-payment-method" class="modal-backdrop">
+    <div class="modal-box" style="max-width: 580px; width: 95%;">
+      <button class="modal-close" onclick="closeModal('modal-payment-method')">✕</button>
+      <h3 id="pm-modal-title" style="color: #fff; margin-bottom: 1.25rem;">+ Add Payment Method</h3>
+      <form id="form-payment-method">
+        <input type="hidden" id="pm-id">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;" class="admin-modal-grid">
+          <div class="form-group">
+            <label class="form-label">Method Name *</label>
+            <input type="text" id="pm-name" class="form-input" required placeholder="e.g. eSewa, Khalti, Binance Pay">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Identifier / Account No *</label>
+            <input type="text" id="pm-identifier" class="form-input" required placeholder="e.g. 98XXXXXXXX / ID">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;" class="admin-modal-grid">
+          <div class="form-group">
+            <label class="form-label">QR Code URL / Image Path</label>
+            <input type="text" id="pm-qrcode" class="form-input" placeholder="https://.../qr.png">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Logo / Icon URL</label>
+            <input type="text" id="pm-logo" class="form-input" placeholder="https://.../logo.png">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">API Key / Secret Token (Optional)</label>
+          <input type="text" id="pm-apikey" class="form-input" placeholder="API key or secret for auto verification">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label class="form-label">Minimum Deposit Amount (NPR)</label>
+            <input type="number" id="pm-min" class="form-input" value="100" min="0">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Sort Display Order</label>
+            <input type="number" id="pm-sort" class="form-input" value="0">
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 1.5rem; margin-bottom: 1.25rem; flex-wrap: wrap;">
+          <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.88rem; cursor: pointer;">
+            <input type="checkbox" id="pm-checkout-visible" checked> Show in Direct Checkout
+          </label>
+          <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.88rem; cursor: pointer;">
+            <input type="checkbox" id="pm-is-active" checked> Active / Enabled
+          </label>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block btn-lg btn-glow">Save Payment Gateway 💾</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 5. Supplier API Modal -->
+  <div id="modal-supplier-api" class="modal-backdrop">
+    <div class="modal-box" style="max-width: 580px; width: 95%;">
+      <button class="modal-close" onclick="closeModal('modal-supplier-api')">✕</button>
+      <h3 id="supplier-api-modal-title" style="color: #fff; margin-bottom: 1.25rem;">+ Add Supplier API</h3>
+      <form id="form-supplier-api">
+        <input type="hidden" id="sapi-id">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;" class="admin-modal-grid">
+          <div class="form-group">
+            <label class="form-label">Supplier Gateway Name *</label>
+            <input type="text" id="sapi-name" class="form-input" required placeholder="e.g. KeyLicense Global, Vendor-X">
+          </div>
+          <div class="form-group">
+            <label class="form-label">API Driver Type *</label>
+            <select id="sapi-type" class="form-select">
+              <option value="keylicense">KeyLicense Standard API</option>
+              <option value="custom_json">Custom JSON REST API</option>
+              <option value="generic">Generic Webhook / Dispatcher</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">API Endpoint Base URL *</label>
+          <input type="url" id="sapi-url" class="form-input" required placeholder="https://api.keylicense.com/v1">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">API Key / Token *</label>
+          <input type="text" id="sapi-key" class="form-input" required placeholder="X-API-Token / Authorization header">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Internal Notes / Instructions</label>
+          <input type="text" id="sapi-notes" class="form-input" placeholder="Primary cheat supplier for Apex and Valorant">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select id="sapi-status" class="form-select">
+            <option value="active">Active</option>
+            <option value="disabled">Disabled</option>
+          </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block btn-lg btn-glow">Save Supplier API 💾</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 6. Variant Mapping Modal -->
+  <div id="modal-supplier-variant" class="modal-backdrop">
+    <div class="modal-box" style="max-width: 580px; width: 95%;">
+      <button class="modal-close" onclick="closeModal('modal-supplier-variant')">✕</button>
+      <h3 id="variant-mapping-modal-title" style="color: #fff; margin-bottom: 1.25rem;">+ Map Plan to Supplier Variant</h3>
+      <form id="form-supplier-variant">
+        <input type="hidden" id="svar-id">
+        <div class="form-group">
+          <label class="form-label">Supplier API *</label>
+          <select id="svar-api-id" class="form-select" required></select>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;" class="admin-modal-grid">
+          <div class="form-group">
+            <label class="form-label">Product *</label>
+            <select id="svar-product-id" class="form-select" required onchange="populateVariantPlanSelect()"></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Plan *</label>
+            <select id="svar-plan-id" class="form-select" required></select>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;" class="admin-modal-grid">
+          <div class="form-group">
+            <label class="form-label">Supplier Variant ID *</label>
+            <input type="text" id="svar-variant-id" class="form-input" required placeholder="e.g. 1024 or PRO_1D">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Variant Name (Optional)</label>
+            <input type="text" id="svar-name" class="form-input" placeholder="e.g. 1 Day Global Key">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Mapping Status</label>
+          <select id="svar-status" class="form-select">
+            <option value="active">Active (Auto Dispatched)</option>
+            <option value="disabled">Disabled</option>
+          </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block btn-lg btn-glow">Save Variant Mapping ⚡</button>
       </form>
     </div>
   </div>
@@ -612,6 +863,7 @@
     document.addEventListener('DOMContentLoaded', async () => {
       initAdminAuth();
       initTabNavigation();
+      initProductImagePreview();
     });
 
     async function initAdminAuth() {
@@ -687,9 +939,11 @@
           if (tabId === 'tab-dashboard') loadDashboardData();
           if (tabId === 'tab-orders') loadAdminOrders();
           if (tabId === 'tab-wallets') loadAdminWallets();
+          if (tabId === 'tab-payment-methods') loadAdminPaymentMethods();
           if (tabId === 'tab-products') loadAdminProducts();
           if (tabId === 'tab-plans') loadAdminPlans();
           if (tabId === 'tab-keys') loadAdminKeys();
+          if (tabId === 'tab-supplier-apis') { loadAdminSupplierApis(); loadAdminSupplierVariants(); }
           if (tabId === 'tab-users') loadAdminUsers();
           if (tabId === 'tab-reseller-prices') loadAdminResellerPrices();
           if (tabId === 'tab-settings') loadAdminSettings();
@@ -711,6 +965,9 @@
       document.getElementById('form-add-product').addEventListener('submit', handleAddProductSubmit);
       document.getElementById('form-add-plan').addEventListener('submit', handleAddPlanSubmit);
       document.getElementById('form-add-keys').addEventListener('submit', handleAddKeysSubmit);
+      document.getElementById('form-payment-method').addEventListener('submit', handlePaymentMethodSubmit);
+      document.getElementById('form-supplier-api').addEventListener('submit', handleSupplierApiSubmit);
+      document.getElementById('form-supplier-variant').addEventListener('submit', handleVariantMappingSubmit);
       document.getElementById('form-approve-order').addEventListener('submit', handleApproveOrderSubmit);
       document.getElementById('form-reject-order').addEventListener('submit', handleRejectOrderSubmit);
       document.getElementById('admin-settings-form').addEventListener('submit', handleSettingsSubmit);
@@ -1005,8 +1262,228 @@
     }
 
     /* ==============================================================
+       3.5. PAYMENT METHODS & GATEWAYS
+       ============================================================== */
+    let globalPaymentMethods = [];
+
+    async function loadAdminPaymentMethods() {
+      const tbody = document.getElementById('admin-payment-methods-tbody');
+      try {
+        const res = await fetch('/api/admin/payment-methods');
+        const data = await res.json();
+        globalPaymentMethods = data.payment_methods || [];
+
+        if (globalPaymentMethods.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding: 2rem; color: var(--text-dim);">No payment methods configured.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = globalPaymentMethods.map(pm => {
+          const logoOrQr = pm.logo_url 
+            ? `<img src="${pm.logo_url}" alt="" style="width: 38px; height: 38px; border-radius: 4px; object-fit: contain; background: #fff; padding: 2px;">`
+            : (pm.qr_code ? `<button class="btn btn-outline btn-sm" onclick="viewProof('${pm.qr_code}')">QR ↗</button>` : '-');
+
+          const isVis = pm.checkout_visible !== false;
+          const isAct = pm.is_active !== false;
+
+          return `
+            <tr>
+              <td>#${pm.id}</td>
+              <td>${logoOrQr}</td>
+              <td>
+                <strong style="color: #fff;">${escapeHtml(pm.name)}</strong>
+                <div style="font-size: 0.78rem; color: var(--text-dim); font-family: monospace;">${escapeHtml(pm.identifier || '')}</div>
+              </td>
+              <td><code>${escapeHtml(pm.api_key ? (pm.api_key.length > 10 ? pm.api_key.substring(0, 8) + '...' : pm.api_key) : '-')}</code></td>
+              <td>NPR ${parseFloat(pm.min_amount || 0).toLocaleString()}</td>
+              <td>${pm.sort_order || 0}</td>
+              <td>
+                <span class="badge ${isVis ? 'badge-undetected' : 'badge-warning'}">
+                  ${isVis ? 'Direct Checkout' : 'Wallet Only'}
+                </span>
+              </td>
+              <td>
+                <button class="btn btn-sm ${isAct ? 'btn-success' : 'btn-outline'}" onclick="togglePaymentMethod(${pm.id}, ${isAct})">
+                  ${isAct ? 'Active' : 'Disabled'}
+                </button>
+              </td>
+              <td>
+                <div style="display: flex; gap: 0.4rem;">
+                  <button class="btn btn-outline btn-sm" onclick="editPaymentMethod(${pm.id})">Edit</button>
+                  <button class="btn btn-outline btn-sm" onclick="deletePaymentMethod(${pm.id})" style="color:var(--danger)">Delete</button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="9" style="color:var(--danger); text-align:center;">Failed to load payment methods.</td></tr>`;
+      }
+    }
+
+    function openAddPaymentMethodModal() {
+      document.getElementById('pm-modal-title').textContent = '+ Add Payment Gateway';
+      document.getElementById('form-payment-method').reset();
+      document.getElementById('pm-id').value = '';
+      document.getElementById('pm-checkout-visible').checked = true;
+      document.getElementById('pm-is-active').checked = true;
+      openModal('modal-payment-method');
+    }
+
+    function editPaymentMethod(id) {
+      const pm = globalPaymentMethods.find(p => p.id === id);
+      if (!pm) return;
+
+      document.getElementById('pm-modal-title').textContent = `Edit Gateway: ${pm.name}`;
+      document.getElementById('pm-id').value = pm.id;
+      document.getElementById('pm-name').value = pm.name || '';
+      document.getElementById('pm-identifier').value = pm.identifier || '';
+      document.getElementById('pm-qrcode').value = pm.qr_code || '';
+      document.getElementById('pm-logo').value = pm.logo_url || '';
+      document.getElementById('pm-apikey').value = pm.api_key || '';
+      document.getElementById('pm-min').value = pm.min_amount || 100;
+      document.getElementById('pm-sort').value = pm.sort_order || 0;
+      document.getElementById('pm-checkout-visible').checked = pm.checkout_visible !== false;
+      document.getElementById('pm-is-active').checked = pm.is_active !== false;
+
+      openModal('modal-payment-method');
+    }
+
+    async function togglePaymentMethod(id, isCurrentlyActive) {
+      try {
+        await fetch('/api/admin/payment-methods', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, is_active: !isCurrentlyActive })
+        });
+        loadAdminPaymentMethods();
+      } catch (err) {
+        showToast('Status toggle failed', 'error');
+      }
+    }
+
+    async function deletePaymentMethod(id) {
+      if (!confirm('Are you sure you want to delete this payment method?')) return;
+      try {
+        await fetch(`/api/admin/payment-methods?id=${id}`, { method: 'DELETE' });
+        showToast('Payment method deleted', 'info');
+        loadAdminPaymentMethods();
+      } catch (err) {
+        showToast('Failed to delete payment method', 'error');
+      }
+    }
+
+    async function handlePaymentMethodSubmit(e) {
+      e.preventDefault();
+      const id = document.getElementById('pm-id').value;
+      const payload = {
+        name: document.getElementById('pm-name').value.trim(),
+        identifier: document.getElementById('pm-identifier').value.trim(),
+        qr_code: document.getElementById('pm-qrcode').value.trim(),
+        logo_url: document.getElementById('pm-logo').value.trim(),
+        api_key: document.getElementById('pm-apikey').value.trim(),
+        min_amount: parseFloat(document.getElementById('pm-min').value) || 0,
+        sort_order: parseInt(document.getElementById('pm-sort').value, 10) || 0,
+        checkout_visible: document.getElementById('pm-checkout-visible').checked,
+        is_active: document.getElementById('pm-is-active').checked
+      };
+
+      try {
+        let res;
+        if (id) {
+          payload.id = parseInt(id, 10);
+          res = await fetch('/api/admin/payment-methods', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+        } else {
+          res = await fetch('/api/admin/payment-methods', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+        }
+
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          showToast(data.message || 'Error saving payment method', 'error');
+          return;
+        }
+
+        showToast('Payment gateway saved successfully!', 'success');
+        closeModal('modal-payment-method');
+        loadAdminPaymentMethods();
+      } catch (err) {
+        showToast('Network error saving payment method', 'error');
+      }
+    }
+
+    /* ==============================================================
        4. PRODUCTS
        ============================================================== */
+    function compressImageFile(file, maxWidth = 800, maxHeight = 800, quality = 0.82) {
+      return new Promise((resolve) => {
+        if (!file || !file.type.startsWith('image/')) {
+          return resolve('');
+        }
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let w = img.width;
+            let h = img.height;
+            if (w > maxWidth || h > maxHeight) {
+              if (w > h) {
+                h = Math.round((h * maxWidth) / w);
+                w = maxWidth;
+              } else {
+                w = Math.round((w * maxHeight) / h);
+                h = maxHeight;
+              }
+            }
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+            resolve(canvas.toDataURL('image/jpeg', quality));
+          };
+          img.onerror = () => resolve(e.target.result);
+          img.src = e.target.result;
+        };
+        reader.onerror = () => resolve('');
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function ensureProductsLoaded(force = false) {
+      if (force || !globalProducts || globalProducts.length === 0) {
+        try {
+          const res = await fetch('/api/admin/products');
+          const data = await res.json();
+          if (data && data.products) {
+            globalProducts = data.products;
+          } else {
+            // Public products list fallback
+            const pubRes = await fetch('/api/products/list');
+            const pubData = await pubRes.json();
+            globalProducts = pubData.products || [];
+          }
+          updateProductDropdowns();
+        } catch (e) {
+          try {
+            const pubRes = await fetch('/api/products/list');
+            const pubData = await pubRes.json();
+            globalProducts = pubData.products || [];
+            updateProductDropdowns();
+          } catch (err) {
+            console.warn('Could not load products:', err);
+          }
+        }
+      }
+    }
+
     async function loadAdminProducts() {
       const tbody = document.getElementById('admin-products-tbody');
       try {
@@ -1014,11 +1491,11 @@
         const data = await res.json();
         globalProducts = data.products || [];
 
-        // Update product selects in modals
+        // Update product selects across all modals
         updateProductDropdowns();
 
         if (globalProducts.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 2rem;">No products configured.</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 2rem;">No products configured. Click "+ Add New Cheat Software" above to add one.</td></tr>`;
           return;
         }
 
@@ -1049,42 +1526,92 @@
       const selects = [
         document.getElementById('plan-product-select'),
         document.getElementById('keys-import-product'),
-        document.getElementById('keys-filter-product')
+        document.getElementById('keys-filter-product'),
+        document.getElementById('svar-product-id')
       ];
 
       selects.forEach(sel => {
         if (!sel) return;
         const isFilter = sel.id === 'keys-filter-product';
-        sel.innerHTML = (isFilter ? '<option value="all">All Products</option>' : '') + 
-          globalProducts.map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
+        if (isFilter) {
+          sel.innerHTML = '<option value="all">All Products</option>' + 
+            (globalProducts || []).map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
+        } else {
+          sel.innerHTML = (globalProducts && globalProducts.length > 0)
+            ? '<option value="">-- Choose Product --</option>' + globalProducts.map(p => `<option value="${p.id}">${escapeHtml(p.name)} (${escapeHtml(p.category)})</option>`).join('')
+            : '<option value="">No products available (Add Product first)</option>';
+        }
       });
     }
 
     function openAddProductModal() {
       document.getElementById('form-add-product').reset();
+      const previewBox = document.getElementById('prod-img-preview');
+      if (previewBox) previewBox.style.display = 'none';
       openModal('modal-add-product');
+    }
+
+    // Attach live image preview listeners once
+    function initProductImagePreview() {
+      const fileInput = document.getElementById('prod-img-file');
+      const urlInput = document.getElementById('prod-img-url');
+      const previewBox = document.getElementById('prod-img-preview');
+      const previewEl = document.getElementById('prod-preview-el');
+
+      if (fileInput && previewBox && previewEl) {
+        fileInput.addEventListener('change', async () => {
+          if (fileInput.files && fileInput.files[0]) {
+            const compressed = await compressImageFile(fileInput.files[0]);
+            previewEl.src = compressed;
+            previewBox.style.display = 'block';
+          }
+        });
+      }
+
+      if (urlInput && previewBox && previewEl) {
+        urlInput.addEventListener('input', () => {
+          const val = urlInput.value.trim();
+          if (val.startsWith('http://') || val.startsWith('https://')) {
+            previewEl.src = val;
+            previewBox.style.display = 'block';
+          }
+        });
+      }
     }
 
     async function handleAddProductSubmit(e) {
       e.preventDefault();
-      const name = document.getElementById('prod-name').value.trim();
-      const category = document.getElementById('prod-cat').value.trim();
-      const description = document.getElementById('prod-desc').value.trim();
-      const features = document.getElementById('prod-features').value.trim();
-      const featured = document.getElementById('prod-featured').checked;
-      let imageUrl = document.getElementById('prod-img-url').value.trim();
+      const btn = document.getElementById('btn-save-product');
+      if (btn) { btn.disabled = true; btn.textContent = 'Saving Cheat...'; }
 
-      const fileInput = document.getElementById('prod-img-file');
-      if (fileInput.files && fileInput.files[0]) {
-        const file = fileInput.files[0];
-        const reader = new FileReader();
-        reader.onload = async (ev) => {
-          imageUrl = ev.target.result;
-          await sendAddProduct({ name, category, description, features, image: imageUrl, featured });
-        };
-        reader.readAsDataURL(file);
-      } else {
+      try {
+        const name = document.getElementById('prod-name').value.trim();
+        const category = document.getElementById('prod-cat').value.trim();
+        const description = document.getElementById('prod-desc').value.trim();
+        const features = document.getElementById('prod-features').value.trim();
+        const featured = document.getElementById('prod-featured').checked;
+        let imageUrl = document.getElementById('prod-img-url').value.trim();
+
+        if (!name || !category || !description) {
+          showToast('Name, Category, and Description are required.', 'warning');
+          return;
+        }
+
+        const fileInput = document.getElementById('prod-img-file');
+        if (fileInput && fileInput.files && fileInput.files[0]) {
+          imageUrl = await compressImageFile(fileInput.files[0]);
+        }
+
+        if (!imageUrl) {
+          imageUrl = 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800&q=80';
+        }
+
         await sendAddProduct({ name, category, description, features, image: imageUrl, featured });
+      } catch (err) {
+        console.error('Add product error:', err);
+        showToast('Error saving product: ' + err.message, 'error');
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = 'Create Product ⚡'; }
       }
     }
 
@@ -1102,6 +1629,7 @@
         }
         showToast('Product added successfully!', 'success');
         closeModal('modal-add-product');
+        await ensureProductsLoaded(true);
         loadAdminProducts();
         loadDashboardData();
       } catch (err) {
@@ -1160,8 +1688,11 @@
       }
     }
 
-    function openAddPlanModal() {
+    async function openAddPlanModal() {
       document.getElementById('form-add-plan').reset();
+      const planSelect = document.getElementById('plan-product-select');
+      if (planSelect) planSelect.innerHTML = '<option value="">Loading products...</option>';
+      await ensureProductsLoaded(true);
       updateProductDropdowns();
       openModal('modal-add-plan');
     }
@@ -1169,6 +1700,10 @@
     async function handleAddPlanSubmit(e) {
       e.preventDefault();
       const product_id = parseInt(document.getElementById('plan-product-select').value, 10);
+      if (!product_id) {
+        showToast('Please select a product first', 'warning');
+        return;
+      }
       const plan_name = document.getElementById('plan-name').value.trim();
       const duration_type = document.getElementById('plan-duration-type').value;
       const days = parseInt(document.getElementById('plan-days').value, 10);
@@ -1297,6 +1832,281 @@
       });
       loadAdminKeys();
       loadDashboardData();
+    }
+
+    /* ==============================================================
+       6.5. SUPPLIER APIS & VARIANT MAPPINGS
+       ============================================================== */
+    let globalSupplierApis = [];
+    let globalSupplierVariants = [];
+
+    async function ensureSupplierApisLoaded() {
+      if (!globalSupplierApis || globalSupplierApis.length === 0) {
+        try {
+          const res = await fetch('/api/admin/supplier-apis');
+          const data = await res.json();
+          globalSupplierApis = data.supplier_apis || [];
+        } catch (e) {}
+      }
+    }
+
+    async function loadAdminSupplierApis() {
+      const tbody = document.getElementById('admin-supplier-apis-tbody');
+      try {
+        const res = await fetch('/api/admin/supplier-apis');
+        const data = await res.json();
+        globalSupplierApis = data.supplier_apis || [];
+
+        if (globalSupplierApis.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 2rem; color: var(--text-dim);">No supplier APIs configured.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = globalSupplierApis.map(api => `
+          <tr>
+            <td>#${api.id}</td>
+            <td><strong style="color: #fff;">${escapeHtml(api.name)}</strong></td>
+            <td><span style="font-family: monospace; font-size: 0.8rem; color: var(--text-dim);">${escapeHtml(api.api_url)}</span></td>
+            <td><span class="badge" style="background: rgba(239, 68, 68, 0.15); color: var(--primary);">${escapeHtml(api.api_type)}</span></td>
+            <td><code>${escapeHtml(api.api_key ? (api.api_key.length > 12 ? api.api_key.substring(0, 10) + '...' : api.api_key) : '-')}</code></td>
+            <td>
+              <span class="badge ${api.status === 'active' ? 'badge-undetected' : 'badge-danger'}">
+                ${api.status}
+              </span>
+            </td>
+            <td>
+              <div style="display: flex; gap: 0.4rem;">
+                <button class="btn btn-outline btn-sm" onclick="editSupplierApi(${api.id})">Edit</button>
+                <button class="btn btn-outline btn-sm" onclick="deleteSupplierApi(${api.id})" style="color:var(--danger)">Delete</button>
+              </div>
+            </td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="7" style="color:var(--danger); text-align:center;">Failed to load supplier APIs.</td></tr>`;
+      }
+    }
+
+    function openAddSupplierApiModal() {
+      document.getElementById('supplier-api-modal-title').textContent = '+ Add Supplier API';
+      document.getElementById('form-supplier-api').reset();
+      document.getElementById('sapi-id').value = '';
+      openModal('modal-supplier-api');
+    }
+
+    function editSupplierApi(id) {
+      const api = globalSupplierApis.find(a => a.id === id);
+      if (!api) return;
+
+      document.getElementById('supplier-api-modal-title').textContent = `Edit Supplier: ${api.name}`;
+      document.getElementById('sapi-id').value = api.id;
+      document.getElementById('sapi-name').value = api.name || '';
+      document.getElementById('sapi-type').value = api.api_type || 'keylicense';
+      document.getElementById('sapi-url').value = api.api_url || '';
+      document.getElementById('sapi-key').value = api.api_key || '';
+      document.getElementById('sapi-notes').value = api.notes || '';
+      document.getElementById('sapi-status').value = api.status || 'active';
+
+      openModal('modal-supplier-api');
+    }
+
+    async function deleteSupplierApi(id) {
+      if (!confirm('Are you sure you want to delete this supplier API?')) return;
+      try {
+        await fetch(`/api/admin/supplier-apis?id=${id}`, { method: 'DELETE' });
+        showToast('Supplier API deleted', 'info');
+        loadAdminSupplierApis();
+      } catch (err) {
+        showToast('Failed to delete supplier API', 'error');
+      }
+    }
+
+    async function handleSupplierApiSubmit(e) {
+      e.preventDefault();
+      const id = document.getElementById('sapi-id').value;
+      const payload = {
+        name: document.getElementById('sapi-name').value.trim(),
+        api_type: document.getElementById('sapi-type').value,
+        api_url: document.getElementById('sapi-url').value.trim(),
+        api_key: document.getElementById('sapi-key').value.trim(),
+        notes: document.getElementById('sapi-notes').value.trim(),
+        status: document.getElementById('sapi-status').value
+      };
+
+      try {
+        let res;
+        if (id) {
+          payload.id = parseInt(id, 10);
+          res = await fetch('/api/admin/supplier-apis', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+        } else {
+          res = await fetch('/api/admin/supplier-apis', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+        }
+
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          showToast(data.message || 'Error saving supplier API', 'error');
+          return;
+        }
+
+        showToast('Supplier API saved successfully!', 'success');
+        closeModal('modal-supplier-api');
+        loadAdminSupplierApis();
+      } catch (err) {
+        showToast('Network error saving supplier API', 'error');
+      }
+    }
+
+    /* Variant Mappings */
+    async function loadAdminSupplierVariants() {
+      const tbody = document.getElementById('admin-supplier-variants-tbody');
+      try {
+        const res = await fetch('/api/admin/supplier-variants');
+        const data = await res.json();
+        globalSupplierVariants = data.supplier_variants || data.variants || [];
+
+        if (globalSupplierVariants.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 2rem; color: var(--text-dim);">No variant mappings configured.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = globalSupplierVariants.map(v => `
+          <tr>
+            <td>#${v.id}</td>
+            <td><strong>${escapeHtml(v.supplier_api_name || 'KeyLicense')}</strong></td>
+            <td>
+              ${escapeHtml(v.product_name)}
+              <div style="font-size: 0.78rem; color: var(--primary);">${escapeHtml(v.plan_name)} (${v.days} ${v.duration_type})</div>
+            </td>
+            <td><code>${escapeHtml(v.supplier_variant_id)}</code></td>
+            <td>${escapeHtml(v.variant_name || '-')}</td>
+            <td>
+              <span class="badge ${v.status === 'active' ? 'badge-undetected' : 'badge-danger'}">
+                ${v.status}
+              </span>
+            </td>
+            <td>
+              <div style="display: flex; gap: 0.4rem;">
+                <button class="btn btn-outline btn-sm" onclick="editVariantMapping(${v.id})">Edit</button>
+                <button class="btn btn-outline btn-sm" onclick="deleteVariantMapping(${v.id})" style="color:var(--danger)">Delete</button>
+              </div>
+            </td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="7" style="color:var(--danger); text-align:center;">Failed to load variant mappings.</td></tr>`;
+      }
+    }
+
+    async function openAddVariantMappingModal() {
+      document.getElementById('variant-mapping-modal-title').textContent = '+ Map Plan to Supplier Variant';
+      document.getElementById('form-supplier-variant').reset();
+      document.getElementById('svar-id').value = '';
+
+      await ensureSupplierApisLoaded();
+      await ensureProductsLoaded();
+      if (!globalPlans || globalPlans.length === 0) {
+        const pRes = await fetch('/api/admin/plans');
+        const pData = await pRes.json();
+        globalPlans = pData.plans || [];
+      }
+
+      // Populate APIs dropdown
+      const apiSelect = document.getElementById('svar-api-id');
+      apiSelect.innerHTML = globalSupplierApis.map(a => `<option value="${a.id}">${escapeHtml(a.name)} (${a.api_type})</option>`).join('');
+
+      // Populate Product dropdown
+      updateProductDropdowns();
+      populateVariantPlanSelect();
+
+      openModal('modal-supplier-variant');
+    }
+
+    function populateVariantPlanSelect() {
+      const prodId = parseInt(document.getElementById('svar-product-id').value, 10);
+      const planSelect = document.getElementById('svar-plan-id');
+      const filteredPlans = (globalPlans || []).filter(p => !prodId || p.product_id === prodId);
+      
+      planSelect.innerHTML = filteredPlans.length === 0 
+        ? '<option value="">No plans for selected product</option>'
+        : filteredPlans.map(p => `<option value="${p.id}">${escapeHtml(p.plan_name)} (${p.days} ${p.duration_type} - $${p.price_usd})</option>`).join('');
+    }
+
+    async function editVariantMapping(id) {
+      const v = globalSupplierVariants.find(item => item.id === id);
+      if (!v) return;
+
+      await openAddVariantMappingModal();
+      document.getElementById('variant-mapping-modal-title').textContent = `Edit Mapping #${v.id}`;
+      document.getElementById('svar-id').value = v.id;
+      document.getElementById('svar-api-id').value = v.supplier_api_id || '';
+      document.getElementById('svar-product-id').value = v.product_id || '';
+      populateVariantPlanSelect();
+      document.getElementById('svar-plan-id').value = v.plan_id || '';
+      document.getElementById('svar-variant-id').value = v.supplier_variant_id || '';
+      document.getElementById('svar-name').value = v.variant_name || '';
+      document.getElementById('svar-status').value = v.status || 'active';
+    }
+
+    async function deleteVariantMapping(id) {
+      if (!confirm('Delete this variant mapping?')) return;
+      try {
+        await fetch(`/api/admin/supplier-variants?id=${id}`, { method: 'DELETE' });
+        showToast('Mapping deleted', 'info');
+        loadAdminSupplierVariants();
+      } catch (err) {
+        showToast('Failed to delete mapping', 'error');
+      }
+    }
+
+    async function handleVariantMappingSubmit(e) {
+      e.preventDefault();
+      const id = document.getElementById('svar-id').value;
+      const payload = {
+        supplier_api_id: parseInt(document.getElementById('svar-api-id').value, 10),
+        product_id: parseInt(document.getElementById('svar-product-id').value, 10),
+        plan_id: parseInt(document.getElementById('svar-plan-id').value, 10),
+        supplier_variant_id: document.getElementById('svar-variant-id').value.trim(),
+        variant_name: document.getElementById('svar-name').value.trim(),
+        status: document.getElementById('svar-status').value
+      };
+
+      try {
+        let res;
+        if (id) {
+          payload.id = parseInt(id, 10);
+          res = await fetch('/api/admin/supplier-variants', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+        } else {
+          res = await fetch('/api/admin/supplier-variants', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+        }
+
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          showToast(data.message || 'Error saving mapping', 'error');
+          return;
+        }
+
+        showToast('Variant mapping saved successfully!', 'success');
+        closeModal('modal-supplier-variant');
+        loadAdminSupplierVariants();
+      } catch (err) {
+        showToast('Network error saving variant mapping', 'error');
+      }
     }
 
     /* ==============================================================

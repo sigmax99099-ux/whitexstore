@@ -15,7 +15,10 @@ export default async function handler(req, res) {
         SELECT 
           pl.*,
           p.name as product_name,
-          sv.supplier_variant_id,
+          COALESCE(
+            (SELECT STRING_AGG(sv.supplier_variant_id, ', ') FROM supplier_variants sv WHERE sv.plan_id = pl.id),
+            ''
+          ) as supplier_variant_id,
           (
             SELECT COUNT(*)::int 
             FROM license_keys lk 
@@ -25,7 +28,6 @@ export default async function handler(req, res) {
           ) as available_keys
         FROM plans pl
         JOIN products p ON pl.product_id = p.id
-        LEFT JOIN supplier_variants sv ON sv.plan_id = pl.id
         WHERE 1=1
       `;
       const params = [];

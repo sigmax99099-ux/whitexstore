@@ -20,10 +20,16 @@ export default async function handler(req, res) {
     }
 
     let imageUrl = image;
-    // If image is a base64 string, upload to Cloudinary
+    // If image is a base64 string, upload to Cloudinary with safe fallback
     if (image && (image.startsWith('data:image/') || image.startsWith('http'))) {
       if (image.startsWith('data:image/')) {
-        imageUrl = await uploadImage(image, 'white-x-store/products');
+        try {
+          imageUrl = await uploadImage(image, 'white-x-store/products');
+        } catch (uploadErr) {
+          console.warn('Cloudinary upload warning (using fallback):', uploadErr.message);
+          // If small enough, keep data URI, otherwise use default gaming cover
+          imageUrl = image.length < 50000 ? image : 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800&q=80';
+        }
       }
     } else {
       imageUrl = 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800&q=80';

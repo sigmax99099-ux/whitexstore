@@ -91,16 +91,22 @@ export default async function handler(req, res) {
 
     const tx = insertRes.rows[0];
 
-    // Trigger Discord notification
-    await notifyWalletTopup({
-      username: user.name,
-      email: user.email,
-      amount: numAmount,
-      currency: currency,
-      method: method.method_name,
-      txId: tx.id,
-      screenshot: screenshotUrl
-    });
+    // Trigger Discord notification (with safe fallback)
+    try {
+      await notifyWalletTopup({
+        username: user.name,
+        email: user.email,
+        amount: numAmount,
+        currency: currency,
+        method: method.method_name,
+        txId: tx.id,
+        refNumber: transaction_ref || '',
+        time: new Date().toLocaleString('en-US', { timeZone: 'Asia/Kathmandu' }),
+        screenshot: screenshotUrl
+      });
+    } catch (discordErr) {
+      console.warn('Discord webhook topup alert warning:', discordErr.message);
+    }
 
     return res.status(201).json({
       success: true,
