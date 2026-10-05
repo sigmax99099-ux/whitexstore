@@ -135,18 +135,41 @@
       });
     }
 
-    async function fetchProducts() {
+    async function fetchProducts(retryCount = 0) {
+      const grid = document.getElementById('products-grid');
       try {
+        if (window.location.protocol === 'file:') {
+          throw new Error('Please open this page via http://localhost:3000/products.html or your Vercel URL, not by opening the file directly.');
+        }
+
         const res = await fetch('/api/products/list');
+        if (!res.ok) {
+          throw new Error(`Server returned status ${res.status}`);
+        }
         const data = await res.json();
-        if (data.success && data.products) {
+        if (data.success && Array.isArray(data.products)) {
           allProducts = data.products;
           filterAndRenderProducts();
+        } else {
+          throw new Error(data.message || 'Invalid products response');
         }
       } catch (err) {
-        document.getElementById('products-grid').innerHTML = `
-          <div style="grid-column:1/-1; text-align:center; color: var(--danger);">
-            Failed to connect to backend server.
+        if (retryCount < 2) {
+          // Auto-retry once after 1.2s in case of serverless cold-start wake up
+          setTimeout(() => fetchProducts(retryCount + 1), 1200);
+          return;
+        }
+
+        grid.innerHTML = `
+          <div style="grid-column:1/-1; text-align:center; padding: 3rem 1rem; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; margin: 2rem 0;">
+            <div style="font-size: 2.5rem; margin-bottom: 1rem;">⚠️</div>
+            <h3 style="color: var(--danger); margin-bottom: 0.5rem; font-size: 1.25rem;">Unable to load products</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; max-width: 500px; margin: 0 auto 1.5rem;">
+              ${err.message || 'Failed to connect to backend server.'}
+            </p>
+            <button class="btn btn-primary" onclick="fetchProducts(0)" style="display:inline-flex; align-items:center; gap:0.5rem;">
+              <span>Retry Now</span> 🔄
+            </button>
           </div>
         `;
       }
