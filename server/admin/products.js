@@ -42,6 +42,17 @@ export default async function handler(req, res) {
         return res.status(400).json({ success: false, message: 'Product ID is required' });
       }
 
+      // Validate category if provided
+      if (category !== undefined && category !== null && category !== '') {
+        const catCheck = await query(
+          `SELECT id FROM categories WHERE LOWER(name) = LOWER($1)`,
+          [String(category).trim()]
+        );
+        if (catCheck.rows.length === 0) {
+          return res.status(400).json({ success: false, message: 'Invalid category. Please select a valid category.' });
+        }
+      }
+
       let imageUrl = image;
       if (image && image.startsWith('data:image/')) {
         imageUrl = await uploadImage(image, 'white-x-store/products');

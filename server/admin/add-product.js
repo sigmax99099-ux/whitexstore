@@ -19,6 +19,15 @@ export default async function handler(req, res) {
       return res.status(400).json({ success: false, message: 'Name, category, and description are required.' });
     }
 
+    // Validate that category exists in categories table
+    const catCheck = await query(
+      `SELECT id FROM categories WHERE LOWER(name) = LOWER($1)`,
+      [String(category).trim()]
+    );
+    if (catCheck.rows.length === 0) {
+      return res.status(400).json({ success: false, message: 'Invalid category. Please select a valid category.' });
+    }
+
     let imageUrl = image;
     // If image is a base64 string, upload to Cloudinary with safe fallback
     if (image && (image.startsWith('data:image/') || image.startsWith('http'))) {

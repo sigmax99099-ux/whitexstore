@@ -30,6 +30,7 @@ import adminMe from '../server/admin/me.js';
 import adminStats from '../server/admin/stats.js';
 import adminProducts from '../server/admin/products.js';
 import adminAddProduct from '../server/admin/add-product.js';
+import adminCategories from '../server/admin/categories.js';
 import adminPlans from '../server/admin/plans.js';
 import adminAddPlan from '../server/admin/add-plan.js';
 import adminKeys from '../server/admin/keys.js';
@@ -67,6 +68,9 @@ const routes = {
   // Products
   '/api/products/list': productsList,
 
+  // Categories (Public)
+  '/api/categories': adminCategories,
+
   // Orders
   '/api/orders/submit': ordersSubmit,
   '/api/orders/my-orders': ordersMyOrders,
@@ -85,6 +89,7 @@ const routes = {
   '/api/admin/stats': adminStats,
   '/api/admin/products': adminProducts,
   '/api/admin/add-product': adminAddProduct,
+  '/api/admin/categories': adminCategories,
   '/api/admin/plans': adminPlans,
   '/api/admin/add-plan': adminAddPlan,
   '/api/admin/keys': adminKeys,

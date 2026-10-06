@@ -652,8 +652,13 @@
             <input type="text" id="prod-name" class="form-input" required placeholder="e.g. Apex Legends - Phantom VIP">
           </div>
           <div class="form-group">
-            <label class="form-label">Game Category *</label>
-            <input type="text" id="prod-cat" class="form-input" required placeholder="e.g. Apex Legends, Valorant">
+            <label class="form-label">CATEGORY *</label>
+            <div style="position: relative;">
+              <select id="prod-cat" class="form-select" required style="padding-right: 40px;">
+                <option value="">-- Select --</option>
+              </select>
+              <span id="prod-cat-error" class="form-error" style="display: none; position: absolute; bottom: -18px; left: 0; font-size: 0.72rem; color: var(--danger);">Please select a category</span>
+            </div>
           </div>
         </div>
 
@@ -684,6 +689,25 @@
           </label>
         </div>
         <button type="submit" id="btn-save-product" class="btn btn-primary btn-block btn-lg btn-glow">Create Product ⚡</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add New Category Modal -->
+  <div id="modal-add-category" class="modal-backdrop">
+    <div class="modal-box" style="max-width: 420px; width: 95%;">
+      <button class="modal-close" onclick="closeAddCategoryModal()">✕</button>
+      <h3 style="color: #fff; margin-bottom: 1.25rem;">+ Add New Category</h3>
+      <form id="form-add-category">
+        <div class="form-group">
+          <label class="form-label">Category Name *</label>
+          <input type="text" id="new-cat-name" class="form-input" required placeholder="e.g. NEW CATEGORY" style="text-transform: uppercase;" autocomplete="off">
+          <div id="new-cat-error" class="form-error" style="display: none; font-size: 0.72rem; color: var(--danger); margin-top: 0.35rem;"></div>
+        </div>
+        <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem; justify-content: flex-end;">
+          <button type="button" class="btn btn-outline btn-sm" onclick="closeAddCategoryModal()">Cancel</button>
+          <button type="submit" id="btn-save-category" class="btn btn-primary btn-sm btn-glow">Save</button>
+        </div>
       </form>
     </div>
   </div>
@@ -1076,6 +1100,21 @@
       document.getElementById('form-approve-order').addEventListener('submit', handleApproveOrderSubmit);
       document.getElementById('form-reject-order').addEventListener('submit', handleRejectOrderSubmit);
       document.getElementById('admin-settings-form').addEventListener('submit', handleSettingsSubmit);
+      document.getElementById('form-add-category').addEventListener('submit', handleAddCategorySubmit);
+
+      // Category dropdown - handle "Add New Category" option
+      document.getElementById('prod-cat').addEventListener('change', function(e) {
+        if (e.target.value === '__ADD_NEW__') {
+          // Reset to default and open modal
+          e.target.value = '';
+          openAddCategoryModal();
+        }
+        // Clear error when user selects a valid option
+        const errorEl = document.getElementById('prod-cat-error');
+        const selectEl = document.getElementById('prod-cat');
+        if (errorEl) errorEl.style.display = 'none';
+        if (selectEl) selectEl.style.borderColor = '';
+      });
     }
 
     /* ==============================================================
@@ -1723,6 +1762,31 @@
       });
     }
 
+    // Category dropdown handling
+    let globalCategories = [];
+
+    async function loadCategories() {
+      try {
+        const res = await fetch('/api/categories');
+        const data = await res.json();
+        if (data.success && data.categories) {
+          globalCategories = data.categories;
+        }
+      } catch (err) {
+        console.error('Failed to load categories:', err);
+      }
+    }
+
+    function populateCategoryDropdown(selectEl, selectedValue = '') {
+      if (!selectEl) return;
+      const defaultOptions = '<option value="">-- Select --</option>';
+      const categoryOptions = globalCategories.map(c => 
+        `<option value="${escapeHtml(c.name)}" ${c.name === selectedValue ? 'selected' : ''}>${escapeHtml(c.name)}</option>`
+      ).join('');
+      const addNewOption = '<option value="__ADD_NEW__" style="color: var(--primary); font-weight: 600;">+ Add New Category</option>';
+      selectEl.innerHTML = defaultOptions + categoryOptions + addNewOption;
+    }
+
     function openAddProductModal() {
       document.getElementById('form-add-product').reset();
       const editIdEl = document.getElementById('prod-edit-id');
@@ -1733,6 +1797,12 @@
       if (btn) btn.textContent = 'Create Product ⚡';
       const previewBox = document.getElementById('prod-img-preview');
       if (previewBox) previewBox.style.display = 'none';
+      
+      // Load and populate categories
+      loadCategories().then(() => {
+        populateCategoryDropdown(document.getElementById('prod-cat'));
+      });
+      
       openModal('modal-add-product');
     }
 
@@ -1751,7 +1821,6 @@
       if (btn) btn.textContent = 'Save Changes 💾';
 
       document.getElementById('prod-name').value = p.name || '';
-      document.getElementById('prod-cat').value = p.category || '';
       document.getElementById('prod-desc').value = p.description || '';
       document.getElementById('prod-features').value = p.features || '';
       document.getElementById('prod-featured').checked = (p.featured === true || p.featured === 'true');
@@ -1765,7 +1834,109 @@
       } else {
         previewBox.style.display = 'none';
       }
+      
+      // Load and populate categories with current category pre-selected
+      loadCategories().then(() => {
+        populateCategoryDropdown(document.getElementById('prod-cat'), p.category || '');
+      });
+      
       openModal('modal-add-product');
+    }
+
+    // Add New Category Modal Functions
+    function openAddCategoryModal() {
+      document.getElementById('form-add-category').reset();
+      const errorEl = document.getElementById('new-cat-error');
+      if (errorEl) errorEl.style.display = 'none';
+      openModal('modal-add-category');
+      // Focus the input after modal opens
+      setTimeout(() => {
+        const input = document.getElementById('new-cat-name');
+        if (input) input.focus();
+      }, 100);
+    }
+
+    function closeAddCategoryModal() {
+      closeModal('modal-add-category');
+      // Reset the category dropdown to "-- Select --"
+      const selectEl = document.getElementById('prod-cat');
+      if (selectEl) selectEl.value = '';
+    }
+
+    async function handleAddCategorySubmit(e) {
+      e.preventDefault();
+      const nameInput = document.getElementById('new-cat-name');
+      const errorEl = document.getElementById('new-cat-error');
+      const btn = document.getElementById('btn-save-category');
+      
+      const rawName = nameInput ? nameInput.value.trim() : '';
+      const trimmedName = rawName.toUpperCase();
+
+      // Validate
+      if (!trimmedName) {
+        if (errorEl) {
+          errorEl.textContent = 'Category name cannot be empty.';
+          errorEl.style.display = 'block';
+        }
+        return;
+      }
+
+      if (trimmedName.length > 100) {
+        if (errorEl) {
+          errorEl.textContent = 'Category name cannot exceed 100 characters.';
+          errorEl.style.display = 'block';
+        }
+        return;
+      }
+
+      // Check for duplicate (case-insensitive)
+      const isDuplicate = globalCategories.some(c => c.name.toLowerCase() === trimmedName.toLowerCase());
+      if (isDuplicate) {
+        if (errorEl) {
+          errorEl.textContent = 'Category already exists.';
+          errorEl.style.display = 'block';
+        }
+        return;
+      }
+
+      if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
+      if (errorEl) errorEl.style.display = 'none';
+
+      try {
+        const res = await fetch('/api/categories', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: trimmedName })
+        });
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+          if (errorEl) {
+            errorEl.textContent = data.message || 'Failed to create category.';
+            errorEl.style.display = 'block';
+          }
+          if (btn) { btn.disabled = false; btn.textContent = 'Save'; }
+          return;
+        }
+
+        // Success - add to global categories and update dropdown
+        globalCategories.push(data.category);
+        globalCategories.sort((a, b) => a.name.localeCompare(b.name));
+        
+        populateCategoryDropdown(document.getElementById('prod-cat'), data.category.name);
+        
+        showToast('Category added successfully!', 'success');
+        closeAddCategoryModal();
+
+      } catch (err) {
+        console.error('Add category error:', err);
+        if (errorEl) {
+          errorEl.textContent = 'Error creating category. Please try again.';
+          errorEl.style.display = 'block';
+        }
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = 'Save'; }
+      }
     }
 
     // Attach live image preview listeners once
@@ -1811,8 +1982,26 @@
         const featured = document.getElementById('prod-featured').checked;
         let imageUrl = document.getElementById('prod-img-url').value.trim();
 
-        if (!name || !category || !description) {
-          showToast('Name, Category, and Description are required.', 'warning');
+        // Validate category selection
+        if (!category || category === '__ADD_NEW__') {
+          const errorEl = document.getElementById('prod-cat-error');
+          const selectEl = document.getElementById('prod-cat');
+          if (errorEl) errorEl.style.display = 'block';
+          if (selectEl) selectEl.style.borderColor = 'var(--danger)';
+          showToast('Please select a category', 'warning');
+          if (btn) { btn.disabled = false; btn.textContent = editId ? 'Save Changes 💾' : 'Create Product ⚡'; }
+          return;
+        }
+
+        // Clear any previous error
+        const errorEl = document.getElementById('prod-cat-error');
+        const selectEl = document.getElementById('prod-cat');
+        if (errorEl) errorEl.style.display = 'none';
+        if (selectEl) selectEl.style.borderColor = '';
+
+        if (!name || !description) {
+          showToast('Name and Description are required.', 'warning');
+          if (btn) { btn.disabled = false; btn.textContent = editId ? 'Save Changes 💾' : 'Create Product ⚡'; }
           return;
         }
 
