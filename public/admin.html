@@ -3882,7 +3882,6 @@
       }
 
       const productId = product === '__ALL__' || !product ? null : parseInt(product, 10);
-      const editId = document.getElementById('dl-edit-id').value;
 
       const btn = document.getElementById('btn-save-dl');
       if (btn) { btn.disabled = true; btn.textContent = editId ? 'Saving...' : 'Saving...'; }
