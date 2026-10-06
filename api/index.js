@@ -43,6 +43,7 @@ import adminApproveWallet from '../server/admin/approve-wallet.js';
 import adminRejectWallet from '../server/admin/reject-wallet.js';
 import adminWalletAdjust from '../server/admin/wallet-adjust.js';
 import adminUploadGatewayImage from '../server/admin/upload-gateway-image.js';
+import adminDownloadLinks from '../server/admin/download-links.js';
 import adminUsers from '../server/admin/users.js';
 import adminSettings from '../server/admin/settings.js';
 import adminResellerPrices from '../server/admin/reseller-prices.js';
@@ -72,6 +73,9 @@ const routes = {
 
   // Categories (Public)
   '/api/categories': adminCategories,
+
+  // Download Links (Admin)
+  '/api/admin/download-links': adminDownloadLinks,
 
   // Orders
   '/api/orders/submit': ordersSubmit,
@@ -104,6 +108,7 @@ const routes = {
   '/api/admin/reject-wallet': adminRejectWallet,
   '/api/admin/wallet/adjust': adminWalletAdjust,
   '/api/admin/upload/gateway-image': adminUploadGatewayImage,
+  '/api/admin/download-links': adminDownloadLinks,
   '/api/admin/users': adminUsers,
   '/api/admin/settings': adminSettings,
   '/api/admin/reseller-prices': adminResellerPrices,

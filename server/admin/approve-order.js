@@ -110,6 +110,29 @@ export default async function handler(req, res) {
     // 4. Mark order as approved
     await client.query("UPDATE orders SET status = 'approved', reject_reason = NULL WHERE id = $1", [order.id]);
 
+    // Deliver download links for this product
+    let downloadLinks = [];
+    try {
+      const productRes = await client.query(
+        `SELECT p.category FROM products p WHERE p.id = $1`,
+        [order.product_id]
+      );
+      const productCategory = productRes.rows[0]?.category;
+
+      if (productCategory) {
+        const dlRes = await client.query(
+          `SELECT id, name, link FROM download_links 
+           WHERE is_active = true 
+           AND category_name = $1 
+           AND (product_id = $2 OR product_id IS NULL)`,
+          [productCategory, order.product_id]
+        );
+        downloadLinks = dlRes.rows;
+      }
+    } catch (e) {
+      console.error('Failed to fetch download links:', e);
+    }
+
     try { await client.query('COMMIT'); } catch(e) {}
     client.release && client.release();
 
@@ -125,7 +148,8 @@ export default async function handler(req, res) {
     return res.status(200).json({
       success: true,
       message: `Order ${order.order_code} approved successfully!`,
-      assigned_key: assignedKey
+      assigned_key: assignedKey,
+      download_links: downloadLinks
     });
   } catch (err) {
     try { await client.query('ROLLBACK'); } catch (rbErr) {}

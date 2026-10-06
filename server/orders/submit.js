@@ -205,6 +205,29 @@ export default async function handler(req, res) {
       // Mark order approved
       await query("UPDATE orders SET status = 'approved' WHERE id = $1", [order.id]);
 
+      // Deliver download links for this product
+      let downloadLinks = [];
+      try {
+        const productRes = await query(
+          `SELECT p.category FROM products p WHERE p.id = $1`,
+          [product_id]
+        );
+        const productCategory = productRes.rows[0]?.category;
+
+        if (productCategory) {
+          const dlRes = await query(
+            `SELECT id, name, link FROM download_links 
+             WHERE is_active = true 
+             AND category_name = $1 
+             AND (product_id = $2 OR product_id IS NULL)`,
+            [productCategory, product_id]
+          );
+          downloadLinks = dlRes.rows;
+        }
+      } catch (e) {
+        console.error('Failed to fetch download links:', e);
+      }
+
       // Notify Discord (Success)
       await notifyOrderDelivered({
         orderCode: order.order_code,
@@ -225,7 +248,8 @@ export default async function handler(req, res) {
         amount_usd: finalPriceUsd,
         amount_npr: finalPriceNpr,
         new_wallet_balance: newBalance,
-        message: 'Order completed and key delivered instantly!'
+        message: 'Order completed and key delivered instantly!',
+        download_links: downloadLinks
       });
     } else {
       // Keep order as pending, awaiting admin manual approval or key replenishment
@@ -248,7 +272,8 @@ export default async function handler(req, res) {
         amount_usd: finalPriceUsd,
         amount_npr: finalPriceNpr,
         new_wallet_balance: newBalance,
-        message: 'Order created! Stock is currently being assigned by admin. Your key will appear in your dashboard shortly.'
+        message: 'Order created! Stock is currently being assigned by admin. Your key will appear in your dashboard shortly.',
+        download_links: []
       });
     }
 

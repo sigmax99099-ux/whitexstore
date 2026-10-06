@@ -333,6 +333,7 @@
         <li class="admin-nav-item"><button data-tab="tab-wallets">💳 Wallets & Deposits</button></li>
         <li class="admin-nav-item"><button data-tab="tab-payment-methods">🏦 Payment Gateways</button></li>
         <li class="admin-nav-item"><button data-tab="tab-products">🎮 Products</button></li>
+        <li class="admin-nav-item"><button data-tab="tab-download-links">📁 Files</button></li>
         <li class="admin-nav-item"><button data-tab="tab-plans">⏱️ Plans & Pricing</button></li>
         <li class="admin-nav-item"><button data-tab="tab-keys">🔑 License Keys</button></li>
         <li class="admin-nav-item"><button data-tab="tab-supplier-apis">🌐 Supplier APIs & Mapping</button></li>
@@ -514,6 +515,33 @@
             </thead>
             <tbody id="admin-products-tbody">
               <tr><td colspan="7" style="text-align: center; padding: 2rem;">Loading products...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- TAB: DOWNLOAD LINKS / FILES -->
+      <section id="tab-download-links" class="admin-tab-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+          <h2 style="color: #fff;">// DOWNLOAD LINKS / FILES</h2>
+          <button class="btn btn-primary btn-sm" onclick="openAddDownloadLinkModal()">+ Add Download Link</button>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table-custom">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Category</th>
+                <th>Product</th>
+                <th>Name</th>
+                <th>Link</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="admin-download-links-tbody">
+              <tr><td colspan="7" style="text-align: center; padding: 2rem;">Loading download links...</td></tr>
             </tbody>
           </table>
         </div>
@@ -862,6 +890,49 @@
           <button type="button" class="btn btn-outline btn-sm" onclick="closeAddCategoryModal()">Cancel</button>
           <button type="submit" id="btn-save-category" class="btn btn-primary btn-sm btn-glow">Save</button>
         </div>
+      </form>
+    </div>
+  </div>
+
+  </div>
+  </div>
+
+  <!-- Add Download Link Modal -->
+  <div id="modal-add-download-link" class="modal-backdrop">
+    <div class="modal-box" style="max-width: 580px; width: 95%;">
+      <button class="modal-close" onclick="closeModal('modal-add-download-link')">✕</button>
+      <h3 id="dl-modal-title" style="color: #fff; margin-bottom: 1.25rem;">+ Add Download Link</h3>
+      <form id="form-add-download-link">
+        <input type="hidden" id="dl-edit-id" value="">
+        <div class="form-group">
+          <label class="form-label">CATEGORY *</label>
+          <select id="dl-category" class="form-select" required onchange="onDLCategoryChange()">
+            <option value="">-- Choose Category --</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">PRODUCT (Optional)</label>
+          <select id="dl-product" class="form-select" disabled>
+            <option value="">-- Choose Product --</option>
+          </select>
+          <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: 0.35rem;">
+            Leave empty for category-wide link (applies to all products in category)
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">NAME *</label>
+          <input type="text" id="dl-name" class="form-input" required placeholder="e.g. Launcher v1.0, Config File, Loader v2.0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">DOWNLOAD LINK (URL) *</label>
+          <input type="url" id="dl-link" class="form-input" required placeholder="https://example.com/file.zip" style="font-family: monospace;">
+        </div>
+        <div style="display: flex; gap: 1.5rem; margin-bottom: 1.25rem; align-items: center;">
+          <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.88rem; cursor: pointer;">
+            <input type="checkbox" id="dl-active" checked> Active / Enabled
+          </label>
+        </div>
+        <button type="submit" id="btn-save-dl" class="btn btn-primary btn-block btn-lg btn-glow">Add Download Link 💾</button>
       </form>
     </div>
   </div>
@@ -1334,6 +1405,7 @@
           if (tabId === 'tab-reseller-prices') loadAdminResellerPrices();
           if (tabId === 'tab-settings') loadAdminSettings();
           if (tabId === 'tab-resets') loadAdminResets();
+          if (tabId === 'tab-download-links') loadAdminDownloadLinks();
         });
       });
 
@@ -1359,6 +1431,7 @@
       document.getElementById('admin-settings-form').addEventListener('submit', handleSettingsSubmit);
       document.getElementById('form-add-category').addEventListener('submit', handleAddCategorySubmit);
       document.getElementById('form-wallet-adjust').addEventListener('submit', handleWalletAdjustSubmit);
+      document.getElementById('form-add-download-link').addEventListener('submit', handleAddDownloadLinkSubmit);
 
       // Category dropdown - handle "Add New Category" option
       document.getElementById('prod-cat').addEventListener('change', function(e) {
@@ -3618,6 +3691,236 @@
         `).join('');
       } catch (err) {
         tbody.innerHTML = `<tr><td colspan="7" style="color:var(--danger); text-align:center;">Failed to load resets.</td></tr>`;
+      }
+    }
+
+    /* ==============================================================
+       11. DOWNLOAD LINKS / FILES
+       ============================================================== */
+    let globalDownloadLinks = [];
+
+    async function loadAdminDownloadLinks() {
+      const tbody = document.getElementById('admin-download-links-tbody');
+      try {
+        const res = await fetch('/api/admin/download-links');
+        const data = await res.json();
+
+        if (!data.success) {
+          tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 2rem; color: var(--danger);">Failed to load download links.</td></tr>`;
+          return;
+        }
+
+        globalDownloadLinks = data.download_links || [];
+
+        if (globalDownloadLinks.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 2rem; color: var(--text-dim);">No download links configured. Click "+ Add Download Link" to add one.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = globalDownloadLinks.map(dl => {
+          const statusBadge = dl.is_active
+            ? '<span class="badge badge-undetected">Active</span>'
+            : '<span class="badge badge-warning">Inactive</span>';
+          const productDisplay = dl.product_name 
+            ? `${escapeHtml(dl.product_name)}`
+            : '<span style="color: var(--text-dim);">All products in category</span>';
+          const linkDisplay = dl.link.length > 50 
+            ? `<a href="${escapeHtml(dl.link)}" target="_blank" style="color: var(--primary); text-decoration: none;">${escapeHtml(dl.link.substring(0, 50))}...</a>`
+            : `<a href="${escapeHtml(dl.link)}" target="_blank" style="color: var(--primary); text-decoration: none;">${escapeHtml(dl.link)}</a>`;
+
+          return `
+            <tr>
+              <td>#${dl.id}</td>
+              <td><span style="color:#94a3b8; font-size:0.85rem; font-weight:500; text-transform:uppercase; letter-spacing:0.5px;">${escapeHtml(dl.category_name)}</span></td>
+              <td>${productDisplay}</td>
+              <td><strong style="color:#ffffff;">${escapeHtml(dl.name)}</strong></td>
+              <td style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${linkDisplay}</td>
+              <td>${statusBadge}</td>
+              <td>
+                <div style="display: flex; gap: 0.4rem;">
+                  <button class="btn btn-outline btn-sm" onclick="editDownloadLink(${dl.id})">Edit</button>
+                  <button class="btn btn-outline btn-sm" onclick="deleteDownloadLink(${dl.id})" style="color:var(--danger)">Del</button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="7" style="color:var(--danger); text-align:center;">Failed to load download links.</td></tr>`;
+      }
+    }
+
+    async function loadCategoriesForDL() {
+      try {
+        const res = await fetch('/api/categories');
+        const data = await res.json();
+        if (data.success && data.categories) {
+          const select = document.getElementById('dl-category');
+          if (select) {
+            select.innerHTML = '<option value="">-- Choose Category --</option>' +
+              data.categories.map(c => `<option value="${escapeHtml(c.name)}">${escapeHtml(c.name)}</option>`).join('');
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load categories for DL:', err);
+      }
+    }
+
+    async function loadProductsForDLCategory() {
+      const category = document.getElementById('dl-category').value;
+      const productSelect = document.getElementById('dl-product');
+      if (!productSelect) return;
+
+      if (!category) {
+        productSelect.innerHTML = '<option value="">-- Choose Product --</option>';
+        productSelect.disabled = true;
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/admin/products?category=${encodeURIComponent(category)}`);
+        const data = await res.json();
+        const products = data.products || [];
+
+        productSelect.innerHTML = '<option value="">-- Choose Product --</option>' +
+          '<option value="__ALL__">All products in this category</option>' +
+          products.map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
+        productSelect.disabled = false;
+      } catch (err) {
+        productSelect.innerHTML = '<option value="">-- Choose Product --</option>';
+        productSelect.disabled = true;
+      }
+    }
+
+    function onDLCategoryChange() {
+      loadProductsForDLCategory();
+    }
+
+    function openAddDownloadLinkModal() {
+      document.getElementById('form-add-download-link').reset();
+      document.getElementById('dl-edit-id').value = '';
+      document.getElementById('dl-active').checked = true;
+      
+      // Reset product dropdown
+      document.getElementById('dl-product').innerHTML = '<option value="">-- Choose Product --</option>';
+      document.getElementById('dl-product').disabled = true;
+      
+      // Load categories
+      loadCategoriesForDL().then(() => {
+        // If editing, pre-select category and product
+      });
+      
+      document.getElementById('dl-modal-title').textContent = '+ Add Download Link';
+      document.getElementById('btn-save-dl').textContent = 'Add Download Link 💾';
+      openModal('modal-add-download-link');
+    }
+
+    function editDownloadLink(id) {
+      const dl = globalDownloadLinks.find(x => x.id === id);
+      if (!dl) {
+        showToast('Download link not found', 'error');
+        return;
+      }
+
+      document.getElementById('form-add-download-link').reset();
+      document.getElementById('dl-edit-id').value = dl.id;
+      document.getElementById('dl-modal-title').textContent = '✏️ Edit Download Link';
+      document.getElementById('btn-save-dl').textContent = 'Save Changes 💾';
+
+      // Load categories and pre-select
+      loadCategoriesForDL().then(() => {
+        document.getElementById('dl-category').value = dl.category_name;
+        loadProductsForDLCategory().then(() => {
+          document.getElementById('dl-product').value = dl.product_id || '__ALL__';
+        });
+      });
+
+      document.getElementById('dl-name').value = dl.name || '';
+      document.getElementById('dl-link').value = dl.link || '';
+      document.getElementById('dl-active').checked = dl.is_active;
+
+      openModal('modal-add-download-link');
+    }
+
+    async function deleteDownloadLink(id) {
+      if (!confirm('Are you sure you want to delete this download link?')) return;
+      try {
+        const res = await fetch(`/api/admin/download-links?id=${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          showToast(data.message || 'Failed to delete download link', 'error');
+          return;
+        }
+        showToast('Download link deleted', 'success');
+        loadAdminDownloadLinks();
+      } catch (err) {
+        showToast('Failed to delete download link', 'error');
+      }
+    }
+
+    async function handleAddDownloadLinkSubmit(e) {
+      e.preventDefault();
+
+      const editId = document.getElementById('dl-edit-id').value;
+      const category = document.getElementById('dl-category').value;
+      const product = document.getElementById('dl-product').value;
+      const name = document.getElementById('dl-name').value.trim();
+      const link = document.getElementById('dl-link').value.trim();
+      const isActive = document.getElementById('dl-active').checked;
+
+      if (!category || !name || !link) {
+        showToast('Category, Name, and Link are required.', 'warning');
+        return;
+      }
+
+      // Validate URL
+      try {
+        new URL(link);
+      } catch (e) {
+        showToast('Please enter a valid URL (including http:// or https://)', 'warning');
+        return;
+      }
+
+      const productId = product === '__ALL__' || !product ? null : parseInt(product, 10);
+      const editId = document.getElementById('dl-edit-id').value;
+
+      const btn = document.getElementById('btn-save-dl');
+      if (btn) { btn.disabled = true; btn.textContent = editId ? 'Saving...' : 'Saving...'; }
+
+      try {
+        const payload = {
+          category_name: category,
+          product_id: productId,
+          name,
+          link,
+          is_active: isActive
+        };
+
+        if (editId) {
+          payload.id = parseInt(editId, 10);
+        }
+
+        const res = await fetch('/api/admin/download-links', {
+          method: editId ? 'PUT' : 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+          showToast(data.message || 'Failed to save download link', 'error');
+          return;
+        }
+
+        showToast(editId ? 'Download link updated!' : 'Download link added!', 'success');
+        closeModal('modal-add-download-link');
+        loadAdminDownloadLinks();
+      } catch (err) {
+        console.error('Download link save error:', err);
+        showToast('Network error saving download link', 'error');
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = editId ? 'Save Changes 💾' : 'Add Download Link 💾'; }
       }
     }
 

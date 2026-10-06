@@ -216,6 +216,22 @@
                       <span style="font-size: 0.75rem; color: var(--primary);">📋 COPY</span>
                     </div>
                   </div>
+                  ${o.download_links && o.download_links.length > 0 ? `
+                    <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--bg-card-border);">
+                      <div style="font-size: 0.72rem; color: var(--primary); font-weight: 700; margin-bottom: 0.5rem;">📁 Download Links</div>
+                      <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                        ${o.download_links.map(dl => `
+                          <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; background: #0d0d15; border: 1px solid var(--bg-card-border); border-radius: var(--radius-sm);">
+                            <div style="flex: 1; min-width: 0;">
+                              <div style="font-weight: 600; color: #fff; font-size: 0.85rem;">${escapeHtml(dl.name)}</div>
+                              <a href="${escapeHtml(dl.link)}" target="_blank" style="font-size: 0.75rem; color: var(--primary); text-decoration: none; font-family: monospace; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(dl.link)}</a>
+                            </div>
+                            <button class="btn btn-outline btn-sm" onclick="copyToClipboard('${escapeHtml(dl.link)}')" style="font-size: 0.7rem; white-space: nowrap;">📋 Copy Link</button>
+                          </div>
+                        `).join('')}
+                      </div>
+                    </div>
+                  ` : ''}
                   <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-dim);">
                     <span>Order: #${escapeHtml(o.order_code)}</span>
                     <span>Delivered: ${new Date(o.created_at).toLocaleDateString()}</span>

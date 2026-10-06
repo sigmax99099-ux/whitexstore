@@ -26,7 +26,8 @@ export default async function handler(req, res) {
         pl.plan_name,
         pl.duration_type,
         pl.days,
-        lk.key_code
+        lk.key_code,
+        p.category as product_category
       FROM orders o
       JOIN products p ON o.product_id = p.id
       JOIN plans pl ON o.plan_id = pl.id
@@ -36,9 +37,26 @@ export default async function handler(req, res) {
       [user.id]
     );
 
+    // Fetch download links for approved orders
+    const orders = ordersRes.rows;
+    for (const order of orders) {
+      if (order.status === 'approved' && order.product_category) {
+        const dlRes = await query(
+          `SELECT id, name, link FROM download_links 
+           WHERE is_active = true 
+           AND category_name = $1 
+           AND (product_id = $2 OR product_id IS NULL)`,
+          [order.product_category, order.product_id]
+        );
+        order.download_links = dlRes.rows;
+      } else {
+        order.download_links = [];
+      }
+    }
+
     return res.status(200).json({
       success: true,
-      orders: ordersRes.rows
+      orders
     });
   } catch (err) {
     console.error('My orders error:', err);

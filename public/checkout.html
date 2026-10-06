@@ -271,6 +271,33 @@
           document.getElementById('btn-copy-key').style.display = 'none';
         }
 
+        // Display download links if available
+        if (data.download_links && data.download_links.length > 0) {
+          const downloadLinksHtml = data.download_links.map(dl => `
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: #0d0d15; border: 1px solid var(--bg-card-border); border-radius: var(--radius-md); margin: 0.5rem 0;">
+              <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                <strong style="color: #fff;">${dl.name}</strong>
+                <a href="${dl.link}" target="_blank" style="font-size: 0.8rem; color: var(--primary); text-decoration: none; font-family: monospace;">${dl.link}</a>
+              </div>
+              <button class="btn btn-outline btn-sm" onclick="copyToClipboard('${dl.link}')">📋 Copy</button>
+            </div>
+          `).join('');
+          
+          const downloadSection = document.createElement('div');
+          downloadSection.style.cssText = 'margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--bg-card-border);';
+          downloadSection.innerHTML = `
+            <h3 style="color: #fff; margin-bottom: 1rem; font-size: 1.1rem;">📁 Download Links</h3>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">Your purchase includes the following download links:</p>
+            <div id="download-links-container" style="display: flex; flex-direction: column; gap: 0.5rem;">
+              ${downloadLinksHtml}
+            </div>
+          `;
+          
+          // Insert after the key display
+          const keyDisplay = document.getElementById('delivered-key-text').parentElement;
+          keyDisplay.insertAdjacentElement('afterend', downloadSection);
+        }
+
         showToast('Order successful! Your key is ready.', 'success');
 
       } catch (err) {
