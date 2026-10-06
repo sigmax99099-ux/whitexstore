@@ -1923,7 +1923,6 @@
           body: JSON.stringify({ id, is_active: !isCurrentlyActive })
         });
         loadAdminPaymentMethods();
-      }
       } catch (err) {
         showToast('Status toggle failed', 'error');
       }
