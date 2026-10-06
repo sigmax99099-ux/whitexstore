@@ -76,12 +76,14 @@ export default async function handler(req, res) {
 
     // Parse multipart data
     const parts = parseMultipart(rawBody, boundary);
+    console.log('[Upload Debug] Parts found:', parts.map(p => ({ name: p.name, filename: p.filename, mimeType: p.mimeType, dataLength: p.data?.length })));
     
     const filePart = parts.find(p => p.name === 'file');
     const typePart = parts.find(p => p.name === 'type');
     const gatewayIdPart = parts.find(p => p.name === 'gateway_id');
 
     if (!filePart) {
+      console.log('[Upload Debug] No file part found in parts:', parts.map(p => p.name));
       return res.status(400).json({ success: false, message: 'No file uploaded' });
     }
 
@@ -95,6 +97,12 @@ export default async function handler(req, res) {
     const fileBuffer = filePart.data;
     const filename = filePart.filename || 'image.png';
     const mimeType = filePart.mimeType || 'application/octet-stream';
+    
+    console.log('[Upload Debug] File buffer length:', fileBuffer?.length, 'filename:', filename, 'mimeType:', mimeType);
+
+    if (!fileBuffer || fileBuffer.length === 0) {
+      return res.status(400).json({ success: false, message: 'File is empty' });
+    }
 
     // Validate file size
     if (fileBuffer.length > MAX_FILE_SIZE) {

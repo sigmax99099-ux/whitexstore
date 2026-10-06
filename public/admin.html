@@ -1941,6 +1941,10 @@
 
     // File upload handlers
     async function uploadGatewayImage(file, type, gatewayId) {
+      console.log('[uploadGatewayImage] file:', file?.name, 'size:', file?.size, 'type:', type, 'gatewayId:', gatewayId);
+      if (!file || file.size === 0) {
+        return { success: false, message: 'No file provided or file is empty' };
+      }
       const formData = new FormData();
       formData.append('file', file);
       formData.append('type', type);
@@ -2113,8 +2117,11 @@
         const useQrUrl = document.getElementById('pm-qr-use-url').checked;
         const hasExistingQr = document.getElementById('pm-qr-preview').style.display === 'flex';
         
+        console.log('[QR Debug]', { qrFile: qrFile?.name, qrSize: qrFile?.size, useQrUrl, hasExistingQr, isNewGateway });
+        
         if (qrFile && qrFile.size > 0) {
           // Upload new QR file
+          console.log('[QR Debug] Uploading file:', qrFile.name, qrFile.size);
           const uploadRes = await uploadGatewayImage(qrFile, 'qr', gatewayId);
           if (!uploadRes.success) {
             showToast('QR upload failed: ' + uploadRes.message, 'error');
