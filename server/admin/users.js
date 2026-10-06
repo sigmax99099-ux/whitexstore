@@ -23,6 +23,7 @@ export default async function handler(req, res) {
           u.wallet_balance,
           u.status,
           u.created_at,
+          ROW_NUMBER() OVER (ORDER BY u.created_at ASC)::int as user_seq,
           COUNT(DISTINCT o.id)::int as total_orders
         FROM users u
         LEFT JOIN orders o ON u.id = o.user_id

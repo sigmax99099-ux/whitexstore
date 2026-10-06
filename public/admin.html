@@ -120,6 +120,160 @@
       color: #f59e0b;
       text-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
     }
+
+    /* Users Table Styling (matching Pic 2) */
+    .table-custom.users-table th {
+      color: #38bdf8 !important;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      padding: 0.95rem 1.1rem;
+      background: #080c1b;
+      border-bottom: 1px solid rgba(56, 189, 248, 0.16);
+    }
+    .table-custom.users-table td {
+      padding: 0.85rem 1.1rem;
+      vertical-align: middle;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .user-type-badge-customer {
+      background: linear-gradient(135deg, #d97706, #b45309);
+      color: #ffffff;
+      font-weight: 800;
+      font-size: 0.74rem;
+      letter-spacing: 0.5px;
+      padding: 6px 14px;
+      border-radius: 18px;
+      box-shadow: 0 0 14px rgba(217, 119, 6, 0.45);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .user-type-badge-reseller {
+      background: linear-gradient(135deg, #7c3aed, #4f46e5);
+      color: #ffffff;
+      font-weight: 800;
+      font-size: 0.74rem;
+      letter-spacing: 0.5px;
+      padding: 6px 14px;
+      border-radius: 18px;
+      box-shadow: 0 0 14px rgba(124, 58, 237, 0.45);
+      border: 1px solid rgba(167, 139, 250, 0.4);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .btn-action-reseller, .btn-action-wallet {
+      background: rgba(30, 58, 138, 0.25);
+      border: 1px solid #1d4ed8;
+      color: #60a5fa;
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      line-height: 1.3;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
+    .btn-action-reseller:hover, .btn-action-wallet:hover {
+      background: rgba(37, 99, 235, 0.45);
+      border-color: #3b82f6;
+      color: #bfdbfe;
+      box-shadow: 0 0 8px rgba(59, 130, 246, 0.35);
+    }
+    .btn-action-block {
+      background: rgba(30, 58, 138, 0.2);
+      border: 1px solid #1e3a8a;
+      color: #93c5fd;
+      border-radius: 6px;
+      padding: 4px 12px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      line-height: 1.3;
+      white-space: nowrap;
+    }
+    .btn-action-block:hover {
+      background: rgba(30, 58, 138, 0.45);
+      border-color: #3b82f6;
+      color: #bfdbfe;
+    }
+    .btn-action-unblock {
+      background: rgba(22, 163, 74, 0.2);
+      border: 1px solid #16a34a;
+      color: #4ade80;
+      border-radius: 6px;
+      padding: 4px 12px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      line-height: 1.3;
+      white-space: nowrap;
+    }
+    .btn-action-unblock:hover {
+      background: rgba(22, 163, 74, 0.35);
+      border-color: #22c55e;
+      color: #86efac;
+    }
+
+    /* Wallet Adjustment Modal Buttons (matching Pic 3) */
+    .btn-wallet-save {
+      background: linear-gradient(180deg, #3b82f6, #2563eb);
+      border: none;
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 0.92rem;
+      border-radius: 8px;
+      padding: 10px 20px;
+      flex: 1;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .btn-wallet-save:hover {
+      filter: brightness(1.1);
+      box-shadow: 0 4px 18px rgba(37, 99, 235, 0.55);
+      transform: translateY(-1px);
+    }
+    .btn-wallet-cancel {
+      background: linear-gradient(180deg, #ef4444, #dc2626);
+      border: none;
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 0.92rem;
+      border-radius: 8px;
+      padding: 10px 20px;
+      flex: 1;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(220, 38, 38, 0.4);
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .btn-wallet-cancel:hover {
+      filter: brightness(1.1);
+      box-shadow: 0 4px 18px rgba(220, 38, 38, 0.55);
+      transform: translateY(-1px);
+    }
   </style>
 </head>
 <body>
@@ -500,17 +654,17 @@
         </div>
 
         <div class="table-responsive">
-          <table class="table-custom">
+          <table class="table-custom users-table">
             <thead>
               <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Phone</th>
-                <th>Tier</th>
-                <th>Reseller Discount</th>
-                <th>Wallet Balance</th>
-                <th>Status</th>
-                <th>Actions</th>
+                <th style="width: 65px;">ID</th>
+                <th>NAME</th>
+                <th>EMAIL</th>
+                <th>PHONE</th>
+                <th style="width: 140px; text-align: center;">TYPE</th>
+                <th style="width: 110px;">WALLET</th>
+                <th style="width: 110px;">STATUS</th>
+                <th style="width: 185px;">ACTION</th>
               </tr>
             </thead>
             <tbody id="admin-users-tbody">
@@ -988,35 +1142,34 @@
   <div id="modal-wallet-adjust" class="modal-backdrop">
     <div class="modal-box" style="max-width: 460px; width: 95%;">
       <button class="modal-close" onclick="closeModal('modal-wallet-adjust')">✕</button>
-      <h3 style="color: #fff; margin-bottom: 0.25rem;">💰 Manual Wallet Adjustment</h3>
-      <p id="wallet-adjust-user" style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 1.5rem;">
-        User: <span id="wallet-adjust-username" style="color: var(--danger); font-weight: 600;"></span>
+      <h3 style="color: #fff; margin-bottom: 0.35rem; font-size: 1.25rem; font-weight: 700;">💰 Manual Wallet Adjustment</h3>
+      <p id="wallet-adjust-user" style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 1.5rem;">
+        User: <span id="wallet-adjust-username" style="color: #ef4444; font-weight: 700;"></span>
       </p>
       <form id="form-wallet-adjust">
         <input type="hidden" id="wallet-adjust-userid" value="">
-        <div class="form-group">
-          <label class="form-label">ACTION *</label>
-          <select id="wallet-adjust-action" class="form-select" required>
-            <option value="">-- Select Action --</option>
-            <option value="credit">+ Credit (Add Money)</option>
-            <option value="debit">– Debit (Remove Money)</option>
+        <div class="form-group" style="margin-bottom: 1.25rem;">
+          <label class="form-label" style="font-size: 0.78rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.45rem;">ACTION</label>
+          <select id="wallet-adjust-action" class="form-select" required style="background: #090d1a; border: 1px solid #1e293b; color: #fff; border-radius: 6px; padding: 10px 12px; width: 100%; font-size: 0.92rem;">
+            <option value="credit">➕ Credit (Add Money)</option>
+            <option value="debit">➖ Debit (Remove Money)</option>
           </select>
         </div>
-        <div class="form-group">
-          <label class="form-label">AMOUNT (NPR) *</label>
+        <div class="form-group" style="margin-bottom: 1.25rem;">
+          <label class="form-label" style="font-size: 0.78rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.45rem;">AMOUNT (NPR)</label>
           <input type="number" id="wallet-adjust-amount" class="form-input" required 
-            placeholder="Enter amount" min="0.01" step="0.01" style="text-align: right;">
-          <div id="wallet-adjust-amount-error" class="form-error" style="display: none; font-size: 0.72rem; color: var(--danger); margin-top: 0.35rem;"></div>
+            placeholder="Enter amount" min="0.01" step="0.01" style="background: #090d1a; border: 1px solid #1e293b; color: #fff; border-radius: 6px; padding: 10px 12px; width: 100%; font-size: 0.92rem;">
+          <div id="wallet-adjust-amount-error" class="form-error" style="display: none; font-size: 0.75rem; color: #ef4444; margin-top: 0.35rem;"></div>
         </div>
-        <div class="form-group">
-          <label class="form-label">DESCRIPTION *</label>
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <label class="form-label" style="font-size: 0.78rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.45rem;">DESCRIPTION</label>
           <input type="text" id="wallet-adjust-description" class="form-input" required 
-            placeholder="Reason for adjustment" maxlength="500">
-          <div id="wallet-adjust-desc-error" class="form-error" style="display: none; font-size: 0.72rem; color: var(--danger); margin-top: 0.35rem;"></div>
+            placeholder="Reason" maxlength="500" style="background: #090d1a; border: 1px solid #1e293b; color: #fff; border-radius: 6px; padding: 10px 12px; width: 100%; font-size: 0.92rem;">
+          <div id="wallet-adjust-desc-error" class="form-error" style="display: none; font-size: 0.75rem; color: #ef4444; margin-top: 0.35rem;"></div>
         </div>
-        <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem; justify-content: flex-end;">
-          <button type="button" class="btn btn-danger btn-sm" onclick="closeModal('modal-wallet-adjust')">✕ Cancel</button>
-          <button type="submit" id="btn-wallet-adjust-save" class="btn btn-primary btn-sm btn-glow">💾 SAVE</button>
+        <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+          <button type="submit" id="btn-wallet-adjust-save" class="btn-wallet-save">💾 SAVE</button>
+          <button type="button" class="btn-wallet-cancel" onclick="closeModal('modal-wallet-adjust')">❌ Cancel</button>
         </div>
       </form>
     </div>
@@ -2725,29 +2878,46 @@
           return;
         }
 
-        tbody.innerHTML = data.users.map(u => {
-          const tierTag = u.user_type === 'reseller' 
-            ? '<span class="badge badge-reseller">Reseller</span>' 
-            : '<span class="badge">Customer</span>';
+        tbody.innerHTML = data.users.map((u, idx) => {
+          const userSeq = u.user_seq || (data.users.length - idx);
+          const isReseller = u.user_type === 'reseller';
+          const isActive = u.status === 'active';
 
-          const statusBtn = u.status === 'active' 
-            ? `<button class="btn btn-sm btn-outline" style="color:var(--danger)" onclick="setUserStatus('${u.id}', 'blocked')">Block</button>` 
-            : `<button class="btn btn-sm btn-success" onclick="setUserStatus('${u.id}', 'active')">Unblock</button>`;
+          const typeBadge = isReseller 
+            ? '<span class="user-type-badge-reseller">🏪 RESELLER</span>' 
+            : '<span class="user-type-badge-customer">👤 CUSTOMER</span>';
+
+          const tierActionBtn = isReseller
+            ? `<button type="button" class="btn-action-reseller" onclick="editUserTier('${u.id}', '${u.user_type}', ${u.reseller_discount || 0})">✏️ Edit Tier</button>`
+            : `<button type="button" class="btn-action-reseller" onclick="promoteToReseller('${u.id}', '${escapeHtml(u.name)}')">🏪 Make Reseller</button>`;
+
+          const statusBtn = isActive 
+            ? `<button type="button" class="btn-action-block" onclick="setUserStatus('${u.id}', 'blocked')">Block</button>` 
+            : `<button type="button" class="btn-action-unblock" onclick="setUserStatus('${u.id}', 'active')">Unblock</button>`;
 
           return `
             <tr>
-              <td><strong>${escapeHtml(u.name)}</strong></td>
-              <td>${escapeHtml(u.email)}</td>
-              <td>${escapeHtml(u.phone || '-')}</td>
-              <td>${tierTag}</td>
-              <td>${u.reseller_discount || 0}%</td>
-              <td>NPR ${parseFloat(u.wallet_balance || 0).toLocaleString()}</td>
-              <td>${u.status}</td>
+              <td style="color: #94a3b8; font-weight: 600;">#${userSeq}</td>
+              <td><strong style="color: #ffffff; font-weight: 700; font-size: 0.95rem;">${escapeHtml(u.name)}</strong></td>
+              <td style="color: #cbd5e1; font-size: 0.88rem;">${escapeHtml(u.email)}</td>
+              <td style="color: #cbd5e1; font-size: 0.88rem;">${escapeHtml(u.phone || '-')}</td>
+              <td style="text-align: center;">${typeBadge}</td>
+              <td style="color: #ef4444; font-weight: 700; font-size: 0.95rem;">Rs ${parseFloat(u.wallet_balance || 0).toLocaleString()}</td>
               <td>
-                <div style="display: flex; gap: 0.35rem;">
-                  <button class="btn btn-outline btn-sm" onclick="editUserTier('${u.id}', '${u.user_type}', ${u.reseller_discount || 0})">Edit Tier</button>
-                  <button class="btn btn-outline btn-sm" style="color: var(--info);" onclick="openWalletAdjustModal('${u.id}', '${escapeHtml(u.name)}', ${parseFloat(u.wallet_balance || 0)})">💰 Wallet</button>
-                  ${statusBtn}
+                <span style="display: inline-flex; align-items: center; gap: 8px; font-size: 0.88rem; color: #f8fafc;">
+                  <span class="prod-status-dot ${isActive ? 'active' : 'hidden'}"></span>
+                  ${isActive ? 'Active' : 'Blocked'}
+                </span>
+              </td>
+              <td>
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                  <div style="display: flex; gap: 6px; align-items: center;">
+                    ${tierActionBtn}
+                    ${statusBtn}
+                  </div>
+                  <div>
+                    <button type="button" class="btn-action-wallet" onclick="openWalletAdjustModal('${u.id}', '${escapeHtml(u.name)}', ${parseFloat(u.wallet_balance || 0)})">💰 Wallet</button>
+                  </div>
                 </div>
               </td>
             </tr>
@@ -2759,12 +2929,50 @@
     }
 
     async function setUserStatus(id, status) {
-      await fetch('/api/admin/users', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, status })
-      });
-      loadAdminUsers();
+      const actionText = status === 'blocked' ? 'block' : 'unblock';
+      if (!confirm(`Are you sure you want to ${actionText} this user?`)) return;
+      try {
+        const res = await fetch('/api/admin/users', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, status })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          showToast(data.message || 'Failed to update user status', 'error');
+          return;
+        }
+        showToast(`User ${status === 'blocked' ? 'blocked' : 'unblocked'} successfully!`, 'success');
+        loadAdminUsers();
+      } catch (err) {
+        showToast('Error updating user status', 'error');
+      }
+    }
+
+    async function promoteToReseller(id, name) {
+      const disc = prompt(`Enter reseller discount percentage for ${name} (e.g. 10):`, '10');
+      if (disc === null) return;
+      const numDisc = parseFloat(disc);
+      if (isNaN(numDisc) || numDisc < 0 || numDisc > 100) {
+        showToast('Please enter a valid percentage between 0 and 100', 'warning');
+        return;
+      }
+      try {
+        const res = await fetch('/api/admin/users', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, user_type: 'reseller', reseller_discount: numDisc })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          showToast(data.message || 'Failed to update user tier', 'error');
+          return;
+        }
+        showToast(`${name} upgraded to Reseller (${numDisc}% discount)!`, 'success');
+        loadAdminUsers();
+      } catch (err) {
+        showToast('Error upgrading user tier', 'error');
+      }
     }
 
     async function editUserTier(id, currentType, currentDisc) {
@@ -2773,12 +2981,22 @@
       const newDisc = prompt('Enter reseller discount percentage (0 to 100):', currentDisc);
       if (newDisc === null) return;
 
-      await fetch('/api/admin/users', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, user_type: newType, reseller_discount: parseFloat(newDisc) })
-      });
-      loadAdminUsers();
+      try {
+        const res = await fetch('/api/admin/users', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, user_type: newType.trim().toLowerCase(), reseller_discount: parseFloat(newDisc) || 0 })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          showToast(data.message || 'Failed to update user tier', 'error');
+          return;
+        }
+        showToast('User tier updated successfully!', 'success');
+        loadAdminUsers();
+      } catch (err) {
+        showToast('Error updating user tier', 'error');
+      }
     }
 
     /* ==============================================================
