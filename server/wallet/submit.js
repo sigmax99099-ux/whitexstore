@@ -100,9 +100,11 @@ export default async function handler(req, res) {
         currency: currency,
         method: method.method_name,
         txId: tx.id,
-        refNumber: transaction_ref || '',
+        screenshot: screenshotUrl,
         time: new Date().toLocaleString('en-US', { timeZone: 'Asia/Kathmandu' }),
-        screenshot: screenshotUrl
+        refNumber: transaction_ref || '',
+        paymentMethodId: method.id,
+        userId: user.id
       });
     } catch (discordErr) {
       console.warn('Discord webhook topup alert warning:', discordErr.message);

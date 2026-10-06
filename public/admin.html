@@ -739,12 +739,25 @@
               <label class="form-label" for="setting-discord-webhook">Discord Webhook URL</label>
               <input type="url" id="setting-discord-webhook" class="form-input" placeholder="https://discord.com/api/webhooks/...">
               <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 0.25rem;">
-                Receive instant alerts for new deposits, orders, auto-deliveries, and password resets.
+                Receive instant alerts for new wallet top-up requests, orders, auto-deliveries, and password resets.
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 1rem;">
+              <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.88rem; cursor: pointer;">
+                <input type="checkbox" id="setting-discord-notify-topup" checked> Notify on new wallet top-up requests
+              </label>
+              <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: 0.25rem; margin-left: 1.75rem;">
+                Send a Discord alert instantly when a client submits a wallet top-up request (status: pending).
               </div>
             </div>
 
             <button type="button" class="btn btn-outline btn-sm" onclick="testDiscordWebhook()" style="margin-bottom: 1.5rem;">
               🔔 Send Test Notification to Discord
+            </button>
+
+            <button type="button" class="btn btn-outline btn-sm" onclick="testDiscordWalletTopup()" style="margin-bottom: 1.5rem;">
+              💰 Send Test Wallet Top-up Notification
             </button>
 
             <h3 style="color: var(--primary); margin-bottom: 1rem;">KeyLicense Supplier API</h3>
@@ -3582,6 +3595,7 @@
         if (data.settings) {
           const s = data.settings;
           document.getElementById('setting-discord-webhook').value = s.discord_webhook || '';
+          document.getElementById('setting-discord-notify-topup').checked = s.discord_notify_topup !== 'false'; // default true
           document.getElementById('setting-kl-token').value = s.kl_api_token || '';
           document.getElementById('setting-npr-rate').value = s.npr_usd_rate || '134.50';
           document.getElementById('setting-inr-rate').value = s.inr_usd_rate || '84.00';
@@ -3596,6 +3610,7 @@
       e.preventDefault();
       const payload = {
         discord_webhook: document.getElementById('setting-discord-webhook').value.trim(),
+        discord_notify_topup: document.getElementById('setting-discord-notify-topup').checked,
         kl_api_token: document.getElementById('setting-kl-token').value.trim(),
         npr_usd_rate: document.getElementById('setting-npr-rate').value.trim(),
         inr_usd_rate: document.getElementById('setting-inr-rate').value.trim(),
@@ -3636,6 +3651,40 @@
         const data = await res.json();
         if (data.delivered) {
           showToast('Test notification delivered to Discord!', 'success');
+        } else {
+          showToast('Webhook dispatch failed. Check your webhook URL.', 'warning');
+        }
+      } catch (err) {
+        showToast('Failed to dispatch webhook', 'error');
+      }
+    }
+
+    async function testDiscordWalletTopup() {
+      showToast('Sending test wallet top-up notification to Discord...', 'info');
+      try {
+        const res = await fetch('/api/notify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: '💰 New Wallet Top-up Request (Pending Approval) [TEST]',
+            description: 'A new wallet top-up request has been submitted and requires admin verification. (This is a test notification)',
+            color: 0xe67e22,
+            fields: [
+              { name: '👤 Client Name / Username', value: 'TestUser123', inline: true },
+              { name: '📧 Client Email', value: 'test@example.com', inline: true },
+              { name: '🆔 Client ID', value: 'a0000000-0000-0000-0000-000000000001', inline: true },
+              { name: '💳 Payment Method', value: 'eSewa (Nepal)', inline: true },
+              { name: '💰 Amount Sent', value: '**1,000 NPR**', inline: true },
+              { name: '🆔 Transaction ID / Reference', value: '\`TXN123456789\`', inline: true },
+              { name: '🆔 Deposit Request ID', value: '#12345', inline: true },
+              { name: '🕒 Submitted At (NPT UTC+5:45)', value: new Date().toLocaleString('en-US', { timeZone: 'Asia/Kathmandu' }), inline: false },
+              { name: '🔗 Admin Approval Page', value: '[Open in Admin](https://whitexstore.com/admin.html?tab=wallets&txId=12345)', inline: false }
+            ]
+          })
+        });
+        const data = await res.json();
+        if (data.delivered) {
+          showToast('Test wallet top-up notification delivered to Discord!', 'success');
         } else {
           showToast('Webhook dispatch failed. Check your webhook URL.', 'warning');
         }
