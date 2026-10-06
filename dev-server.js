@@ -43,28 +43,40 @@ const server = http.createServer(async (req, res) => {
 
   // 1. API Route Handler (delegates to consolidated api/index.js)
   if (pathname.startsWith('/api')) {
-    // Parse body for POST / PUT / PATCH
+    // Check content type to determine if we should pre-parse
+    const contentType = req.headers['content-type'] || '';
+    const isMultipart = contentType.includes('multipart/form-data');
+    
+    // Parse body for POST / PUT / PATCH (but skip multipart - let handler handle it)
     let bodyData = null;
+    let rawBodyBuffers = null;
     if (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH') {
       try {
         const buffers = [];
         for await (const chunk of req) {
           buffers.push(chunk);
         }
-        const rawBody = Buffer.concat(buffers).toString('utf-8');
-        if (rawBody) {
-          try {
-            bodyData = JSON.parse(rawBody);
-          } catch (e) {
-            bodyData = rawBody;
+        
+        // For multipart, preserve raw buffers for handler
+        if (isMultipart) {
+          rawBodyBuffers = buffers;
+        } else {
+          const rawBody = Buffer.concat(buffers).toString('utf-8');
+          if (rawBody) {
+            try {
+              bodyData = JSON.parse(rawBody);
+            } catch (e) {
+              bodyData = rawBody;
+            }
           }
         }
       } catch (err) {
         console.error('Body parsing error:', err);
       }
     }
-
+    
     req.body = bodyData;
+    req.rawBodyBuffers = rawBodyBuffers;
     req.query = { ...parsedUrl.query };
 
     try {

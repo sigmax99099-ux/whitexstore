@@ -58,28 +58,34 @@ export default async function handler(req, res) {
   try {
     // Parse multipart form data
     const contentType = req.headers['content-type'] || '';
-    console.log('[Upload Debug] Content-Type:', contentType);
     if (!contentType.includes('multipart/form-data')) {
       return res.status(400).json({ success: false, message: 'Content-Type must be multipart/form-data' });
     }
 
-    // Simple multipart parser for our use case
+    // Extract boundary from Content-Type
     const boundary = contentType.split('boundary=')[1];
-    console.log('[Upload Debug] Boundary:', boundary);
     if (!boundary) {
       return res.status(400).json({ success: false, message: 'Invalid multipart boundary' });
     }
 
-    const buffers = [];
-    for await (const chunk of req) {
-      buffers.push(chunk);
+    // Remove quotes if present
+    const cleanBoundary = boundary.replace(/^"|"$/g, '').trim();
+
+    // Use pre-read raw buffers from dev-server.js (for multipart)
+    let rawBody;
+    if (req.rawBodyBuffers && req.rawBodyBuffers.length > 0) {
+      rawBody = Buffer.concat(req.rawBodyBuffers);
+    } else {
+      // Fallback: read from stream (for non-dev-server environments)
+      const buffers = [];
+      for await (const chunk of req) {
+        buffers.push(chunk);
+      }
+      rawBody = Buffer.concat(buffers);
     }
-    const rawBody = Buffer.concat(buffers);
-    console.log('[Upload Debug] Raw body length:', rawBody.length);
 
     // Parse multipart data
-    const parts = parseMultipart(rawBody, boundary);
-    console.log('[Upload Debug] Parts found:', parts.map(p => ({ name: p.name, filename: p.filename, mimeType: p.mimeType, dataLength: p.data?.length })));
+    const parts = parseMultipart(rawBody, cleanBoundary);
     
     const filePart = parts.find(p => p.name === 'file');
     const typePart = parts.find(p => p.name === 'type');
@@ -232,7 +238,8 @@ function parseMultipart(buffer, boundary) {
       : body;
     
     // Parse headers
-    const contentDisposition = headers.match(/Content-Disposition:.*name="([^"]+)"/i);
+    // Match name="..." that comes right after "form-data;" (specific pattern)
+    const contentDisposition = headers.match(/Content-Disposition:\s*form-data;\s*name="([^"]+)"/i);
     const filenameMatch = headers.match(/filename="([^"]+)"/i);
     const contentTypeMatch = headers.match(/Content-Type:\s*([^\r\n]+)/i);
     
