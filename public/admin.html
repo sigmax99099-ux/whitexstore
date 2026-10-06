@@ -1673,7 +1673,7 @@
       try {
         const res = await fetch('/api/admin/payment-methods');
         const data = await res.json();
-        globalPaymentMethods = data.payment_methods || [];
+        globalPaymentMethods = data.methods || [];
 
         if (globalPaymentMethods.length === 0) {
           tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding: 2rem; color: var(--text-dim);">No payment methods configured.</td></tr>`;
