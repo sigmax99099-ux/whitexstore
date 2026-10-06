@@ -2103,13 +2103,18 @@
       
       try {
         // Handle image uploads first
-        let qrUrl = document.getElementById('pm-qrcode').value.trim();
-        let logoUrl = document.getElementById('pm-logo').value.trim();
+        let qrUrl = null;
+        let logoUrl = null;
         const gatewayId = id ? parseInt(id, 10) : null;
+        const isNewGateway = !gatewayId;
         
         // Upload QR image if file selected
         const qrFile = document.getElementById('pm-qr-file').files[0];
-        if (qrFile) {
+        const useQrUrl = document.getElementById('pm-qr-use-url').checked;
+        const hasExistingQr = document.getElementById('pm-qr-preview').style.display === 'flex';
+        
+        if (qrFile && qrFile.size > 0) {
+          // Upload new QR file
           const uploadRes = await uploadGatewayImage(qrFile, 'qr', gatewayId);
           if (!uploadRes.success) {
             showToast('QR upload failed: ' + uploadRes.message, 'error');
@@ -2117,18 +2122,23 @@
             return;
           }
           qrUrl = uploadRes.url;
-        } else if (document.getElementById('pm-qr-use-url').checked) {
+        } else if (useQrUrl) {
           // Use URL fallback
-          qrUrl = document.getElementById('pm-qrcode').value.trim();
-        } else if (document.getElementById('pm-qr-preview').style.display === 'flex' && !qrFile && gatewayId) {
+          const urlValue = document.getElementById('pm-qrcode').value.trim();
+          if (urlValue) qrUrl = urlValue;
+        } else if (hasExistingQr && !isNewGateway) {
           // Keep existing image (already shown in preview)
           const pm = globalPaymentMethods.find(p => p.id === gatewayId);
-          qrUrl = pm?.qr_image || '';
+          qrUrl = pm?.qr_image || null;
         }
+        // If no file, no URL, and no existing image -> qrUrl stays null (optional)
         
         // Upload Logo image if file selected
         const logoFile = document.getElementById('pm-logo-file').files[0];
-        if (logoFile) {
+        const useLogoUrl = document.getElementById('pm-logo-use-url').checked;
+        const hasExistingLogo = document.getElementById('pm-logo-preview').style.display === 'flex';
+        
+        if (logoFile && logoFile.size > 0) {
           const uploadRes = await uploadGatewayImage(logoFile, 'logo', gatewayId);
           if (!uploadRes.success) {
             showToast('Logo upload failed: ' + uploadRes.message, 'error');
@@ -2136,11 +2146,12 @@
             return;
           }
           logoUrl = uploadRes.url;
-        } else if (document.getElementById('pm-logo-use-url').checked) {
-          logoUrl = document.getElementById('pm-logo').value.trim();
-        } else if (document.getElementById('pm-logo-preview').style.display === 'flex' && !logoFile && gatewayId) {
+        } else if (useLogoUrl) {
+          const urlValue = document.getElementById('pm-logo').value.trim();
+          if (urlValue) logoUrl = urlValue;
+        } else if (hasExistingLogo && !isNewGateway) {
           const pm = globalPaymentMethods.find(p => p.id === gatewayId);
-          logoUrl = pm?.logo_url || '';
+          logoUrl = pm?.logo_url || null;
         }
         
         const payload = {
