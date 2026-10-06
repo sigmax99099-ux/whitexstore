@@ -1,6 +1,7 @@
 import { query } from '../../lib/db.js';
 import { getAuthAdmin } from '../../lib/auth.js';
 import { uploadImage } from '../../lib/cloudinary.js';
+import { PAYMENT_GATEWAYS, getGatewayByName, getCurrencyFromGatewayName } from '../../lib/gateways.js';
 
 export default async function handler(req, res) {
   const admin = await getAuthAdmin(req);
@@ -33,6 +34,7 @@ export default async function handler(req, res) {
         account_id,
         account_holder,
         instructions,
+        description,
         qr_image,
         logo_url,
         api_key,
@@ -41,11 +43,35 @@ export default async function handler(req, res) {
         sort_order
       } = req.body || {};
 
-      if (!method_name || !currency || !account_id) {
-        return res.status(400).json({ success: false, message: 'Method name, currency, and Account ID/Number are required.' });
+      // Validate method_name against known gateways
+      const gateway = getGatewayByName(method_name);
+      if (!gateway) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Invalid payment method. Please select from the predefined list.' 
+        });
       }
 
-      // Handle image upload if base64
+      // Auto-derive currency from gateway
+      currency = gateway.currency;
+
+      if (!account_id) {
+        return res.status(400).json({ success: false, message: 'Account ID/Number is required.' });
+      }
+
+      // Check for duplicate active gateway for same method
+      const duplicateRes = await query(
+        `SELECT id FROM payment_methods WHERE method_name = $1 AND currency = $2 AND status = 'active'`,
+        [method_name, currency]
+      );
+      if (duplicateRes.rows.length > 0) {
+        return res.status(409).json({ 
+          success: false, 
+          message: `An active gateway for "${method_name} (${currency})" already exists.` 
+        });
+      }
+
+      // Handle image upload if base64 (for backward compat with URL inputs)
       if (qr_image && qr_image.startsWith('data:image/')) {
         try {
           qr_image = await uploadImage(qr_image, 'white-x-store/qr');
@@ -63,15 +89,16 @@ export default async function handler(req, res) {
 
       const insertRes = await query(
         `INSERT INTO payment_methods 
-          (method_name, currency, account_id, account_holder, instructions, qr_image, logo_url, api_key, checkout_visible, status, sort_order)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+          (method_name, currency, account_id, account_holder, instructions, description, qr_image, logo_url, api_key, checkout_visible, status, sort_order)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
          RETURNING *`,
         [
           String(method_name).trim(),
-          String(currency).toUpperCase().trim(),
+          currency,
           String(account_id).trim(),
           account_holder ? String(account_holder).trim() : '',
           instructions ? String(instructions).trim() : '',
+          description ? String(description).trim() : '',
           qr_image || null,
           logo_url || null,
           api_key ? String(api_key).trim() : null,
@@ -88,6 +115,13 @@ export default async function handler(req, res) {
       });
     } catch (err) {
       console.error('Create payment method error:', err);
+      // Check for unique constraint violation
+      if (err.code === '23505' && err.constraint === 'payment_methods_method_currency_active_unique') {
+        return res.status(409).json({ 
+          success: false, 
+          message: `An active gateway for this method and currency already exists.` 
+        });
+      }
       return res.status(500).json({ success: false, message: 'Failed to create payment method: ' + err.message });
     }
   }
@@ -102,6 +136,7 @@ export default async function handler(req, res) {
         account_id,
         account_holder,
         instructions,
+        description,
         qr_image,
         logo_url,
         api_key,
@@ -112,6 +147,33 @@ export default async function handler(req, res) {
 
       if (!id) {
         return res.status(400).json({ success: false, message: 'Method ID is required.' });
+      }
+
+      // If method_name is being changed, validate against known gateways
+      if (method_name !== undefined && method_name !== null) {
+        const gateway = getGatewayByName(method_name);
+        if (!gateway) {
+          return res.status(400).json({ 
+            success: false, 
+            message: 'Invalid payment method. Please select from the predefined list.' 
+          });
+        }
+        // Auto-derive currency from gateway
+        currency = gateway.currency;
+      }
+
+      // Check for duplicate active gateway for same method (excluding current)
+      if (method_name !== undefined && method_name !== null) {
+        const duplicateRes = await query(
+          `SELECT id FROM payment_methods WHERE method_name = $1 AND currency = $2 AND status = 'active' AND id != $3`,
+          [method_name, currency, parseInt(id, 10)]
+        );
+        if (duplicateRes.rows.length > 0) {
+          return res.status(409).json({ 
+            success: false, 
+            message: `An active gateway for "${method_name} (${currency})" already exists.` 
+          });
+        }
       }
 
       if (qr_image && qr_image.startsWith('data:image/')) {
@@ -136,13 +198,14 @@ export default async function handler(req, res) {
              account_id = COALESCE($3, account_id),
              account_holder = COALESCE($4, account_holder),
              instructions = COALESCE($5, instructions),
-             qr_image = COALESCE($6, qr_image),
-             logo_url = COALESCE($7, logo_url),
-             api_key = COALESCE($8, api_key),
-             checkout_visible = COALESCE($9, checkout_visible),
-             status = COALESCE($10, status),
-             sort_order = COALESCE($11, sort_order)
-         WHERE id = $12
+             description = COALESCE($6, description),
+             qr_image = COALESCE($7, qr_image),
+             logo_url = COALESCE($8, logo_url),
+             api_key = COALESCE($9, api_key),
+             checkout_visible = COALESCE($10, checkout_visible),
+             status = COALESCE($11, status),
+             sort_order = COALESCE($12, sort_order)
+         WHERE id = $13
          RETURNING *`,
         [
           method_name ? String(method_name).trim() : null,
@@ -150,6 +213,7 @@ export default async function handler(req, res) {
           account_id ? String(account_id).trim() : null,
           account_holder !== undefined ? String(account_holder).trim() : null,
           instructions !== undefined ? String(instructions).trim() : null,
+          description !== undefined ? String(description).trim() : null,
           qr_image !== undefined ? qr_image : null,
           logo_url !== undefined ? logo_url : null,
           api_key !== undefined ? api_key : null,
@@ -171,6 +235,13 @@ export default async function handler(req, res) {
       });
     } catch (err) {
       console.error('Update payment method error:', err);
+      // Check for unique constraint violation
+      if (err.code === '23505' && err.constraint === 'payment_methods_method_currency_active_unique') {
+        return res.status(409).json({ 
+          success: false, 
+          message: `An active gateway for this method and currency already exists.` 
+        });
+      }
       return res.status(500).json({ success: false, message: 'Failed to update payment method: ' + err.message });
     }
   }

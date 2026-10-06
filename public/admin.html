@@ -939,30 +939,96 @@
 
   <!-- 4. Payment Method Modal -->
   <div id="modal-payment-method" class="modal-backdrop">
-    <div class="modal-box" style="max-width: 580px; width: 95%;">
+    <div class="modal-box" style="max-width: 640px; width: 95%; max-height: 90vh; overflow-y: auto;">
       <button class="modal-close" onclick="closeModal('modal-payment-method')">✕</button>
       <h3 id="pm-modal-title" style="color: #fff; margin-bottom: 1.25rem;">+ Add Payment Method</h3>
       <form id="form-payment-method">
         <input type="hidden" id="pm-id">
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;" class="admin-modal-grid">
-          <div class="form-group">
-            <label class="form-label">Method Name *</label>
-            <input type="text" id="pm-name" class="form-input" required placeholder="e.g. eSewa, Khalti, Binance Pay">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Identifier / Account No *</label>
-            <input type="text" id="pm-identifier" class="form-input" required placeholder="e.g. 98XXXXXXXX / ID">
+        
+        <!-- Method Selection -->
+        <div class="form-group">
+          <label class="form-label">Method Name *</label>
+          <div style="position: relative;">
+            <select id="pm-method-select" class="form-select" required onchange="onPaymentMethodSelect()">
+              <option value="">-- Choose Gateway --</option>
+            </select>
+            <div id="pm-custom-method-wrap" style="display: none; margin-top: 0.5rem;">
+              <input type="text" id="pm-custom-method" class="form-input" placeholder="Custom method name">
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.5rem;" class="admin-modal-grid">
+                <select id="pm-custom-currency" class="form-select">
+                  <option value="NPR">NPR</option>
+                  <option value="INR">INR</option>
+                  <option value="USD">USD</option>
+                </select>
+              </div>
+            </div>
           </div>
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;" class="admin-modal-grid">
           <div class="form-group">
-            <label class="form-label">QR Code URL / Image Path</label>
-            <input type="text" id="pm-qrcode" class="form-input" placeholder="https://.../qr.png">
+            <label class="form-label">Identifier / Account No *</label>
+            <input type="text" id="pm-identifier" class="form-input" required placeholder="e.g. 98XXXXXXXX / ID">
           </div>
           <div class="form-group">
-            <label class="form-label">Logo / Icon URL</label>
-            <input type="text" id="pm-logo" class="form-input" placeholder="https://.../logo.png">
+            <label class="form-label">Account Holder Name *</label>
+            <input type="text" id="pm-holder" class="form-input" required placeholder="e.g. White X Store Official">
+          </div>
+        </div>
+
+        <!-- Description / Instructions -->
+        <div class="form-group">
+          <label class="form-label">Description / Instructions <span id="pm-desc-counter" style="color: var(--text-dim); font-weight: 400; font-size: 0.75rem;">(0/500)</span></label>
+          <textarea id="pm-description" class="form-textarea" style="min-height: 80px;" maxlength="500" placeholder="Transfer instructions for users (optional). Supports line breaks."></textarea>
+        </div>
+
+        <!-- QR Code Upload -->
+        <div class="form-group">
+          <label class="form-label">QR Code Image *</label>
+          <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            <div id="pm-qr-upload-area">
+              <input type="file" id="pm-qr-file" class="form-input" accept="image/png,image/jpeg,image/webp" style="padding: 0.5rem;" onchange="handleQRFileSelect(event)">
+              <div style="font-size: 0.72rem; color: var(--text-dim);">PNG, JPG, WEBP • Max 2MB</div>
+            </div>
+            <div id="pm-qr-preview" style="display: none; align-items: center; gap: 1rem; padding: 0.75rem; background: #0d0d15; border-radius: var(--radius-md); border: 1px solid var(--bg-card-border);">
+              <img id="pm-qr-preview-img" src="" alt="QR Preview" style="max-height: 100px; border-radius: 4px; border: 1px solid var(--bg-card-border);">
+              <div style="flex: 1;">
+                <div id="pm-qr-preview-name" style="font-weight: 500; color: #fff; font-size: 0.85rem;"></div>
+                <div style="font-size: 0.72rem; color: var(--text-dim);"></div>
+              </div>
+              <button type="button" class="btn btn-outline btn-sm" onclick="removeQRImage()" style="color: var(--danger);">Remove</button>
+            </div>
+            <div id="pm-qr-url-fallback" style="display: none; margin-top: 0.5rem;">
+              <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.82rem; color: var(--text-muted); cursor: pointer;">
+                <input type="checkbox" id="pm-qr-use-url" onchange="toggleQRUrlFallback()"> Use URL instead
+              </label>
+              <input type="url" id="pm-qrcode" class="form-input" style="margin-top: 0.5rem;" placeholder="https://.../qr.png" disabled>
+            </div>
+          </div>
+        </div>
+
+        <!-- Logo Upload -->
+        <div class="form-group">
+          <label class="form-label">Logo / Icon Image</label>
+          <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            <div id="pm-logo-upload-area">
+              <input type="file" id="pm-logo-file" class="form-input" accept="image/png,image/jpeg,image/webp" style="padding: 0.5rem;" onchange="handleLogoFileSelect(event)">
+              <div style="font-size: 0.72rem; color: var(--text-dim);">PNG, JPG, WEBP • Max 2MB</div>
+            </div>
+            <div id="pm-logo-preview" style="display: none; align-items: center; gap: 1rem; padding: 0.75rem; background: #0d0d15; border-radius: var(--radius-md); border: 1px solid var(--bg-card-border);">
+              <img id="pm-logo-preview-img" src="" alt="Logo Preview" style="max-height: 60px; width: 60px; border-radius: 4px; border: 1px solid var(--bg-card-border); object-fit: contain; background: #fff; padding: 4px;">
+              <div style="flex: 1;">
+                <div id="pm-logo-preview-name" style="font-weight: 500; color: #fff; font-size: 0.85rem;"></div>
+                <div style="font-size: 0.72rem; color: var(--text-dim);"></div>
+              </div>
+              <button type="button" class="btn btn-outline btn-sm" onclick="removeLogoImage()" style="color: var(--danger);">Remove</button>
+            </div>
+            <div id="pm-logo-url-fallback" style="display: none; margin-top: 0.5rem;">
+              <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.82rem; color: var(--text-muted); cursor: pointer;">
+                <input type="checkbox" id="pm-logo-use-url" onchange="toggleLogoUrlFallback()"> Use URL instead
+              </label>
+              <input type="url" id="pm-logo" class="form-input" style="margin-top: 0.5rem;" placeholder="https://.../logo.png" disabled>
+            </div>
           </div>
         </div>
 
@@ -1657,12 +1723,127 @@
       }
     }
 
+    // Payment Gateway Configuration (mirrors lib/gateways.js)
+    const PAYMENT_GATEWAYS = [
+      { key: 'esewa', name: 'eSewa (Nepal)', country: 'Nepal', currency: 'NPR' },
+      { key: 'khalti', name: 'Khalti (Nepal)', country: 'Nepal', currency: 'NPR' },
+      { key: 'bank_transfer_np', name: 'Bank Transfer (Nepal)', country: 'Nepal', currency: 'NPR' },
+      { key: 'upi', name: 'UPI / PhonePe / GPay (India)', country: 'India', currency: 'INR' },
+      { key: 'crypto', name: 'Crypto / Binance Pay (USDT)', country: 'Global', currency: 'USD' },
+    ];
+
+    // Initialize payment method dropdown
+    function initPaymentMethodDropdown() {
+      const select = document.getElementById('pm-method-select');
+      if (!select) return;
+      
+      select.innerHTML = '<option value="">-- Choose Gateway --</option>' +
+        PAYMENT_GATEWAYS.map(g => `<option value="${g.key}" data-currency="${g.currency}">${g.name} (${g.currency})</option>`).join('') +
+        '<option value="__CUSTOM__">Other / Custom...</option>';
+    }
+
+    function onPaymentMethodSelect() {
+      const select = document.getElementById('pm-method-select');
+      const customWrap = document.getElementById('pm-custom-method-wrap');
+      const customMethod = document.getElementById('pm-custom-method');
+      const customCurrency = document.getElementById('pm-custom-currency');
+      const identifierInput = document.getElementById('pm-identifier');
+      const holderInput = document.getElementById('pm-holder');
+      
+      if (!select) return;
+      
+      const value = select.value;
+      const isCustom = value === '__CUSTOM__';
+      
+      if (customWrap) customWrap.style.display = isCustom ? 'block' : 'none';
+      if (customMethod) customMethod.required = isCustom;
+      if (customCurrency) customCurrency.required = isCustom;
+      
+      if (!isCustom && value) {
+        const gateway = PAYMENT_GATEWAYS.find(g => g.key === value);
+        if (gateway) {
+          // Auto-fill identifier placeholder based on gateway
+          const placeholders = {
+            'esewa': 'eSewa ID (e.g. 98XXXXXXXX)',
+            'khalti': 'Khalti Wallet ID/Phone',
+            'bank_transfer_np': 'Bank Account Number',
+            'upi': 'UPI ID (e.g. merchant@upi)',
+            'crypto': 'USDT Wallet Address (TRC20/BEP20)',
+          };
+          if (identifierInput) identifierInput.placeholder = placeholders[gateway.key] || 'Account ID / Number';
+          
+          const holderPlaceholders = {
+            'esewa': 'White X Store Official',
+            'khalti': 'White X Store Official',
+            'bank_transfer_np': 'White X Store Pvt Ltd',
+            'upi': 'White X Store India',
+            'crypto': 'White X Crypto Pay',
+          };
+          if (holderInput) holderInput.placeholder = holderPlaceholders[gateway.key] || 'Account Holder Name';
+        }
+      } else if (isCustom) {
+        if (identifierInput) identifierInput.placeholder = 'Account ID / Number';
+        if (holderInput) holderInput.placeholder = 'Account Holder Name';
+      }
+    }
+
+    function getSelectedGatewayKey() {
+      const select = document.getElementById('pm-method-select');
+      if (!select || select.value === '__CUSTOM__') return null;
+      return select.value;
+    }
+
+    function getSelectedGatewayName() {
+      const key = getSelectedGatewayKey();
+      if (!key) {
+        const custom = document.getElementById('pm-custom-method');
+        return custom?.value?.trim() || '';
+      }
+      const gateway = PAYMENT_GATEWAYS.find(g => g.key === key);
+      return gateway?.name || '';
+    }
+
+    function getSelectedGatewayCurrency() {
+      const key = getSelectedGatewayKey();
+      if (!key) {
+        const custom = document.getElementById('pm-custom-currency');
+        return custom?.value || 'NPR';
+      }
+      const gateway = PAYMENT_GATEWAYS.find(g => g.key === key);
+      return gateway?.currency || 'NPR';
+    }
+
     function openAddPaymentMethodModal() {
+      initPaymentMethodDropdown();
       document.getElementById('pm-modal-title').textContent = '+ Add Payment Gateway';
       document.getElementById('form-payment-method').reset();
       document.getElementById('pm-id').value = '';
       document.getElementById('pm-checkout-visible').checked = true;
       document.getElementById('pm-is-active').checked = true;
+      
+      // Reset file previews
+      document.getElementById('pm-qr-preview').style.display = 'none';
+      document.getElementById('pm-qr-upload-area').style.display = 'block';
+      document.getElementById('pm-logo-preview').style.display = 'none';
+      document.getElementById('pm-logo-upload-area').style.display = 'block';
+      document.getElementById('pm-qr-url-fallback').style.display = 'none';
+      document.getElementById('pm-logo-url-fallback').style.display = 'none';
+      document.getElementById('pm-qr-use-url').checked = false;
+      document.getElementById('pm-logo-use-url').checked = false;
+      document.getElementById('pm-qrcode').disabled = true;
+      document.getElementById('pm-logo').disabled = true;
+      document.getElementById('pm-custom-method-wrap').style.display = 'none';
+      
+      // Clear file inputs
+      document.getElementById('pm-qr-file').value = '';
+      document.getElementById('pm-logo-file').value = '';
+      document.getElementById('pm-qrcode').value = '';
+      document.getElementById('pm-logo').value = '';
+      
+      // Clear description counter
+      updateDescriptionCounter();
+      
+      onPaymentMethodSelect();
       openModal('modal-payment-method');
     }
 
@@ -1670,18 +1851,67 @@
       const pm = globalPaymentMethods.find(p => p.id === id);
       if (!pm) return;
 
+      initPaymentMethodDropdown();
+      
       document.getElementById('pm-modal-title').textContent = `Edit Gateway: ${pm.name}`;
       document.getElementById('pm-id').value = pm.id;
-      document.getElementById('pm-name').value = pm.name || '';
-      document.getElementById('pm-identifier').value = pm.identifier || '';
-      document.getElementById('pm-qrcode').value = pm.qr_code || '';
-      document.getElementById('pm-logo').value = pm.logo_url || '';
+      
+      // Find matching gateway key
+      const gateway = PAYMENT_GATEWAYS.find(g => g.name === pm.method_name);
+      
+      if (gateway) {
+        document.getElementById('pm-method-select').value = gateway.key;
+      } else {
+        // Custom gateway - use "Other" option
+        document.getElementById('pm-method-select').value = '__CUSTOM__';
+        document.getElementById('pm-custom-method-wrap').style.display = 'block';
+        document.getElementById('pm-custom-method').value = pm.method_name;
+        document.getElementById('pm-custom-currency').value = pm.currency || 'NPR';
+      }
+      
+      document.getElementById('pm-identifier').value = pm.identifier || pm.account_id || '';
+      document.getElementById('pm-holder').value = pm.account_holder || '';
+      document.getElementById('pm-description').value = pm.description || '';
       document.getElementById('pm-apikey').value = pm.api_key || '';
       document.getElementById('pm-min').value = pm.min_amount || 100;
       document.getElementById('pm-sort').value = pm.sort_order || 0;
       document.getElementById('pm-checkout-visible').checked = pm.checkout_visible !== false;
       document.getElementById('pm-is-active').checked = pm.is_active !== false;
-
+      
+      // Handle QR image - show preview if exists
+      if (pm.qr_image) {
+        document.getElementById('pm-qr-preview-img').src = pm.qr_image;
+        document.getElementById('pm-qr-preview-name').textContent = 'Current QR Code';
+        document.getElementById('pm-qr-preview').style.display = 'flex';
+        document.getElementById('pm-qr-upload-area').style.display = 'none';
+      } else {
+        document.getElementById('pm-qr-preview').style.display = 'none';
+        document.getElementById('pm-qr-upload-area').style.display = 'block';
+      }
+      
+      // Handle Logo image - show preview if exists
+      if (pm.logo_url) {
+        document.getElementById('pm-logo-preview-img').src = pm.logo_url;
+        document.getElementById('pm-logo-preview-name').textContent = 'Current Logo';
+        document.getElementById('pm-logo-preview').style.display = 'flex';
+        document.getElementById('pm-logo-upload-area').style.display = 'none';
+      } else {
+        document.getElementById('pm-logo-preview').style.display = 'none';
+        document.getElementById('pm-logo-upload-area').style.display = 'block';
+      }
+      
+      // Clear file inputs
+      document.getElementById('pm-qr-file').value = '';
+      document.getElementById('pm-logo-file').value = '';
+      document.getElementById('pm-qrcode').value = '';
+      document.getElementById('pm-logo').value = '';
+      document.getElementById('pm-qr-url-fallback').style.display = 'none';
+      document.getElementById('pm-logo-url-fallback').style.display = 'none';
+      document.getElementById('pm-qr-use-url').checked = false;
+      document.getElementById('pm-logo-use-url').checked = false;
+      
+      updateDescriptionCounter();
+      onPaymentMethodSelect();
       openModal('modal-payment-method');
     }
 
@@ -1709,49 +1939,248 @@
       }
     }
 
+    // File upload handlers
+    async function uploadGatewayImage(file, type, gatewayId) {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('type', type);
+      if (gatewayId) formData.append('gateway_id', gatewayId);
+      
+      const res = await fetch('/api/admin/upload/gateway-image', {
+        method: 'POST',
+        body: formData
+      });
+      return res.json();
+    }
+
+    function handleQRFileSelect(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      if (file.size > 2 * 1024 * 1024) {
+        showToast('QR image exceeds 2MB limit', 'error');
+        event.target.value = '';
+        return;
+      }
+      
+      const allowedTypes = ['image/png', 'image/jpeg', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        showToast('Invalid file type. Use PNG, JPG, or WEBP', 'error');
+        event.target.value = '';
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        document.getElementById('pm-qr-preview-img').src = e.target.result;
+        document.getElementById('pm-qr-preview-name').textContent = file.name;
+        document.getElementById('pm-qr-preview').style.display = 'flex';
+        document.getElementById('pm-qr-upload-area').style.display = 'none';
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function handleLogoFileSelect(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      if (file.size > 2 * 1024 * 1024) {
+        showToast('Logo image exceeds 2MB limit', 'error');
+        event.target.value = '';
+        return;
+      }
+      
+      const allowedTypes = ['image/png', 'image/jpeg', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        showToast('Invalid file type. Use PNG, JPG, or WEBP', 'error');
+        event.target.value = '';
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        document.getElementById('pm-logo-preview-img').src = e.target.result;
+        document.getElementById('pm-logo-preview-name').textContent = file.name;
+        document.getElementById('pm-logo-preview').style.display = 'flex';
+        document.getElementById('pm-logo-upload-area').style.display = 'none';
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function removeQRImage() {
+      document.getElementById('pm-qr-preview').style.display = 'none';
+      document.getElementById('pm-qr-upload-area').style.display = 'block';
+      document.getElementById('pm-qr-file').value = '';
+    }
+
+    function removeLogoImage() {
+      document.getElementById('pm-logo-preview').style.display = 'none';
+      document.getElementById('pm-logo-upload-area').style.display = 'block';
+      document.getElementById('pm-logo-file').value = '';
+    }
+
+    function toggleQRUrlFallback() {
+      const useUrl = document.getElementById('pm-qr-use-url').checked;
+      document.getElementById('pm-qr-url-fallback').style.display = useUrl ? 'block' : 'none';
+      document.getElementById('pm-qrcode').disabled = !useUrl;
+      if (useUrl) {
+        document.getElementById('pm-qr-upload-area').style.display = 'none';
+        document.getElementById('pm-qr-preview').style.display = 'none';
+      } else {
+        document.getElementById('pm-qr-upload-area').style.display = 'block';
+      }
+    }
+
+    function toggleLogoUrlFallback() {
+      const useUrl = document.getElementById('pm-logo-use-url').checked;
+      document.getElementById('pm-logo-url-fallback').style.display = useUrl ? 'block' : 'none';
+      document.getElementById('pm-logo').disabled = !useUrl;
+      if (useUrl) {
+        document.getElementById('pm-logo-upload-area').style.display = 'none';
+        document.getElementById('pm-logo-preview').style.display = 'none';
+      } else {
+        document.getElementById('pm-logo-upload-area').style.display = 'block';
+      }
+    }
+
+    function updateDescriptionCounter() {
+      const textarea = document.getElementById('pm-description');
+      const counter = document.getElementById('pm-desc-counter');
+      if (textarea && counter) {
+        counter.textContent = `(${textarea.value.length}/500)`;
+        if (textarea.value.length > 500) {
+          counter.style.color = 'var(--danger)';
+        } else {
+          counter.style.color = 'var(--text-dim)';
+        }
+      }
+    }
+
     async function handlePaymentMethodSubmit(e) {
       e.preventDefault();
+      
       const id = document.getElementById('pm-id').value;
-      const payload = {
-        name: document.getElementById('pm-name').value.trim(),
-        identifier: document.getElementById('pm-identifier').value.trim(),
-        qr_code: document.getElementById('pm-qrcode').value.trim(),
-        logo_url: document.getElementById('pm-logo').value.trim(),
-        api_key: document.getElementById('pm-apikey').value.trim(),
-        min_amount: parseFloat(document.getElementById('pm-min').value) || 0,
-        sort_order: parseInt(document.getElementById('pm-sort').value, 10) || 0,
-        checkout_visible: document.getElementById('pm-checkout-visible').checked,
-        is_active: document.getElementById('pm-is-active').checked
-      };
-
+      const methodKey = getSelectedGatewayKey();
+      const isCustom = methodKey === null && document.getElementById('pm-method-select').value === '__CUSTOM__';
+      
+      if (!methodKey && !isCustom) {
+        showToast('Please select a payment method', 'warning');
+        return;
+      }
+      
+      const methodName = isCustom 
+        ? document.getElementById('pm-custom-method').value.trim()
+        : getSelectedGatewayName();
+      const currency = isCustom
+        ? document.getElementById('pm-custom-currency').value
+        : getSelectedGatewayCurrency();
+      
+      if (!methodName) {
+        showToast('Method name is required', 'warning');
+        return;
+      }
+      
+      const identifier = document.getElementById('pm-identifier').value.trim();
+      if (!identifier) {
+        showToast('Identifier / Account No is required', 'warning');
+        return;
+      }
+      
+      const holder = document.getElementById('pm-holder').value.trim();
+      if (!holder) {
+        showToast('Account Holder Name is required', 'warning');
+        return;
+      }
+      
+      const description = document.getElementById('pm-description').value.trim();
+      if (description.length > 500) {
+        showToast('Description cannot exceed 500 characters', 'warning');
+        return;
+      }
+      
+      const btn = document.querySelector('#form-payment-method button[type="submit"]');
+      if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
+      
       try {
-        let res;
-        if (id) {
-          payload.id = parseInt(id, 10);
-          res = await fetch('/api/admin/payment-methods', {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
-        } else {
-          res = await fetch('/api/admin/payment-methods', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
+        // Handle image uploads first
+        let qrUrl = document.getElementById('pm-qrcode').value.trim();
+        let logoUrl = document.getElementById('pm-logo').value.trim();
+        const gatewayId = id ? parseInt(id, 10) : null;
+        
+        // Upload QR image if file selected
+        const qrFile = document.getElementById('pm-qr-file').files[0];
+        if (qrFile) {
+          const uploadRes = await uploadGatewayImage(qrFile, 'qr', gatewayId);
+          if (!uploadRes.success) {
+            showToast('QR upload failed: ' + uploadRes.message, 'error');
+            if (btn) { btn.disabled = false; btn.textContent = 'Save Payment Gateway 💾'; }
+            return;
+          }
+          qrUrl = uploadRes.url;
+        } else if (document.getElementById('pm-qr-use-url').checked) {
+          // Use URL fallback
+          qrUrl = document.getElementById('pm-qrcode').value.trim();
+        } else if (document.getElementById('pm-qr-preview').style.display === 'flex' && !qrFile && gatewayId) {
+          // Keep existing image (already shown in preview)
+          const pm = globalPaymentMethods.find(p => p.id === gatewayId);
+          qrUrl = pm?.qr_image || '';
         }
-
+        
+        // Upload Logo image if file selected
+        const logoFile = document.getElementById('pm-logo-file').files[0];
+        if (logoFile) {
+          const uploadRes = await uploadGatewayImage(logoFile, 'logo', gatewayId);
+          if (!uploadRes.success) {
+            showToast('Logo upload failed: ' + uploadRes.message, 'error');
+            if (btn) { btn.disabled = false; btn.textContent = 'Save Payment Gateway 💾'; }
+            return;
+          }
+          logoUrl = uploadRes.url;
+        } else if (document.getElementById('pm-logo-use-url').checked) {
+          logoUrl = document.getElementById('pm-logo').value.trim();
+        } else if (document.getElementById('pm-logo-preview').style.display === 'flex' && !logoFile && gatewayId) {
+          const pm = globalPaymentMethods.find(p => p.id === gatewayId);
+          logoUrl = pm?.logo_url || '';
+        }
+        
+        const payload = {
+          method_name: methodName,
+          currency: currency,
+          account_id: identifier,
+          account_holder: holder,
+          instructions: document.getElementById('pm-instructions')?.value?.trim() || '',
+          description: description,
+          qr_image: qrUrl || null,
+          logo_url: logoUrl || null,
+          api_key: document.getElementById('pm-apikey').value.trim() || null,
+          min_amount: parseFloat(document.getElementById('pm-min').value) || 0,
+          sort_order: parseInt(document.getElementById('pm-sort').value, 10) || 0,
+          checkout_visible: document.getElementById('pm-checkout-visible').checked,
+          is_active: document.getElementById('pm-is-active').checked
+        };
+        
+        if (id) payload.id = parseInt(id, 10);
+        
+        const res = await fetch('/api/admin/payment-methods', {
+          method: id ? 'PUT' : 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        
         const data = await res.json();
         if (!res.ok || !data.success) {
           showToast(data.message || 'Error saving payment method', 'error');
           return;
         }
-
+        
         showToast('Payment gateway saved successfully!', 'success');
         closeModal('modal-payment-method');
         loadAdminPaymentMethods();
       } catch (err) {
+        console.error('Payment method save error:', err);
         showToast('Network error saving payment method', 'error');
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = 'Save Payment Gateway 💾'; }
       }
     }
 

@@ -42,6 +42,7 @@ import adminWallets from '../server/admin/wallets.js';
 import adminApproveWallet from '../server/admin/approve-wallet.js';
 import adminRejectWallet from '../server/admin/reject-wallet.js';
 import adminWalletAdjust from '../server/admin/wallet-adjust.js';
+import adminUploadGatewayImage from '../server/admin/upload-gateway-image.js';
 import adminUsers from '../server/admin/users.js';
 import adminSettings from '../server/admin/settings.js';
 import adminResellerPrices from '../server/admin/reseller-prices.js';
@@ -102,6 +103,7 @@ const routes = {
   '/api/admin/approve-wallet': adminApproveWallet,
   '/api/admin/reject-wallet': adminRejectWallet,
   '/api/admin/wallet/adjust': adminWalletAdjust,
+  '/api/admin/upload/gateway-image': adminUploadGatewayImage,
   '/api/admin/users': adminUsers,
   '/api/admin/settings': adminSettings,
   '/api/admin/reseller-prices': adminResellerPrices,

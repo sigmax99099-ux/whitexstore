@@ -294,7 +294,11 @@
         document.getElementById('gw-title').textContent = selectedMethod.method_name;
         document.getElementById('gw-acc-id').textContent = selectedMethod.account_id;
         document.getElementById('gw-acc-name').textContent = selectedMethod.account_holder;
-        document.getElementById('gw-instructions').textContent = selectedMethod.instructions;
+        
+        // Use description if available, fallback to instructions
+        const displayText = selectedMethod.description || selectedMethod.instructions || 'No instructions available.';
+        document.getElementById('gw-instructions').textContent = displayText;
+        
         document.getElementById('topup-currency-display').value = selectedMethod.currency;
 
         if (selectedMethod.qr_image) {
