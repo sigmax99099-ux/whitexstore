@@ -1923,6 +1923,7 @@
           body: JSON.stringify({ id, is_active: !isCurrentlyActive })
         });
         loadAdminPaymentMethods();
+      }
       } catch (err) {
         showToast('Status toggle failed', 'error');
       }
@@ -2140,6 +2141,13 @@
         
         if (logoFile && logoFile.size > 0) {
           const uploadRes = await uploadGatewayImage(logoFile, 'logo', gatewayId);
+          if (!uploadRes.success) {
+            showToast('Logo upload failed: ' + uploadRes.message, 'error');
+            if (btn) { btn.disabled = false; btn.textContent = 'Save Payment Gateway 💾'; }
+            return;
+          }
+          logoUrl = uploadRes.url;
+        }
         
         const payload = {
           method_name: methodName,
