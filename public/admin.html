@@ -984,6 +984,44 @@
     </div>
   </div>
 
+  <!-- 7. Manual Wallet Adjustment Modal -->
+  <div id="modal-wallet-adjust" class="modal-backdrop">
+    <div class="modal-box" style="max-width: 460px; width: 95%;">
+      <button class="modal-close" onclick="closeModal('modal-wallet-adjust')">✕</button>
+      <h3 style="color: #fff; margin-bottom: 0.25rem;">💰 Manual Wallet Adjustment</h3>
+      <p id="wallet-adjust-user" style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 1.5rem;">
+        User: <span id="wallet-adjust-username" style="color: var(--danger); font-weight: 600;"></span>
+      </p>
+      <form id="form-wallet-adjust">
+        <input type="hidden" id="wallet-adjust-userid" value="">
+        <div class="form-group">
+          <label class="form-label">ACTION *</label>
+          <select id="wallet-adjust-action" class="form-select" required>
+            <option value="">-- Select Action --</option>
+            <option value="credit">+ Credit (Add Money)</option>
+            <option value="debit">– Debit (Remove Money)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">AMOUNT (NPR) *</label>
+          <input type="number" id="wallet-adjust-amount" class="form-input" required 
+            placeholder="Enter amount" min="0.01" step="0.01" style="text-align: right;">
+          <div id="wallet-adjust-amount-error" class="form-error" style="display: none; font-size: 0.72rem; color: var(--danger); margin-top: 0.35rem;"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">DESCRIPTION *</label>
+          <input type="text" id="wallet-adjust-description" class="form-input" required 
+            placeholder="Reason for adjustment" maxlength="500">
+          <div id="wallet-adjust-desc-error" class="form-error" style="display: none; font-size: 0.72rem; color: var(--danger); margin-top: 0.35rem;"></div>
+        </div>
+        <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem; justify-content: flex-end;">
+          <button type="button" class="btn btn-danger btn-sm" onclick="closeModal('modal-wallet-adjust')">✕ Cancel</button>
+          <button type="submit" id="btn-wallet-adjust-save" class="btn btn-primary btn-sm btn-glow">💾 SAVE</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script src="/assets/js/app.js"></script>
   <script>
     let globalProducts = [];
@@ -1101,6 +1139,7 @@
       document.getElementById('form-reject-order').addEventListener('submit', handleRejectOrderSubmit);
       document.getElementById('admin-settings-form').addEventListener('submit', handleSettingsSubmit);
       document.getElementById('form-add-category').addEventListener('submit', handleAddCategorySubmit);
+      document.getElementById('form-wallet-adjust').addEventListener('submit', handleWalletAdjustSubmit);
 
       // Category dropdown - handle "Add New Category" option
       document.getElementById('prod-cat').addEventListener('change', function(e) {
@@ -1863,6 +1902,103 @@
       if (selectEl) selectEl.value = '';
     }
 
+    // Wallet Adjustment Modal Functions
+    function openWalletAdjustModal(userId, username, currentBalance) {
+      document.getElementById('form-wallet-adjust').reset();
+      document.getElementById('wallet-adjust-userid').value = userId;
+      document.getElementById('wallet-adjust-username').textContent = username;
+      
+      // Clear any previous errors
+      document.getElementById('wallet-adjust-amount-error').style.display = 'none';
+      document.getElementById('wallet-adjust-desc-error').style.display = 'none';
+      
+      openModal('modal-wallet-adjust');
+      
+      // Focus the action dropdown after modal opens
+      setTimeout(() => {
+        const select = document.getElementById('wallet-adjust-action');
+        if (select) select.focus();
+      }, 100);
+    }
+
+    async function handleWalletAdjustSubmit(e) {
+      e.preventDefault();
+      
+      const userId = document.getElementById('wallet-adjust-userid').value;
+      const action = document.getElementById('wallet-adjust-action').value;
+      const amount = document.getElementById('wallet-adjust-amount').value;
+      const description = document.getElementById('wallet-adjust-description').value.trim();
+      
+      const amountErrorEl = document.getElementById('wallet-adjust-amount-error');
+      const descErrorEl = document.getElementById('wallet-adjust-desc-error');
+      const btn = document.getElementById('btn-wallet-adjust-save');
+      
+      // Validate
+      let hasError = false;
+      
+      if (!action) {
+        hasError = true;
+        // Action is a select, we can show a toast
+        showToast('Please select an action', 'warning');
+      }
+      
+      const numAmount = parseFloat(amount);
+      if (!amount || isNaN(numAmount) || numAmount <= 0) {
+        hasError = true;
+        amountErrorEl.textContent = 'Please enter a valid positive amount';
+        amountErrorEl.style.display = 'block';
+      } else if (numAmount > 999999999) {
+        hasError = true;
+        amountErrorEl.textContent = 'Amount exceeds maximum allowed value';
+        amountErrorEl.style.display = 'block';
+      } else {
+        amountErrorEl.style.display = 'none';
+      }
+      
+      if (!description) {
+        hasError = true;
+        descErrorEl.textContent = 'Description is required';
+        descErrorEl.style.display = 'block';
+      } else if (description.length > 500) {
+        hasError = true;
+        descErrorEl.textContent = 'Description cannot exceed 500 characters';
+        descErrorEl.style.display = 'block';
+      } else {
+        descErrorEl.style.display = 'none';
+      }
+      
+      if (hasError) return;
+      
+      if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
+      
+      try {
+        const res = await fetch('/api/admin/wallet/adjust', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId, action, amount: numAmount, description })
+        });
+        const data = await res.json();
+        
+        if (!res.ok || !data.success) {
+          showToast(data.message || 'Failed to adjust wallet', 'error');
+          if (btn) { btn.disabled = false; btn.textContent = '💾 SAVE'; }
+          return;
+        }
+        
+        showToast(`Wallet ${action === 'credit' ? 'credited' : 'debited'} successfully! New balance: NPR ${data.balance.toLocaleString()}`, 'success');
+        closeModal('modal-wallet-adjust');
+        
+        // Refresh the users table to show updated balance
+        loadAdminUsers();
+        
+      } catch (err) {
+        console.error('Wallet adjust error:', err);
+        showToast('Error adjusting wallet: ' + err.message, 'error');
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = '💾 SAVE'; }
+      }
+    }
+
     async function handleAddCategorySubmit(e) {
       e.preventDefault();
       const nameInput = document.getElementById('new-cat-name');
@@ -2610,6 +2746,7 @@
               <td>
                 <div style="display: flex; gap: 0.35rem;">
                   <button class="btn btn-outline btn-sm" onclick="editUserTier('${u.id}', '${u.user_type}', ${u.reseller_discount || 0})">Edit Tier</button>
+                  <button class="btn btn-outline btn-sm" style="color: var(--info);" onclick="openWalletAdjustModal('${u.id}', '${escapeHtml(u.name)}', ${parseFloat(u.wallet_balance || 0)})">💰 Wallet</button>
                   ${statusBtn}
                 </div>
               </td>
