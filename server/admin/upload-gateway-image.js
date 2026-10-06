@@ -58,12 +58,14 @@ export default async function handler(req, res) {
   try {
     // Parse multipart form data
     const contentType = req.headers['content-type'] || '';
+    console.log('[Upload Debug] Content-Type:', contentType);
     if (!contentType.includes('multipart/form-data')) {
       return res.status(400).json({ success: false, message: 'Content-Type must be multipart/form-data' });
     }
 
     // Simple multipart parser for our use case
     const boundary = contentType.split('boundary=')[1];
+    console.log('[Upload Debug] Boundary:', boundary);
     if (!boundary) {
       return res.status(400).json({ success: false, message: 'Invalid multipart boundary' });
     }
@@ -73,6 +75,7 @@ export default async function handler(req, res) {
       buffers.push(chunk);
     }
     const rawBody = Buffer.concat(buffers);
+    console.log('[Upload Debug] Raw body length:', rawBody.length);
 
     // Parse multipart data
     const parts = parseMultipart(rawBody, boundary);
