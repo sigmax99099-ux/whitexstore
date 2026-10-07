@@ -648,24 +648,82 @@
 
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
           <h2 style="color: #fff;">// PLAN TO SUPPLIER VARIANT MAPPING</h2>
-          <button class="btn btn-primary btn-sm" onclick="openAddVariantMappingModal()">+ Add Variant Mapping</button>
         </div>
 
+        <!-- SUPPLIER CATALOG TABLE (read-only, from supplier API) -->
+        <div class="admin-card" style="margin-bottom: 1.5rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+            <h3 style="color: var(--primary); margin: 0;">// SUPPLIER CATALOG (from API)</h3>
+            <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+              <input type="text" id="sv-catalog-search" class="form-input" placeholder="Search by product name or variant ID..." style="width: 300px;">
+              <button class="btn btn-primary btn-sm" onclick="loadSupplierCatalog()">🔄 Sync from Supplier</button>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table class="table-custom">
+              <thead>
+                <tr>
+                  <th style="width: 50px;">#</th>
+                  <th>VARIANT ID</th>
+                  <th>PRODUCT</th>
+                  <th>DURATION</th>
+                  <th>PRICE</th>
+                  <th>STOCK</th>
+                </tr>
+              </thead>
+              <tbody id="sv-catalog-tbody">
+                <tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-dim);">Click "Sync from Supplier" to load catalog.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ADD MAPPING FORM -->
+        <div class="admin-card" style="margin-bottom: 1.5rem;">
+          <h3 style="color: var(--primary); margin-bottom: 1rem;">// MAP YOUR PRODUCT &rarr; KEY LICENSE VARIANT</h3>
+          <form id="form-sv-mapping">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;" class="admin-modal-grid">
+              <div class="form-group">
+                <label class="form-label">YOUR PRODUCT *</label>
+                <select id="svm-store-product" class="form-select" required>
+                  <option value="">-- Select Store Product --</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">YOUR PLAN *</label>
+                <select id="svm-store-plan" class="form-select" required>
+                  <option value="">-- Select Store Plan --</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">KEY LICENSE VARIANT ID *</label>
+              <input type="text" id="svm-variant-id" class="form-input" required placeholder="e.g. 226" style="font-family: monospace;">
+              <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 0.35rem;">Copy from the table above. Must match a Variant ID exactly.</div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block btn-lg btn-glow">Save Mapping ⚡</button>
+          </form>
+        </div>
+
+        <!-- SAVED MAPPINGS LIST -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+          <h2 style="color: #fff;">// SAVED MAPPINGS</h2>
+        </div>
         <div class="table-responsive">
           <table class="table-custom">
             <thead>
               <tr>
-                <th>ID</th>
-                <th>Supplier API</th>
-                <th>Product & Plan</th>
-                <th>Supplier Variant ID</th>
-                <th>Variant Name</th>
-                <th>Status</th>
-                <th>Actions</th>
+                <th>STORE PRODUCT / PLAN</th>
+                <th>VARIANT ID</th>
+                <th>SUPPLIER PRODUCT</th>
+                <th>DURATION</th>
+                <th>AUTO DELIVERY</th>
+                <th>ACTIVE</th>
+                <th>ACTIONS</th>
               </tr>
             </thead>
-            <tbody id="admin-supplier-variants-tbody">
-              <tr><td colspan="7" style="text-align: center; padding: 2rem;">Loading variant mappings...</td></tr>
+            <tbody id="sv-mappings-tbody">
+              <tr><td colspan="7" style="text-align: center; padding: 2rem;">Loading mappings...</td></tr>
             </tbody>
           </table>
         </div>
@@ -1362,49 +1420,31 @@
     </div>
   </div>
 
-  <!-- 6. Variant Mapping Modal -->
-  <div id="modal-supplier-variant" class="modal-backdrop">
+  <!-- VARIANT MAPPING MODAL (new structure) -->
+  <div id="modal-sv-mapping" class="modal-backdrop">
     <div class="modal-box" style="max-width: 580px; width: 95%;">
-      <button class="modal-close" onclick="closeModal('modal-supplier-variant')">✕</button>
-      <h3 id="variant-mapping-modal-title" style="color: #fff; margin-bottom: 1.25rem;">+ Map Plan to Supplier Variant</h3>
-      <form id="form-supplier-variant">
-        <input type="hidden" id="svar-id">
+      <button class="modal-close" onclick="closeModal('modal-sv-mapping')">✕</button>
+      <h3 id="svm-modal-title" style="color: #fff; margin-bottom: 1.25rem;">+ Map Product to Supplier Variant</h3>
+      <form id="form-sv-mapping">
+        <input type="hidden" id="svm-edit-id" value="">
         <div class="form-group">
-          <label class="form-label">Supplier API *</label>
-          <select id="svar-api-id" class="form-select" required></select>
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;" class="admin-modal-grid">
-          <div class="form-group">
-            <label class="form-label">Product *</label>
-            <select id="svar-product-id" class="form-select" required onchange="populateVariantPlanSelect()"></select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Plan *</label>
-            <select id="svar-plan-id" class="form-select" required></select>
-          </div>
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;" class="admin-modal-grid">
-          <div class="form-group">
-            <label class="form-label">Supplier Variant ID *</label>
-            <input type="text" id="svar-variant-id" class="form-input" required placeholder="e.g. 1024 or PRO_1D">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Variant Name (Optional)</label>
-            <input type="text" id="svar-name" class="form-input" placeholder="e.g. 1 Day Global Key">
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Mapping Status</label>
-          <select id="svar-status" class="form-select">
-            <option value="active">Active (Auto Dispatched)</option>
-            <option value="disabled">Disabled</option>
+          <label class="form-label">YOUR PRODUCT *</label>
+          <select id="svm-store-product" class="form-select" required onchange="populateSvmPlans()">
+            <option value="">-- Select Store Product --</option>
           </select>
         </div>
-
-        <button type="submit" class="btn btn-primary btn-block btn-lg btn-glow">Save Variant Mapping ⚡</button>
+        <div class="form-group">
+          <label class="form-label">YOUR PLAN *</label>
+          <select id="svm-store-plan" class="form-select" required>
+            <option value="">-- Select Store Plan --</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">KEY LICENSE VARIANT ID *</label>
+          <input type="text" id="svm-variant-id" class="form-input" required placeholder="e.g. 226" style="font-family: monospace;">
+          <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 0.35rem;">Copy from the Supplier Catalog table above. Must match a Variant ID exactly.</div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block btn-lg btn-glow">Save Mapping ⚡</button>
       </form>
     </div>
   </div>
@@ -1579,7 +1619,7 @@
           if (tabId === 'tab-products') loadAdminProducts();
           if (tabId === 'tab-plans') loadAdminPlans();
           if (tabId === 'tab-keys') loadAdminKeys();
-          if (tabId === 'tab-supplier-apis') { loadAdminSupplierApis(); loadAdminSupplierVariants(); }
+          if (tabId === 'tab-supplier-apis') { loadAdminSupplierApis(); loadSupplierCatalog(); loadAdminSupplierMappings(); }
           if (tabId === 'tab-supplier-settings') loadSupplierSettings();
           if (tabId === 'tab-product-mappings') loadProductMappings();
           if (tabId === 'tab-deliveries') loadDeliveries();
@@ -3406,149 +3446,258 @@
       }
     }
 
-    /* Variant Mappings */
-    async function loadAdminSupplierVariants() {
-      const tbody = document.getElementById('admin-supplier-variants-tbody');
+    /* Supplier Catalog (from supplier API) */
+    let globalSupplierCatalog = [];
+    
+    async function loadSupplierCatalog() {
+      const tbody = document.getElementById('sv-catalog-tbody');
+      const btn = document.querySelector('button[onclick="loadSupplierCatalog()"]');
+      const searchInput = document.getElementById('sv-catalog-search');
+      
+      if (btn) { btn.disabled = true; btn.textContent = '⏳ Syncing...'; }
+      if (searchInput) searchInput.value = '';
+      
+      try {
+        const res = await fetch('/api/admin/supplier-variants?catalog=1');
+        const data = await res.json();
+        
+        if (!data.success) {
+          showToast(data.message || 'Failed to load supplier catalog', 'error');
+          tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 2rem; color: var(--danger);">${escapeHtml(data.message)}</td></tr>`;
+          return;
+        }
+        
+        globalSupplierCatalog = data.catalog || [];
+        
+        if (globalSupplierCatalog.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 2rem; color: var(--text-dim);">No products found from supplier.</td></tr>`;
+          return;
+        }
+        
+        renderSupplierCatalog();
+        showToast(`Loaded ${globalSupplierCatalog.length} variants from supplier.`, 'success');
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="6" style="color:var(--danger); text-align:center;">Failed to load supplier catalog.</td></tr>`;
+        showToast('Error: ' + err.message, 'error');
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = '🔄 Sync from Supplier'; }
+      }
+    }
+    
+    function renderSupplierCatalog() {
+      const tbody = document.getElementById('sv-catalog-tbody');
+      const searchTerm = document.getElementById('sv-catalog-search')?.value.toLowerCase().trim() || '';
+      
+      let catalog = globalSupplierCatalog;
+      if (searchTerm) {
+        catalog = catalog.filter(item => 
+          item.product_name.toLowerCase().includes(searchTerm) ||
+          item.variant_id.toLowerCase().includes(searchTerm)
+        );
+      }
+      
+      if (catalog.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 2rem; color: var(--text-dim);">No matches found.</td></tr>`;
+        return;
+      }
+      
+      tbody.innerHTML = catalog.map((item, idx) => `
+        <tr>
+          <td style="color: #94a3b8;">${idx + 1}</td>
+          <td>
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <code style="font-family: monospace; font-size: 0.85rem; background: #0d0d15; padding: 0.2rem 0.4rem; border-radius: 4px; border: 1px solid var(--bg-card-border);">${escapeHtml(item.variant_id)}</code>
+              <button class="btn btn-outline btn-sm" onclick="copyToClipboard('${escapeHtml(item.variant_id)}')" style="padding: 0.2rem 0.5rem; font-size: 0.7rem;" title="Copy Variant ID">📋</button>
+            </div>
+          </td>
+          <td>
+            <strong style="color: #fff;">${escapeHtml(item.product_name)}</strong>
+            <div style="font-size: 0.7rem; color: var(--text-dim);">${escapeHtml(item.source_type)} | ${escapeHtml(item.code_prefix)}</div>
+          </td>
+          <td>${escapeHtml(item.label)}</td>
+          <td style="color: #34d399; font-weight: 600;">${item.price_formatted}</td>
+          <td style="color: var(--text-dim);">${item.stock}</td>
+        </tr>
+      `).join('');
+    }
+    
+    document.getElementById('sv-catalog-search')?.addEventListener('input', renderSupplierCatalog);
+    
+    /* Saved Mappings List */
+    async function loadAdminSupplierMappings() {
+      const tbody = document.getElementById('sv-mappings-tbody');
       try {
         const res = await fetch('/api/admin/supplier-variants');
         const data = await res.json();
-        globalSupplierVariants = data.supplier_variants || data.variants || [];
-
-        if (globalSupplierVariants.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 2rem; color: var(--text-dim);">No variant mappings configured.</td></tr>`;
+        const mappings = data.mappings || [];
+        
+        if (mappings.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 2rem; color: var(--text-dim);">No mappings configured. Use the form above to create mappings.</td></tr>`;
           return;
         }
-
-        tbody.innerHTML = globalSupplierVariants.map(v => `
+        
+        tbody.innerHTML = mappings.map(m => `
           <tr>
-            <td>#${v.id}</td>
-            <td><strong>${escapeHtml(v.supplier_api_name || 'KeyLicense')}</strong></td>
             <td>
-              ${escapeHtml(v.product_name)}
-              <div style="font-size: 0.78rem; color: var(--primary);">${escapeHtml(v.plan_name)} (${v.days} ${v.duration_type})</div>
+              <strong style="color: #fff;">${escapeHtml(m.product_name)}</strong>
+              <div style="font-size: 0.78rem; color: var(--primary);">${escapeHtml(m.plan_name)} (${m.days} ${m.duration_type})</div>
             </td>
-            <td><code>${escapeHtml(v.supplier_variant_id)}</code></td>
-            <td>${escapeHtml(v.variant_name || '-')}</td>
-            <td>
-              <span class="badge ${v.status === 'active' ? 'badge-undetected' : 'badge-danger'}">
-                ${v.status}
+            <td><code>${escapeHtml(m.supplier_variant_id)}</code></td>
+            <td>${escapeHtml(m.supplier_product_name)}</td>
+            <td>${escapeHtml(m.supplier_plan_label || (m.supplier_plan_days + ' Days'))}</td>
+            <td style="text-align: center;">
+              <label style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" ${m.auto_delivery ? 'checked' : ''} onchange="toggleAutoDelivery(${m.id}, this.checked)">
+              </label>
+            </td>
+            <td style="text-align: center;">
+              <span class="badge ${m.is_active ? 'badge-undetected' : 'badge-danger'}">
+                ${m.is_active ? 'Active' : 'Inactive'}
               </span>
             </td>
             <td>
               <div style="display: flex; gap: 0.4rem;">
-                <button class="btn btn-outline btn-sm" onclick="editVariantMapping(${v.id})">Edit</button>
-                <button class="btn btn-outline btn-sm" onclick="deleteVariantMapping(${v.id})" style="color:var(--danger)">Delete</button>
+                <button class="btn btn-outline btn-sm" onclick="editSvmMapping(${m.id})">Edit</button>
+                <button class="btn btn-outline btn-sm" style="color: var(--danger)" onclick="deleteSvmMapping(${m.id})">Delete</button>
               </div>
             </td>
           </tr>
         `).join('');
       } catch (err) {
-        tbody.innerHTML = `<tr><td colspan="7" style="color:var(--danger); text-align:center;">Failed to load variant mappings.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" style="color:var(--danger); text-align:center;">Failed to load mappings.</td></tr>`;
       }
     }
-
-    async function openAddVariantMappingModal() {
-      document.getElementById('variant-mapping-modal-title').textContent = '+ Map Plan to Supplier Variant';
-      document.getElementById('form-supplier-variant').reset();
-      document.getElementById('svar-id').value = '';
-
-      await ensureSupplierApisLoaded();
-      await ensureProductsLoaded();
-      if (!globalPlans || globalPlans.length === 0) {
-        const pRes = await fetch('/api/admin/plans');
-        const pData = await pRes.json();
-        globalPlans = pData.plans || [];
+    
+    function openSvmMappingModal(editMapping = null) {
+      document.getElementById('svm-edit-id').value = editMapping ? editMapping.id : '';
+      document.getElementById('form-sv-mapping').reset();
+      
+      // Populate product dropdown
+      const productSelect = document.getElementById('svm-store-product');
+      productSelect.innerHTML = '<option value="">-- Select Store Product --</option>' + 
+        (globalProducts || []).map(p => `<option value="${p.id}" ${editMapping && editMapping.product_id === p.id ? 'selected' : ''}>${escapeHtml(p.name)}</option>`).join('');
+      
+      if (editMapping) {
+        document.getElementById('svm-edit-id').value = editMapping.id;
+        document.getElementById('svm-variant-id').value = editMapping.supplier_variant_id;
+        document.getElementById('svm-modal-title').textContent = 'Edit Mapping';
+        
+        // Populate plans for the selected product
+        setTimeout(() => populateSvmPlans(editMapping.plan_id), 0);
+      } else {
+        document.getElementById('svm-edit-id').value = '';
+        document.getElementById('svm-modal-title').textContent = '+ Map Product to Supplier Variant';
       }
-
-      // Populate APIs dropdown
-      const apiSelect = document.getElementById('svar-api-id');
-      apiSelect.innerHTML = globalSupplierApis.map(a => `<option value="${a.id}">${escapeHtml(a.name)} (${a.api_type})</option>`).join('');
-
-      // Populate Product dropdown
-      updateProductDropdowns();
-      populateVariantPlanSelect();
-
-      openModal('modal-supplier-variant');
+      
+      openModal('modal-sv-mapping');
     }
-
-    function populateVariantPlanSelect() {
-      const prodId = parseInt(document.getElementById('svar-product-id').value, 10);
-      const planSelect = document.getElementById('svar-plan-id');
-      const filteredPlans = (globalPlans || []).filter(p => !prodId || p.product_id === prodId);
+    
+    function populateSvmPlans(selectedPlanId = null) {
+      const productId = parseInt(document.getElementById('svm-store-product').value, 10);
+      const planSelect = document.getElementById('svm-store-plan');
+      
+      if (!productId) {
+        planSelect.innerHTML = '<option value="">-- Select Store Product First --</option>';
+        planSelect.disabled = true;
+        return;
+      }
+      
+      planSelect.disabled = false;
+      const filteredPlans = (globalPlans || []).filter(p => p.product_id === productId);
       
       planSelect.innerHTML = filteredPlans.length === 0 
         ? '<option value="">No plans for selected product</option>'
         : filteredPlans.map(p => `<option value="${p.id}">${escapeHtml(p.plan_name)} (${p.days} ${p.duration_type} - $${p.price_usd})</option>`).join('');
-    }
-
-    async function editVariantMapping(id) {
-      const v = globalSupplierVariants.find(item => item.id === id);
-      if (!v) return;
-
-      await openAddVariantMappingModal();
-      document.getElementById('variant-mapping-modal-title').textContent = `Edit Mapping #${v.id}`;
-      document.getElementById('svar-id').value = v.id;
-      document.getElementById('svar-api-id').value = v.supplier_api_id || '';
-      document.getElementById('svar-product-id').value = v.product_id || '';
-      populateVariantPlanSelect();
-      document.getElementById('svar-plan-id').value = v.plan_id || '';
-      document.getElementById('svar-variant-id').value = v.supplier_variant_id || '';
-      document.getElementById('svar-name').value = v.variant_name || '';
-      document.getElementById('svar-status').value = v.status || 'active';
-    }
-
-    async function deleteVariantMapping(id) {
-      if (!confirm('Delete this variant mapping?')) return;
-      try {
-        await fetch(`/api/admin/supplier-variants?id=${id}`, { method: 'DELETE' });
-        showToast('Mapping deleted', 'info');
-        loadAdminSupplierVariants();
-      } catch (err) {
-        showToast('Failed to delete mapping', 'error');
+      
+      if (selectedPlanId) {
+        planSelect.value = selectedPlanId;
       }
     }
-
-    async function handleVariantMappingSubmit(e) {
+    
+    document.getElementById('svm-store-product')?.addEventListener('change', () => populateSvmPlans());
+    
+    async function handleSvmMappingSubmit(e) {
       e.preventDefault();
-      const id = document.getElementById('svar-id').value;
-      const payload = {
-        supplier_api_id: parseInt(document.getElementById('svar-api-id').value, 10),
-        product_id: parseInt(document.getElementById('svar-product-id').value, 10),
-        plan_id: parseInt(document.getElementById('svar-plan-id').value, 10),
-        supplier_variant_id: document.getElementById('svar-variant-id').value.trim(),
-        variant_name: document.getElementById('svar-name').value.trim(),
-        status: document.getElementById('svar-status').value
-      };
-
+      const editId = document.getElementById('svm-edit-id').value;
+      const storeProductId = parseInt(document.getElementById('svm-store-product').value, 10);
+      const storePlanId = parseInt(document.getElementById('svm-store-plan').value, 10);
+      const variantId = document.getElementById('svm-variant-id').value.trim();
+      
+      if (!storeProductId || !storePlanId || !variantId) {
+        showToast('All fields are required.', 'error');
+        return;
+      }
+      
+      const isEdit = !!document.getElementById('svm-edit-id').value;
+      const btn = e.target.querySelector('button[type="submit"]');
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+      
       try {
-        let res;
-        if (id) {
-          payload.id = parseInt(id, 10);
-          res = await fetch('/api/admin/supplier-variants', {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
-        } else {
-          res = await fetch('/api/admin/supplier-variants', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
-        }
-
+        const url = isEdit ? `/api/admin/supplier-variants` : `/api/admin/supplier-variants`;
+        const method = 'POST'; // Both create and update use POST (upsert)
+        
+        const payload = {
+          store_product_id: storeProductId,
+          store_plan_id: storeProductId,
+          supplier_variant_id: document.getElementById('svm-variant-id').value.trim()
+        };
+        
+        if (editId) payload.id = editId;
+        
+        const res = await fetch('/api/admin/supplier-variants', {
+          method: method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        
         const data = await res.json();
         if (!res.ok || !data.success) {
           showToast(data.message || 'Error saving mapping', 'error');
           return;
         }
-
-        showToast('Variant mapping saved successfully!', 'success');
-        closeModal('modal-supplier-variant');
-        loadAdminSupplierVariants();
+        
+        showToast(isEdit ? 'Mapping updated!' : 'Mapping created!', 'success');
+        closeModal('modal-sv-mapping');
+        loadAdminSupplierMappings();
+        loadSupplierCatalog(); // Refresh catalog too
       } catch (err) {
-        showToast('Network error saving variant mapping', 'error');
+        showToast('Error: ' + err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Save Mapping ⚡';
       }
+    }
+    
+    async function editSvmMapping(id) {
+      // Fetch mapping details
+      try {
+        const res = await fetch('/api/admin/supplier-variants');
+        const data = await res.json();
+        const mapping = (data.mappings || []).find(m => m.id == id);
+        if (mapping) openSvmMappingModal(mapping);
+      } catch (err) {
+        showToast('Failed to load mapping', 'error');
+      }
+    }
+    
+    async function deleteSvmMapping(id) {
+      if (!confirm('Delete this mapping?')) return;
+      try {
+        await fetch(`/api/admin/supplier-variants?id=${id}`, { method: 'DELETE' });
+        showToast('Mapping deleted', 'info');
+        loadAdminSupplierMappings();
+      } catch (err) {
+        showToast('Failed to delete mapping', 'error');
+      }
+    }
+    
+    function toggleAutoDelivery(id, enabled) {
+      fetch('/api/admin/supplier-variants', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, auto_delivery: enabled })
+      }).then(() => loadAdminSupplierMappings());
     }
 
     /* ==============================================================

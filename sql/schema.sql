@@ -132,9 +132,15 @@ CREATE TABLE supplier_variants (
   id SERIAL PRIMARY KEY,
   product_id INT NOT NULL REFERENCES products(id) ON DELETE CASCADE,
   plan_id INT NOT NULL REFERENCES plans(id) ON DELETE CASCADE,
-  supplier_variant_id TEXT NOT NULL,
-  supplier_status TEXT DEFAULT 'active' CHECK (supplier_status IN ('active', 'upcoming', 'disabled')),
-  auto_delivery BOOLEAN DEFAULT true
+  supplier_variant_id TEXT NOT NULL,        -- plan.id from supplier API (e.g., "226")
+  supplier_product_id INT NOT NULL,         -- product.id from supplier API (e.g., 46)
+  supplier_product_name TEXT NOT NULL,      -- product.name from supplier API (e.g., "BR MODS PC")
+  supplier_plan_days INT NOT NULL,          -- plan.duration_days as int (e.g., 1)
+  supplier_plan_label TEXT,                 -- plan.label (e.g., "1 Days")
+  supplier_plan_price NUMERIC,              -- plan.price as numeric (e.g., 0.38)
+  auto_delivery BOOLEAN DEFAULT true,       -- auto-dispatch keys
+  is_active BOOLEAN DEFAULT true,           -- enable/disable this mapping
+  supplier_status TEXT DEFAULT 'active' CHECK (supplier_status IN ('active', 'upcoming', 'disabled'))
 );
 
 -- 10. RESELLER PRICES TABLE
