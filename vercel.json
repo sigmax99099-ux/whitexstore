@@ -9,7 +9,7 @@
   "crons": [
     {
       "path": "/api/admin/cron/retry-deliveries",
-      "schedule": "*/5 * * * *"
+      "schedule": "0 0 * * *"
     }
   ]
 }
