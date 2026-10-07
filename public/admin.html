@@ -4347,7 +4347,9 @@
         const data = await res.json();
         
         if (data.success) {
-          showToast(`Sync complete: ${data.created} created, ${data.updated} updated, ${data.skipped} skipped`, 'success');
+          const total = data.totalReceived || (data.created + data.updated + data.skipped);
+          const msg = `Sync complete: ${data.created} created, ${data.updated} updated, ${data.skipped} skipped (${total} from supplier)`;
+          showToast(msg, data.created + data.updated > 0 ? 'success' : 'warning');
           loadProductMappings();
         } else {
           showToast(data.message || 'Sync failed', 'error');
