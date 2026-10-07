@@ -3127,7 +3127,7 @@
       try {
         const res = await fetch('/api/admin/supplier-apis');
         const data = await res.json();
-        globalSupplierApis = data.supplier_apis || [];
+        globalSupplierApis = data.apis || [];
 
         if (globalSupplierApis.length === 0) {
           tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 2rem; color: var(--text-dim);">No supplier APIs configured.</td></tr>`;
