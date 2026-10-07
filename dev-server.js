@@ -62,6 +62,7 @@ const server = http.createServer(async (req, res) => {
           rawBodyBuffers = buffers;
         } else {
           const rawBody = Buffer.concat(buffers).toString('utf-8');
+          
           if (rawBody) {
             try {
               bodyData = JSON.parse(rawBody);
