@@ -52,6 +52,13 @@ import adminKeyLicenseCheck from '../server/admin/keylicense-check.js';
 import adminPaymentMethods from '../server/admin/payment-methods.js';
 import adminSupplierApis from '../server/admin/supplier-apis.js';
 import adminSupplierVariants from '../server/admin/supplier-variants.js';
+import adminRetryPending from '../server/admin/retry-pending.js';
+import adminSupplierSettings from '../server/admin/supplier-settings.js';
+import adminProductMappings from '../server/admin/product-mappings.js';
+import adminSyncProducts from '../server/admin/sync-products.js';
+import adminDeliveries from '../server/admin/deliveries.js';
+import adminCronRetryDeliveries from '../server/admin/cron-retry-deliveries.js';
+import adminHwidReset from '../server/admin/hwid-reset.js';
 
 // Public Settings
 import publicSettings from '../server/settings.js';
@@ -117,6 +124,13 @@ const routes = {
   '/api/admin/payment-methods': adminPaymentMethods,
   '/api/admin/supplier-apis': adminSupplierApis,
   '/api/admin/supplier-variants': adminSupplierVariants,
+  '/api/admin/retry-pending': adminRetryPending,
+  '/api/admin/supplier-settings': adminSupplierSettings,
+  '/api/admin/product-mappings': adminProductMappings,
+  '/api/admin/sync-products': adminSyncProducts,
+  '/api/admin/deliveries': adminDeliveries,
+  '/api/admin/cron/retry-deliveries': adminCronRetryDeliveries,
+  '/api/admin/hwid-reset': adminHwidReset,
 };
 
 export default async function handler(req, res) {

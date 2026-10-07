@@ -337,6 +337,10 @@
         <li class="admin-nav-item"><button data-tab="tab-plans">⏱️ Plans & Pricing</button></li>
         <li class="admin-nav-item"><button data-tab="tab-keys">🔑 License Keys</button></li>
         <li class="admin-nav-item"><button data-tab="tab-supplier-apis">🌐 Supplier APIs & Mapping</button></li>
+        <li class="admin-nav-item"><button data-tab="tab-supplier-settings">⚙️ Supplier Settings</button></li>
+        <li class="admin-nav-item"><button data-tab="tab-product-mappings">🔗 Product Mappings</button></li>
+        <li class="admin-nav-item"><button data-tab="tab-deliveries">📦 Deliveries</button></li>
+        <li class="admin-nav-item"><button data-tab="tab-hwid-reset">🔐 HWID Reset</button></li>
         <li class="admin-nav-item"><button data-tab="tab-users">👥 Users & Resellers</button></li>
         <li class="admin-nav-item"><button data-tab="tab-reseller-prices">🏷️ Reseller Prices</button></li>
         <li class="admin-nav-item"><button data-tab="tab-settings">⚙️ Settings & API</button></li>
@@ -803,6 +807,168 @@
               Save All Settings 💾
             </button>
           </form>
+        </div>
+      </section>
+
+      <!-- TAB: SUPPLIER SETTINGS -->
+      <section id="tab-supplier-settings" class="admin-tab-content">
+        <h2 style="color: #fff; margin-bottom: 1.5rem;">// SUPPLIER SETTINGS</h2>
+        
+        <div class="admin-card" style="max-width: 780px;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+            <div class="form-group">
+              <label style="display: flex; align-items: center; gap: 0.75rem; font-size: 1rem; cursor: pointer;">
+                <input type="checkbox" id="supplier-auto-delivery" checked style="width: 20px; height: 20px;">
+                <span style="font-weight: 600;">Enable Auto-Delivery</span>
+              </label>
+              <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 0.35rem; margin-left: 2.5rem;">
+                Automatically generate and deliver license keys after successful payment
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="supplier-low-balance">Low Balance Threshold ($)</label>
+              <input type="number" id="supplier-low-balance" class="form-input" step="0.01" min="0" value="10.00" placeholder="10.00">
+              <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: 0.35rem;">
+                Alert admin when supplier wallet balance falls below this amount
+              </div>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+            <button type="button" class="btn btn-primary btn-sm" onclick="testSupplierConnection()">🔗 Test Connection</button>
+            <button type="button" class="btn btn-outline btn-sm" onclick="refreshSupplierBalance()">🔄 Refresh Balance</button>
+          </div>
+
+          <div id="supplier-connection-result" style="display: none; padding: 1rem; background: #0d0d15; border-radius: var(--radius-md); border: 1px solid var(--bg-card-border); font-family: monospace; font-size: 0.8rem; max-height: 400px; overflow: auto;"></div>
+        </div>
+
+        <div class="admin-card" style="max-width: 780px; margin-top: 1.5rem;">
+          <h3 style="color: var(--primary); margin-bottom: 1rem;">Live Wallet Balance</h3>
+          <div id="supplier-balance-display" style="font-size: 2.5rem; font-weight: 800; color: #34d399; font-family: var(--font-heading);">
+            $236.86
+          </div>
+          <div id="supplier-balance-status" style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--text-muted);">
+            Last checked: <span id="supplier-last-check">Never</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB: PRODUCT MAPPINGS -->
+      <section id="tab-product-mappings" class="admin-tab-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+          <h2 style="color: #fff;">// PRODUCT MAPPINGS</h2>
+          <div style="display: flex; gap: 0.75rem;">
+            <button class="btn btn-primary btn-sm" onclick="syncProductsFromSupplier()">🔄 Sync from Supplier</button>
+            <button class="btn btn-outline btn-sm" onclick="openAddMappingModal()">+ Add Mapping</button>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table-custom">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Store Product / Plan</th>
+                <th>Supplier Product</th>
+                <th>Days</th>
+                <th>Count</th>
+                <th>Auto Delivery</th>
+                <th>Active</th>
+                <th>Supplier Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="admin-mappings-tbody">
+              <tr><td colspan="9" style="text-align: center; padding: 2rem;">Loading mappings...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- TAB: DELIVERIES -->
+      <section id="tab-deliveries" class="admin-tab-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+          <h2 style="color: #fff;">// DELIVERIES</h2>
+          <div style="display: flex; gap: 0.75rem;">
+            <select id="deliveries-filter-status" class="form-select" style="width: auto;">
+              <option value="all">All Statuses</option>
+              <option value="pending">⏳ Pending</option>
+              <option value="delivered">✅ Delivered</option>
+              <option value="failed">❌ Failed</option>
+              <option value="flagged">🔴 Flagged</option>
+            </select>
+            <input type="text" id="deliveries-search-input" class="form-input" placeholder="Search order, customer, product..." style="width: 300px;">
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table-custom">
+            <thead>
+              <tr>
+                <th>Order</th>
+                <th>Customer</th>
+                <th>Product / Plan</th>
+                <th>Days</th>
+                <th>Keys (click to reveal)</th>
+                <th>Supplier Cost</th>
+                <th>Sale Price</th>
+                <th>Profit</th>
+                <th>Status</th>
+                <th>Error</th>
+                <th>Attempts</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="admin-deliveries-tbody">
+              <tr><td colspan="12" style="text-align: center; padding: 2rem;">Loading deliveries...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- TAB: HWID RESET -->
+      <section id="tab-hwid-reset" class="admin-tab-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+          <h2 style="color: #fff;">// HWID RESET TOOL</h2>
+        </div>
+
+        <div class="admin-card" style="max-width: 580px; margin-bottom: 2rem;">
+          <h3 style="color: var(--primary); margin-bottom: 1rem;">Reset HWID for License Key</h3>
+          <form id="form-hwid-reset">
+            <div class="form-group">
+              <label class="form-label">License Key *</label>
+              <input type="text" id="hwid-key-input" class="form-input" required placeholder="Enter license key to reset HWID" style="font-family: monospace;">
+            </div>
+            <div style="font-size: 0.75rem; color: var(--text-dim); margin-bottom: 1rem;">
+              This will call the supplier API to reset the device binding for the given key. The key must be valid and exist in the supplier system.
+            </div>
+            <button type="submit" class="btn btn-primary btn-block btn-lg btn-glow">Reset HWID ⚡</button>
+          </form>
+          <div id="hwid-result" style="display: none; margin-top: 1rem; padding: 1rem; background: #0d0d15; border-radius: var(--radius-md); border: 1px solid var(--bg-card-border); font-family: monospace; font-size: 0.8rem;"></div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+          <h2 style="color: #fff;">// RESET LOGS</h2>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table-custom">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Key (masked)</th>
+                <th>Requested By</th>
+                <th>Admin</th>
+                <th>IP Address</th>
+                <th>Result</th>
+                <th>Error</th>
+                <th>Created</th>
+              </tr>
+            </thead>
+            <tbody id="admin-hwid-logs-tbody">
+              <tr><td colspan="8" style="text-align: center; padding: 2rem;">Loading logs...</td></tr>
+            </tbody>
+          </table>
         </div>
       </section>
 
@@ -1414,6 +1580,10 @@
           if (tabId === 'tab-plans') loadAdminPlans();
           if (tabId === 'tab-keys') loadAdminKeys();
           if (tabId === 'tab-supplier-apis') { loadAdminSupplierApis(); loadAdminSupplierVariants(); }
+          if (tabId === 'tab-supplier-settings') loadSupplierSettings();
+          if (tabId === 'tab-product-mappings') loadProductMappings();
+          if (tabId === 'tab-deliveries') loadDeliveries();
+          if (tabId === 'tab-hwid-reset') loadHwidLogs();
           if (tabId === 'tab-users') loadAdminUsers();
           if (tabId === 'tab-reseller-prices') loadAdminResellerPrices();
           if (tabId === 'tab-settings') loadAdminSettings();
@@ -3971,6 +4141,530 @@
         if (btn) { btn.disabled = false; btn.textContent = editId ? 'Save Changes 💾' : 'Add Download Link 💾'; }
       }
     }
+
+    /* ==============================================================
+       SUPPLIER SETTINGS
+       ============================================================== */
+    async function loadSupplierSettings() {
+      try {
+        // Load settings
+        const settingsRes = await fetch('/api/admin/supplier-settings');
+        const settingsData = await settingsRes.json();
+        
+        if (settingsData.success && settingsData.settings) {
+          const s = settingsData.settings;
+          document.getElementById('supplier-auto-delivery').checked = s.auto_delivery_enabled;
+          document.getElementById('supplier-low-balance').value = s.low_balance_threshold;
+          
+          if (s.last_known_balance !== null && s.last_known_balance !== undefined) {
+            document.getElementById('supplier-balance-display').textContent = `$${parseFloat(s.last_known_balance).toFixed(2)}`;
+            document.getElementById('supplier-balance-display').style.color = parseFloat(s.last_known_balance) <= s.low_balance_threshold ? '#ef4444' : '#34d399';
+          }
+          
+          if (s.last_balance_check) {
+            document.getElementById('supplier-last-check').textContent = new Date(s.last_balance_check).toLocaleString();
+          }
+        }
+      } catch (err) {
+        console.error('Load supplier settings error:', err);
+      }
+    }
+
+    async function testSupplierConnection() {
+      const resultDiv = document.getElementById('supplier-connection-result');
+      resultDiv.style.display = 'block';
+      resultDiv.textContent = 'Testing connection...';
+      resultDiv.style.color = 'var(--primary)';
+      
+      try {
+        const res = await fetch('/api/admin/supplier-settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'test_connection' })
+        });
+        
+        const data = await res.json();
+        
+        if (data.success && data.account) {
+          const acc = data.account;
+          resultDiv.innerHTML = `
+            <div style="color: #34d399;">✅ Connection Successful!</div>
+            <div style="margin-top: 0.5rem; font-size: 0.75rem;">
+              <div>Account ID: ${acc.id}</div>
+              <div>Username: ${acc.username}</div>
+              <div>Balance: $${acc.balance}</div>
+              <div>API Access: ${acc.api_access ? 'Enabled' : 'Disabled'}</div>
+              <div>Products: ${data.permitted_products?.length || 0}</div>
+            </div>
+            <details style="margin-top: 1rem;">
+              <summary style="cursor: pointer; color: var(--primary);">View Full Product List</summary>
+              <pre style="margin-top: 0.5rem; font-size: 0.7rem; max-height: 300px; overflow: auto;">${JSON.stringify(data.permitted_products, null, 2)}</pre>
+            </details>
+          `;
+          resultDiv.style.color = '#34d399';
+          
+          // Update balance display
+          if (acc.balance !== undefined) {
+            document.getElementById('supplier-balance-display').textContent = `$${acc.balance}`;
+            document.getElementById('supplier-balance-display').style.color = acc.balance <= 10 ? '#ef4444' : '#34d399';
+            document.getElementById('supplier-last-check').textContent = new Date().toLocaleString();
+          }
+        } else {
+          resultDiv.innerHTML = `<div style="color: #ef4444;">❌ Connection Failed: ${data.message || 'Unknown error'}</div>`;
+          resultDiv.style.color = '#ef4444';
+        }
+      } catch (err) {
+        resultDiv.innerHTML = `<div style="color: #ef4444;">❌ Error: ${err.message}</div>`;
+        resultDiv.style.color = '#ef4444';
+      }
+    }
+
+    async function refreshSupplierBalance() {
+      const btn = event.target;
+      btn.disabled = true;
+      btn.textContent = 'Refreshing...';
+      
+      try {
+        const res = await fetch('/api/admin/supplier-settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'refresh_balance' })
+        });
+        
+        const data = await res.json();
+        
+        if (data.success && data.balance !== undefined) {
+          document.getElementById('supplier-balance-display').textContent = `$${data.balance}`;
+          document.getElementById('supplier-balance-display').style.color = data.balance <= 10 ? '#ef4444' : '#34d399';
+          document.getElementById('supplier-last-check').textContent = new Date().toLocaleString();
+          showToast(`Balance refreshed: $${data.balance}`, 'success');
+        } else {
+          showToast(data.message || 'Failed to refresh balance', 'error');
+        }
+      } catch (err) {
+        showToast('Error refreshing balance: ' + err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '🔄 Refresh Balance';
+      }
+    }
+
+    // Save supplier settings
+    document.getElementById('supplier-auto-delivery')?.addEventListener('change', async (e) => {
+      await saveSupplierSetting('auto_delivery_enabled', e.target.checked);
+    });
+    
+    document.getElementById('supplier-low-balance')?.addEventListener('change', async (e) => {
+      await saveSupplierSetting('low_balance_threshold', parseFloat(e.target.value) || 0);
+    });
+
+    async function saveSupplierSetting(key, value) {
+      try {
+        const res = await fetch('/api/admin/supplier-settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ [key]: value })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(`${key} updated`, 'success');
+        } else {
+          showToast(data.message || 'Failed to update', 'error');
+          loadSupplierSettings(); // Reset UI
+        }
+      } catch (err) {
+        showToast('Error: ' + err.message, 'error');
+        loadSupplierSettings();
+      }
+    }
+
+    /* ==============================================================
+       PRODUCT MAPPINGS
+       ============================================================== */
+    async function loadProductMappings() {
+      const tbody = document.getElementById('admin-mappings-tbody');
+      try {
+        const res = await fetch('/api/admin/product-mappings');
+        const data = await res.json();
+        
+        if (!data.success) {
+          tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding: 2rem; color: var(--danger);">Failed to load mappings.</td></tr>`;
+          return;
+        }
+        
+        const mappings = data.mappings || [];
+        
+        if (mappings.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding: 2rem; color: var(--text-dim);">No product mappings configured. Click "+ Add Mapping" or "Sync from Supplier".</td></tr>`;
+          return;
+        }
+        
+        tbody.innerHTML = mappings.map(m => `
+          <tr>
+            <td>#${m.id}</td>
+            <td>
+              <strong style="color: #fff;">${escapeHtml(m.product_name)}</strong><br>
+              <span style="color: var(--text-muted); font-size: 0.8rem;">${escapeHtml(m.plan_name)} (${m.plan_days}d)</span>
+            </td>
+            <td>${escapeHtml(m.supplier_product_name)}</td>
+            <td>${m.supplier_plan_days} days</td>
+            <td>${m.supplier_plan_count}</td>
+            <td style="text-align: center;">
+              <label style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" ${m.auto_delivery ? 'checked' : ''} onchange="updateMapping(${m.id}, 'auto_delivery', this.checked)">
+              </label>
+            </td>
+            <td style="text-align: center;">
+              <label style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" ${m.is_active ? 'checked' : ''} onchange="updateMapping(${m.id}, 'is_active', this.checked)">
+              </label>
+            </td>
+            <td>
+              <select class="form-select" style="width: 100%;" onchange="updateMapping(${m.id}, 'supplier_status', this.value)">
+                <option value="active" ${m.supplier_status === 'active' ? 'selected' : ''}>Active</option>
+                <option value="upcoming" ${m.supplier_status === 'upcoming' ? 'selected' : ''}>Upcoming</option>
+                <option value="disabled" ${m.supplier_status === 'disabled' ? 'selected' : ''}>Disabled</option>
+              </select>
+            </td>
+            <td>
+              <button class="btn btn-outline btn-sm" onclick="editMapping(${m.id})">Edit</button>
+              <button class="btn btn-outline btn-sm" style="color: var(--danger);" onclick="deleteMapping(${m.id})">Del</button>
+            </td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="9" style="color:var(--danger); text-align:center;">Failed to load mappings.</td></tr>`;
+      }
+    }
+
+    async function syncProductsFromSupplier() {
+      const btn = event.target;
+      btn.disabled = true;
+      btn.textContent = 'Syncing...';
+      
+      try {
+        const res = await fetch('/api/admin/sync-products', { method: 'POST' });
+        const data = await res.json();
+        
+        if (data.success) {
+          showToast(`Sync complete: ${data.created} created, ${data.updated} updated, ${data.skipped} skipped`, 'success');
+          loadProductMappings();
+        } else {
+          showToast(data.message || 'Sync failed', 'error');
+        }
+      } catch (err) {
+        showToast('Sync error: ' + err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '🔄 Sync from Supplier';
+      }
+    }
+
+    async function updateMapping(id, field, value) {
+      try {
+        const res = await fetch('/api/admin/product-mappings', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, [field]: value })
+        });
+        const data = await res.json();
+        if (!data.success) {
+          showToast(data.message || 'Failed to update', 'error');
+          loadProductMappings(); // Reset
+        } else {
+          showToast('Updated', 'success');
+        }
+      } catch (err) {
+        showToast('Error: ' + err.message, 'error');
+        loadProductMappings();
+      }
+    }
+
+    async function deleteMapping(id) {
+      if (!confirm('Delete this mapping?')) return;
+      try {
+        const res = await fetch('/api/admin/product-mappings?id=' + id, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+          showToast('Mapping deleted', 'success');
+          loadProductMappings();
+        } else {
+          showToast(data.message || 'Failed to delete', 'error');
+        }
+      } catch (err) {
+        showToast('Error: ' + err.message, 'error');
+      }
+    }
+
+    function openAddMappingModal() {
+      // Simple prompt-based add for now
+      const productId = prompt('Store Product ID:');
+      if (!productId) return;
+      const planId = prompt('Store Plan ID:');
+      if (!planId) return;
+      const supplierProductId = prompt('Supplier Product ID (e.g., 53):');
+      if (!supplierProductId) return;
+      const supplierProductName = prompt('Supplier Product Name (e.g., EMOTE PANEL PC):');
+      if (!supplierProductName) return;
+      const supplierPlanDays = prompt('Days (e.g., 30):', '30');
+      if (!supplierPlanDays) return;
+      
+      try {
+        const res = await fetch('/api/admin/product-mappings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            product_id: parseInt(productId),
+            plan_id: parseInt(planId),
+            supplier_product_id: parseInt(supplierProductId),
+            supplier_product_name: supplierProductName,
+            supplier_plan_days: parseInt(supplierPlanDays),
+            supplier_plan_count: 1,
+            auto_delivery: true,
+            is_active: true,
+            supplier_status: 'active'
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('Mapping created', 'success');
+          loadProductMappings();
+        } else {
+          showToast(data.message || 'Failed to create', 'error');
+        }
+      } catch (err) {
+        showToast('Error: ' + err.message, 'error');
+      }
+    }
+
+    /* ==============================================================
+       DELIVERIES
+       ============================================================== */
+    let deliveriesFilterStatus = 'all';
+    let deliveriesSearch = '';
+    
+    async function loadDeliveries() {
+      const tbody = document.getElementById('admin-deliveries-tbody');
+      const status = deliveriesFilterStatus;
+      const search = deliveriesSearch;
+      
+      let url = '/api/admin/deliveries?limit=50';
+      if (status !== 'all') url += '&status=' + status;
+      if (search) url += '&search=' + encodeURIComponent(search);
+      
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+        
+        if (!data.success) {
+          tbody.innerHTML = `<tr><td colspan="12" style="text-align:center; padding: 2rem; color: var(--danger);">Failed to load deliveries.</td></tr>`;
+          return;
+        }
+        
+        const deliveries = data.deliveries || [];
+        
+        if (deliveries.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="12" style="text-align:center; padding: 2rem; color: var(--text-dim);">No deliveries found.</td></tr>`;
+          return;
+        }
+        
+        tbody.innerHTML = deliveries.map(d => {
+          const keysMasked = d.keys ? d.keys.map(k => maskKey(k)).join('<br>') : '-';
+          const keysRaw = d.keys_raw ? d.keys_raw.join('<br>') : '-';
+          const statusBadge = getDeliveryStatusBadge(d.status);
+          const profit = d.profit ? `$${d.profit}` : 'N/A';
+          const supplierCost = d.total_cost ? `$${parseFloat(d.total_cost).toFixed(2)}` : 'N/A';
+          const salePrice = d.amount_usd ? `$${parseFloat(d.amount_usd).toFixed(2)}` : 'N/A';
+          
+          return `
+            <tr>
+              <td><strong>#${escapeHtml(d.order_code)}</strong></td>
+              <td>
+                ${escapeHtml(d.customer_name)}<br>
+                <span style="font-size: 0.75rem; color: var(--text-muted);">${escapeHtml(d.customer_email)}</span>
+              </td>
+              <td>
+                <strong style="color: #fff;">${escapeHtml(d.product_name)}</strong><br>
+                <span style="color: var(--text-muted); font-size: 0.8rem;">${escapeHtml(d.plan_name)}</span>
+              </td>
+              <td>${d.days} days</td>
+              <td>
+                <details>
+                  <summary style="cursor: pointer; color: var(--primary); font-family: monospace; font-size: 0.85rem;">
+                    ${keysMasked} (click to reveal)
+                  </summary>
+                  <div style="margin-top: 0.5rem; font-family: monospace; font-size: 0.8rem;">${keysRaw}</div>
+                </details>
+              </td>
+              <td>${supplierCost}</td>
+              <td>${salePrice}</td>
+              <td>${profit}</td>
+              <td>${statusBadge}</td>
+              <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--danger); font-size: 0.75rem;">
+                ${escapeHtml(d.last_error || '-')}
+              </td>
+              <td>${d.attempts}/${d.max_attempts}</td>
+              <td>
+                ${d.status === 'failed' || d.status === 'flagged' ? `
+                  <button class="btn btn-outline btn-sm" onclick="retryDelivery(${d.id})" style="margin-bottom: 0.3rem;">🔄 Retry</button>
+                  <button class="btn btn-outline btn-sm" style="color: var(--primary);" onclick="refundDelivery(${d.id})">💰 Refund</button>
+                ` : d.status === 'pending' ? `
+                  <button class="btn btn-outline btn-sm" onclick="retryDelivery(${d.id})" disabled>⏳ Processing</button>
+                ` : `
+                  <span style="color: var(--text-dim); font-size: 0.8rem;">Done</span>
+                `}
+              </td>
+            </tr>
+          `;
+        }).join('');
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="12" style="color:var(--danger); text-align:center;">Failed to load deliveries.</td></tr>`;
+      }
+    }
+
+    function getDeliveryStatusBadge(status) {
+      switch (status) {
+        case 'delivered': return '<span class="badge badge-undetected">✅ Delivered</span>';
+        case 'pending': return '<span class="badge badge-warning">⏳ Pending</span>';
+        case 'failed': return '<span class="badge badge-danger">❌ Failed</span>';
+        case 'flagged': return '<span class="badge badge-danger">🔴 Flagged</span>';
+        default: return `<span class="badge badge-warning">${status}</span>`;
+      }
+    }
+
+    document.getElementById('deliveries-filter-status')?.addEventListener('change', (e) => {
+      deliveriesFilterStatus = e.target.value;
+      loadDeliveries();
+    });
+    
+    document.getElementById('deliveries-search-input')?.addEventListener('input', (e) => {
+      deliveriesSearch = e.target.value;
+      loadDeliveries();
+    });
+
+    async function retryDelivery(id) {
+      try {
+        const res = await fetch('/api/admin/deliveries', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'retry', delivery_id: id })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('Delivery queued for retry', 'success');
+          loadDeliveries();
+        } else {
+          showToast(data.message || 'Failed to retry', 'error');
+        }
+      } catch (err) {
+        showToast('Error: ' + err.message, 'error');
+      }
+    }
+
+    async function refundDelivery(id) {
+      if (!confirm('Refund wallet for this failed delivery? This will mark the order as rejected.')) return;
+      
+      try {
+        const res = await fetch('/api/admin/deliveries', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'refund', delivery_id: id })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(`Refunded ${data.refunded_npr} NPR to wallet`, 'success');
+          loadDeliveries();
+        } else {
+          showToast(data.message || 'Failed to refund', 'error');
+        }
+      } catch (err) {
+        showToast('Error: ' + err.message, 'error');
+      }
+    }
+
+    /* ==============================================================
+       HWID RESET
+       ============================================================== */
+    async function loadHwidLogs() {
+      const tbody = document.getElementById('admin-hwid-logs-tbody');
+      try {
+        const res = await fetch('/api/admin/hwid-reset?limit=50');
+        const data = await res.json();
+        
+        if (!data.success) {
+          tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 2rem; color: var(--danger);">Failed to load logs.</td></tr>`;
+          return;
+        }
+        
+        const logs = data.logs || [];
+        
+        if (logs.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 2rem; color: var(--text-dim);">No HWID reset logs.</td></tr>`;
+          return;
+        }
+        
+        tbody.innerHTML = logs.map(l => `
+          <tr>
+            <td>#${l.id}</td>
+            <td><span class="license-key-pill">${escapeHtml(l.key_code)}</span></td>
+            <td>
+              ${escapeHtml(l.requested_by_name || 'Customer')}<br>
+              <span style="font-size: 0.75rem; color: var(--text-muted);">${escapeHtml(l.requested_by_email || '')}</span>
+            </td>
+            <td>${escapeHtml(l.requested_by_admin_name || '-')}</td>
+            <td style="font-family: monospace; font-size: 0.8rem;">${escapeHtml(l.ip_address || '-')}</td>
+            <td><span class="badge ${l.result === 'success' ? 'badge-undetected' : l.result === 'failed' ? 'badge-danger' : 'badge-warning'}">${l.result}</span></td>
+            <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--danger); font-size: 0.75rem;">
+              ${escapeHtml(l.error_message || '-')}
+            </td>
+            <td>${new Date(l.created_at).toLocaleString()}</td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="8" style="color:var(--danger); text-align:center;">Failed to load logs.</td></tr>`;
+      }
+    }
+
+    document.getElementById('form-hwid-reset')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const key = document.getElementById('hwid-key-input').value.trim();
+      const resultDiv = document.getElementById('hwid-result');
+      
+      if (!key) return;
+      
+      const btn = e.target.querySelector('button[type="submit"]');
+      btn.disabled = true;
+      btn.textContent = 'Resetting...';
+      resultDiv.style.display = 'none';
+      
+      try {
+        const res = await fetch('/api/admin/hwid-reset', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key })
+        });
+        
+        const data = await res.json();
+        
+        if (data.success) {
+          resultDiv.style.display = 'block';
+          resultDiv.style.color = '#34d399';
+          resultDiv.textContent = '✅ HWID Reset Successful!\n' + JSON.stringify(data.result, null, 2);
+          loadHwidLogs();
+        } else {
+          resultDiv.style.display = 'block';
+          resultDiv.style.color = '#ef4444';
+          resultDiv.textContent = '❌ Failed: ' + data.message;
+        }
+      } catch (err) {
+        resultDiv.style.display = 'block';
+        resultDiv.style.color = '#ef4444';
+        resultDiv.textContent = '❌ Error: ' + err.message;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Reset HWID ⚡';
+      }
+    });
 
     /* ==============================================================
        MODAL CONTROLLERS

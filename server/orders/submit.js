@@ -3,6 +3,7 @@ import { query, getClient } from '../../lib/db.js';
 import { getAuthUser } from '../../lib/auth.js';
 import { callSupplierForKey } from '../../lib/keylicense.js';
 import { notifyNewOrder, notifyOrderDelivered } from '../../lib/discord.js';
+import { deliverOrder } from '../../services/delivery.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -146,95 +147,46 @@ export default async function handler(req, res) {
     try { await client.query('COMMIT'); } catch(e) { /* mock: no-op */ }
     client.release && client.release();
 
-    // 7. Attempt Auto-Delivery of Key
-    let deliveredKey = null;
-    let autoSuccess = false;
+    // 7. Attempt Auto-Delivery of Key using new delivery service
+    // This handles:
+    // - Idempotency via UNIQUE delivery record per order_id
+    // - Supplier API with typed errors and retry logic
+    // - Delivery status tracking in deliveries table
+    // - Admin notifications on failure
+    const deliveryResult = await deliverOrder(order.id);
 
-    // A. Check if linked to KeyLicense Supplier Variant
-    const variantRes = await query(
-      'SELECT supplier_variant_id FROM supplier_variants WHERE product_id = $1 AND plan_id = $2',
-      [product_id, plan_id]
-    );
-
-    if (variantRes.rows.length > 0 && variantRes.rows[0].supplier_variant_id) {
-      const variantId = variantRes.rows[0].supplier_variant_id;
-      const klResult = await callSupplierForKey(variantId);
-      if (klResult && klResult.success && klResult.key) {
-        deliveredKey = klResult.key;
-        autoSuccess = true;
-      }
-    }
-
-    // B. If KeyLicense was not used or failed, check local inventory in license_keys table
-    if (!autoSuccess) {
-      const localKeyRes = await query(
-        `SELECT id, key_code FROM license_keys 
-         WHERE product_id = $1 
-           AND status = 'available' 
-           AND days = $2 
-         ORDER BY id ASC LIMIT 1`,
-        [product_id, item.days]
+    // 8. Fetch download links for this product
+    let downloadLinks = [];
+    try {
+      const productRes = await query(
+        `SELECT p.category FROM products p WHERE p.id = $1`,
+        [product_id]
       );
+      const productCategory = productRes.rows[0]?.category;
 
-      if (localKeyRes.rows.length > 0) {
-        const localKey = localKeyRes.rows[0];
-        deliveredKey = localKey.key_code;
-        autoSuccess = true;
-
-        // Mark local key as sold
-        await query(
-          `UPDATE license_keys 
-           SET status = 'sold', assigned_order_id = $1, assigned_user_id = $2 
-           WHERE id = $3`,
-          [order.id, user.id, localKey.id]
+      if (productCategory) {
+        const dlRes = await query(
+          `SELECT id, name, link FROM download_links 
+           WHERE is_active = true 
+           AND category_name = $1 
+           AND (product_id = $2 OR product_id IS NULL)`,
+          [productCategory, product_id]
         );
+        downloadLinks = dlRes.rows;
       }
+    } catch (e) {
+      console.error('Failed to fetch download links:', e);
     }
 
-    // 8. Handle Delivery Outcomes
-    if (autoSuccess && deliveredKey) {
-      // If key came from KeyLicense, insert into license_keys as sold
-      if (variantRes.rows.length > 0) {
-        await query(
-          `INSERT INTO license_keys (product_id, key_code, duration_type, days, status, assigned_order_id, assigned_user_id)
-           VALUES ($1, $2, $3, $4, 'sold', $5, $6)`,
-          [product_id, deliveredKey, item.duration_type, item.days, order.id, user.id]
-        );
-      }
-
-      // Mark order approved
-      await query("UPDATE orders SET status = 'approved' WHERE id = $1", [order.id]);
-
-      // Deliver download links for this product
-      let downloadLinks = [];
-      try {
-        const productRes = await query(
-          `SELECT p.category FROM products p WHERE p.id = $1`,
-          [product_id]
-        );
-        const productCategory = productRes.rows[0]?.category;
-
-        if (productCategory) {
-          const dlRes = await query(
-            `SELECT id, name, link FROM download_links 
-             WHERE is_active = true 
-             AND category_name = $1 
-             AND (product_id = $2 OR product_id IS NULL)`,
-            [productCategory, product_id]
-          );
-          downloadLinks = dlRes.rows;
-        }
-      } catch (e) {
-        console.error('Failed to fetch download links:', e);
-      }
-
+    // 9. Handle Delivery Outcomes
+    if (deliveryResult.success) {
       // Notify Discord (Success)
       await notifyOrderDelivered({
         orderCode: order.order_code,
         username: user.name,
         productName: item.product_name,
         planName: item.plan_name,
-        keyCode: deliveredKey,
+        keyCode: deliveryResult.keys[0], // First key
         auto: true
       });
 
@@ -244,15 +196,22 @@ export default async function handler(req, res) {
         order_code: order.order_code,
         product_name: item.product_name,
         plan_name: item.plan_name,
-        license_key: deliveredKey,
+        license_key: deliveryResult.keys[0], // First key for immediate display
+        license_keys: deliveryResult.keys, // All keys for dashboard
+        delivery_id: deliveryResult.deliveryId,
         amount_usd: finalPriceUsd,
         amount_npr: finalPriceNpr,
         new_wallet_balance: newBalance,
-        message: 'Order completed and key delivered instantly!',
-        download_links: downloadLinks
+        message: deliveryResult.alreadyDelivered 
+          ? 'Order already processed. Key delivered previously.' 
+          : 'Order completed and key delivered instantly!',
+        download_links: downloadLinks,
+        supplier_cost: deliveryResult.supplierCost,
+        balance_left: deliveryResult.balanceLeft
       });
     } else {
-      // Keep order as pending, awaiting admin manual approval or key replenishment
+      // Delivery failed or pending - order stays pending
+      // Dashboard will poll /api/orders/my-orders for delivery status
       await notifyNewOrder({
         orderCode: order.order_code,
         username: user.name,
@@ -262,17 +221,39 @@ export default async function handler(req, res) {
         amountUsd: finalPriceUsd
       });
 
+      const isRetryable = deliveryResult.retryable === true;
+      const isTimeout = deliveryResult.code === 'TIMEOUT';
+      const isFlagged = deliveryResult.code === 'FLAGGED';
+      const isNoMapping = deliveryResult.code === 'NO_MAPPING';
+      const isDisabled = deliveryResult.code === 'AUTO_DELIVERY_DISABLED';
+
+      let message = 'Your key is being prepared...';
+      if (isTimeout || isFlagged) {
+        message = 'Delivery timed out. Admin has been notified and will review shortly.';
+      } else if (isNoMapping) {
+        message = 'No supplier mapping configured for this product. Contact support.';
+      } else if (isDisabled) {
+        message = 'Auto-delivery is currently disabled. Contact support.';
+      } else if (!isRetryable) {
+        message = 'Delivery failed permanently. Contact support for refund.';
+      }
+
       return res.status(200).json({
         success: true,
-        order_status: 'pending',
+        order_status: 'pending_delivery',
         order_code: order.order_code,
         product_name: item.product_name,
         plan_name: item.plan_name,
         license_key: null,
+        license_keys: [],
+        delivery_id: deliveryResult.deliveryId,
+        delivery_error: deliveryResult.error,
+        delivery_code: deliveryResult.code,
+        delivery_retryable: isRetryable,
         amount_usd: finalPriceUsd,
         amount_npr: finalPriceNpr,
         new_wallet_balance: newBalance,
-        message: 'Order created! Stock is currently being assigned by admin. Your key will appear in your dashboard shortly.',
+        message,
         download_links: []
       });
     }

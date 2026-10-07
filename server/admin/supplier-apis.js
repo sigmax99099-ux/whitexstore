@@ -20,6 +20,7 @@ export default async function handler(req, res) {
         ORDER BY sa.id ASC
       `);
       console.log('[supplier-apis] Query result rows:', apisRes.rows.length);
+      console.log('[supplier-apis] First 3 rows:', apisRes.rows.slice(0,3).map(r => r.name));
       return res.status(200).json({ success: true, apis: apisRes.rows });
     } catch (err) {
       console.error('Admin get supplier APIs error:', err);

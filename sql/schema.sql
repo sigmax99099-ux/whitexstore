@@ -11,6 +11,10 @@ DROP TABLE IF EXISTS login_attempts CASCADE;
 DROP TABLE IF EXISTS password_resets CASCADE;
 DROP TABLE IF EXISTS reseller_prices CASCADE;
 DROP TABLE IF EXISTS supplier_variants CASCADE;
+DROP TABLE IF EXISTS hwid_reset_log CASCADE;
+DROP TABLE IF EXISTS deliveries CASCADE;
+DROP TABLE IF EXISTS product_mappings CASCADE;
+DROP TABLE IF EXISTS supplier_settings CASCADE;
 DROP TABLE IF EXISTS settings CASCADE;
 DROP TABLE IF EXISTS wallet_transactions CASCADE;
 DROP TABLE IF EXISTS payment_methods CASCADE;
@@ -128,7 +132,9 @@ CREATE TABLE supplier_variants (
   id SERIAL PRIMARY KEY,
   product_id INT NOT NULL REFERENCES products(id) ON DELETE CASCADE,
   plan_id INT NOT NULL REFERENCES plans(id) ON DELETE CASCADE,
-  supplier_variant_id TEXT NOT NULL
+  supplier_variant_id TEXT NOT NULL,
+  supplier_status TEXT DEFAULT 'active' CHECK (supplier_status IN ('active', 'upcoming', 'disabled')),
+  auto_delivery BOOLEAN DEFAULT true
 );
 
 -- 10. RESELLER PRICES TABLE
@@ -167,6 +173,76 @@ CREATE TABLE login_attempts (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- 14. SUPPLIER SETTINGS (singleton)
+CREATE TABLE supplier_settings (
+  id INT PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+  auto_delivery_enabled BOOLEAN NOT NULL DEFAULT true,
+  low_balance_threshold NUMERIC NOT NULL DEFAULT 10.00,
+  last_known_balance NUMERIC,
+  last_balance_check TIMESTAMP WITH TIME ZONE,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 15. PRODUCT MAPPINGS (store product/plan -> supplier product)
+CREATE TABLE product_mappings (
+  id SERIAL PRIMARY KEY,
+  product_id INT NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+  plan_id INT NOT NULL REFERENCES plans(id) ON DELETE CASCADE,
+  supplier_product_id INT NOT NULL,           -- e.g., 53 for EMOTE PANEL
+  supplier_product_name TEXT NOT NULL,        -- cached for display
+  supplier_plan_days INT NOT NULL,            -- e.g., 30
+  supplier_plan_count INT NOT NULL DEFAULT 1, -- usually 1
+  auto_delivery BOOLEAN NOT NULL DEFAULT true,
+  is_active BOOLEAN NOT NULL DEFAULT true,
+  supplier_status TEXT NOT NULL DEFAULT 'active' CHECK (supplier_status IN ('active', 'upcoming', 'disabled')),
+  notes TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE (product_id, plan_id)
+);
+
+CREATE INDEX idx_product_mappings_product ON product_mappings(product_id);
+CREATE INDEX idx_product_mappings_plan ON product_mappings(plan_id);
+
+-- 16. DELIVERIES (one per order, idempotent)
+CREATE TABLE deliveries (
+  id SERIAL PRIMARY KEY,
+  order_id INT NOT NULL UNIQUE REFERENCES orders(id) ON DELETE CASCADE,
+  product_mapping_id INT REFERENCES product_mappings(id) ON DELETE SET NULL,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'delivered', 'failed', 'flagged')),
+  keys TEXT[],                                -- array of license keys
+  unit_price NUMERIC,                         -- per key cost from supplier
+  total_cost NUMERIC,                         -- total deducted from balance
+  balance_left NUMERIC,                       -- supplier balance after delivery
+  expires_at TIMESTAMP WITH TIME ZONE,        -- key expiration from supplier
+  attempts INT NOT NULL DEFAULT 0,
+  max_attempts INT NOT NULL DEFAULT 5,
+  last_error TEXT,
+  next_retry_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  delivered_at TIMESTAMP WITH TIME ZONE
+);
+
+CREATE INDEX idx_deliveries_status ON deliveries(status);
+CREATE INDEX idx_deliveries_next_retry ON deliveries(next_retry_at) WHERE status IN ('pending', 'failed');
+
+-- 17. HWID RESET LOG
+CREATE TABLE hwid_reset_log (
+  id SERIAL PRIMARY KEY,
+  key_code TEXT NOT NULL,
+  requested_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  requested_by_admin INT REFERENCES admins(id) ON DELETE SET NULL,
+  ip_address TEXT,
+  user_agent TEXT,
+  result TEXT NOT NULL,                       -- 'success', 'failed', 'invalid_key', 'rate_limited'
+  error_message TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX idx_hwid_reset_key ON hwid_reset_log(key_code);
+CREATE INDEX idx_hwid_reset_user ON hwid_reset_log(requested_by);
+CREATE INDEX idx_hwid_reset_created ON hwid_reset_log(created_at);
+
 -- INDEXES FOR PERFORMANCE & RATE LIMITING
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_orders_user ON orders(user_id);
@@ -202,6 +278,11 @@ INSERT INTO settings (setting_key, setting_value) VALUES
 ('min_topup_npr', '200'),
 ('site_notice', '⚡ Instant 24/7 Automated Key Delivery Active. 100% Undetected on Latest Game Patches.')
 ON CONFLICT (setting_key) DO NOTHING;
+
+-- Supplier Settings (singleton)
+INSERT INTO supplier_settings (id, auto_delivery_enabled, low_balance_threshold) VALUES
+(1, true, 10.00)
+ON CONFLICT (id) DO NOTHING;
 
 -- Default Payment Methods
 INSERT INTO payment_methods (method_name, currency, account_id, account_holder, instructions, qr_image, status) VALUES

@@ -23,15 +23,30 @@ export default async function handler(req, res) {
         p.id as product_id,
         p.name as product_name,
         p.image as product_image,
+        p.category as product_category,
         pl.plan_name,
         pl.duration_type,
         pl.days,
         lk.key_code,
-        p.category as product_category
+        -- Delivery info
+        d.id as delivery_id,
+        d.status as delivery_status,
+        d.keys as delivery_keys,
+        d.unit_price as delivery_unit_price,
+        d.total_cost as delivery_total_cost,
+        d.balance_left as delivery_balance_left,
+        d.expires_at as delivery_expires_at,
+        d.attempts as delivery_attempts,
+        d.max_attempts as delivery_max_attempts,
+        d.last_error as delivery_last_error,
+        d.next_retry_at as delivery_next_retry_at,
+        d.created_at as delivery_created_at,
+        d.delivered_at as delivery_delivered_at
       FROM orders o
       JOIN products p ON o.product_id = p.id
       JOIN plans pl ON o.plan_id = pl.id
-      LEFT JOIN license_keys lk ON lk.assigned_order_id = o.id
+      LEFT JOIN license_keys lk ON lk.assigned_order_id = o.id AND lk.status = 'sold'
+      LEFT JOIN deliveries d ON d.order_id = o.id
       WHERE o.user_id = $1
       ORDER BY o.created_at DESC`,
       [user.id]
@@ -51,6 +66,27 @@ export default async function handler(req, res) {
         order.download_links = dlRes.rows;
       } else {
         order.download_links = [];
+      }
+
+      // Normalize delivery keys array
+      if (order.delivery_keys) {
+        order.license_keys = Array.isArray(order.delivery_keys) ? order.delivery_keys : [];
+      } else {
+        order.license_keys = order.key_code ? [order.key_code] : [];
+      }
+
+      // Determine display status for dashboard
+      if (order.delivery_status) {
+        order.delivery_display_status = order.delivery_status; // 'pending', 'delivered', 'failed', 'flagged'
+        order.delivery_can_retry = order.delivery_status === 'failed' && order.delivery_attempts < order.delivery_max_attempts;
+      } else if (order.status === 'pending') {
+        order.delivery_display_status = 'pending';
+      } else if (order.status === 'approved' && order.key_code) {
+        order.delivery_display_status = 'delivered';
+      } else if (order.status === 'pending_delivery') {
+        order.delivery_display_status = 'pending';
+      } else if (order.status === 'rejected') {
+        order.delivery_display_status = 'failed';
       }
     }
 

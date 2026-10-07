@@ -90,7 +90,7 @@
         <div class="section-head" style="margin-bottom: 1.25rem;">
           <div>
             <h3 style="color: #fff;">// MY ACTIVE LICENSE KEYS</h3>
-            <p style="font-size: 0.88rem; color: var(--text-muted);">Click the key to copy it directly to your clipboard</p>
+            <p style="font-size: 0.88rem; color: var(--text-muted);">Click the key to copy. Pending deliveries will auto-refresh every 10s.</p>
           </div>
           <a href="/products.html" class="btn btn-primary btn-sm">+ Buy New Key</a>
         </div>
@@ -120,12 +120,13 @@
                 <th>Plan Duration</th>
                 <th>Amount (USD)</th>
                 <th>Status</th>
+                <th>Delivery</th>
                 <th>Date</th>
               </tr>
             </thead>
             <tbody id="orders-table-body">
               <tr>
-                <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-dim);">
+                <td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-dim);">
                   Loading orders...
                 </td>
               </tr>
@@ -161,7 +162,11 @@
 
       renderUserInfo(authData.user);
       loadUserOrders();
+      startDeliveryPolling();
     });
+
+    let pollingInterval = null;
+    let pendingOrderIds = new Set();
 
     function renderUserInfo(user) {
       document.getElementById('dash-user-name').textContent = user.name;
@@ -179,6 +184,34 @@
       }
     }
 
+    function escapeHtml(text) {
+      if (!text) return '';
+      return String(text)
+        .replace(/&/g, '&')
+        .replace(/</g, '<')
+        .replace(/>/g, '>')
+        .replace(/"/g, '"')
+        .replace(/'/g, '&#039;');
+    }
+
+    function formatDate(dateStr) {
+      return new Date(dateStr).toLocaleDateString('en-US', { 
+        year: 'numeric', month: 'short', day: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+      });
+    }
+
+    function getUsageInstructions(productName) {
+      const base = '1. Launch the game\n2. Open the loader/panel\n3. Enter your license key: ';
+      if (productName.includes('PUBG') || productName.includes('Mobile')) {
+        return base + 'Use the mobile app or emulator loader.';
+      }
+      if (productName.includes('Valorant') || productName.includes('Vanguard')) {
+        return base + 'Run as Administrator. Disable Vanguard if required.';
+      }
+      return base + 'Follow the loader instructions on screen.';
+    }
+
     async function loadUserOrders() {
       try {
         const res = await fetch('/api/orders/my-orders');
@@ -190,10 +223,18 @@
         const keysContainer = document.getElementById('keys-container');
         const ordersTbody = document.getElementById('orders-table-body');
 
-        // Extract orders that have license keys
-        const deliveredOrders = orders.filter(o => o.key_code);
+        // Track pending order IDs for polling
+        pendingOrderIds.clear();
+        orders.forEach(o => {
+          if (o.delivery_display_status === 'pending' || o.delivery_display_status === 'failed') {
+            pendingOrderIds.add(o.id);
+          }
+        });
 
-        if (deliveredOrders.length === 0) {
+        // ============ Render License Keys ============
+        const deliveredOrders = orders.filter(o => o.license_keys && o.license_keys.length > 0);
+
+        if (deliveredOrders.length === 0 && pendingOrderIds.size === 0) {
           keysContainer.innerHTML = `
             <div style="text-align: center; padding: 2.5rem; background: #0d0d15; border-radius: var(--radius-md);">
               <p style="color: var(--text-dim); margin-bottom: 1rem;">No license keys purchased yet.</p>
@@ -201,52 +242,132 @@
             </div>
           `;
         } else {
-          keysContainer.innerHTML = `
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.25rem;">
-              ${deliveredOrders.map(o => `
-                <div style="background: #0d0d15; border: 1px solid var(--bg-card-border); border-radius: var(--radius-md); padding: 1.25rem;">
-                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                    <strong style="color: #fff; font-size: 1.05rem;">${escapeHtml(o.product_name)}</strong>
-                    <span class="badge badge-undetected">${escapeHtml(o.plan_name)}</span>
-                  </div>
-                  <div style="margin: 0.85rem 0;">
-                    <div style="font-size: 0.72rem; color: var(--text-dim); margin-bottom: 0.25rem;">YOUR LICENSE KEY:</div>
-                    <div class="license-key-pill" style="width: 100%; justify-content: space-between; cursor: pointer;" onclick="copyToClipboard('${escapeHtml(o.key_code)}')">
-                      <span>${escapeHtml(o.key_code)}</span>
-                      <span style="font-size: 0.75rem; color: var(--primary);">📋 COPY</span>
-                    </div>
-                  </div>
-                  ${o.download_links && o.download_links.length > 0 ? `
-                    <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--bg-card-border);">
-                      <div style="font-size: 0.72rem; color: var(--primary); font-weight: 700; margin-bottom: 0.5rem;">📁 Download Links</div>
-                      <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                        ${o.download_links.map(dl => `
-                          <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; background: #0d0d15; border: 1px solid var(--bg-card-border); border-radius: var(--radius-sm);">
-                            <div style="flex: 1; min-width: 0;">
-                              <div style="font-weight: 600; color: #fff; font-size: 0.85rem;">${escapeHtml(dl.name)}</div>
-                              <a href="${escapeHtml(dl.link)}" target="_blank" style="font-size: 0.75rem; color: var(--primary); text-decoration: none; font-family: monospace; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(dl.link)}</a>
-                            </div>
-                            <button class="btn btn-outline btn-sm" onclick="copyToClipboard('${escapeHtml(dl.link)}')" style="font-size: 0.7rem; white-space: nowrap;">📋 Copy Link</button>
-                          </div>
-                        `).join('')}
-                      </div>
-                    </div>
-                  ` : ''}
-                  <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-dim);">
-                    <span>Order: #${escapeHtml(o.order_code)}</span>
-                    <span>Delivered: ${new Date(o.created_at).toLocaleDateString()}</span>
+          let html = '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.25rem;">';
+          
+          // Delivered keys
+          deliveredOrders.forEach(o => {
+            const expiry = o.delivery_expires_at ? formatDate(o.delivery_expires_at) : 'N/A';
+            const instructions = getUsageInstructions(o.product_name);
+            html += `
+              <div style="background: #0d0d15; border: 1px solid var(--bg-card-border); border-radius: var(--radius-md); padding: 1.25rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                  <strong style="color: #fff; font-size: 1.05rem;">${escapeHtml(o.product_name)}</strong>
+                  <span class="badge badge-undetected">${escapeHtml(o.plan_name)}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-dim); margin-bottom: 0.5rem;">
+                  <span>Expires: ${expiry}</span>
+                  <span>Supplier Cost: $${o.delivery_total_cost ? parseFloat(o.delivery_total_cost).toFixed(2) : 'N/A'}</span>
+                </div>
+                <div style="margin: 0.85rem 0;">
+                  <div style="font-size: 0.72rem; color: var(--primary); font-weight: 700; margin-bottom: 0.25rem;">YOUR LICENSE KEY:</div>
+                  <div class="license-key-pill" style="width: 100%; justify-content: space-between; cursor: pointer;" onclick="copyToClipboard('${escapeHtml(o.license_keys[0])}')">
+                    <span style="font-family: monospace; font-size: 0.9rem;">${escapeHtml(o.license_keys[0])}</span>
+                    <span style="font-size: 0.75rem; color: var(--primary);">📋 COPY</span>
                   </div>
                 </div>
-              `).join('')}
-            </div>
-          `;
+                ${o.license_keys.length > 1 ? `
+                  <details style="margin-top: 0.5rem;">
+                    <summary style="cursor: pointer; color: var(--primary); font-size: 0.8rem;">+ ${o.license_keys.length - 1} more key(s)</summary>
+                    <div style="margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.3rem;">
+                      ${o.license_keys.slice(1).map(k => `
+                        <div class="license-key-pill" style="cursor: pointer;" onclick="copyToClipboard('${escapeHtml(k)}')">
+                          <span style="font-family: monospace; font-size: 0.85rem;">${escapeHtml(k)}</span>
+                          <span style="font-size: 0.7rem; color: var(--primary);">📋 COPY</span>
+                        </div>
+                      `).join('')}
+                    </div>
+                  </details>
+                ` : ''}
+                <details style="margin-top: 1rem;">
+                  <summary style="cursor: pointer; color: var(--text-muted); font-size: 0.8rem;">📖 Usage Instructions</summary>
+                  <pre style="margin-top: 0.5rem; font-size: 0.75rem; color: var(--text-dim); white-space: pre-wrap; background: #0d0d15; padding: 0.75rem; border-radius: var(--radius-sm);">${escapeHtml(instructions)}</pre>
+                </details>
+                ${o.download_links && o.download_links.length > 0 ? `
+                  <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--bg-card-border);">
+                    <div style="font-size: 0.72rem; color: var(--primary); font-weight: 700; margin-bottom: 0.5rem;">📁 Download Links</div>
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                      ${o.download_links.map(dl => `
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; background: #0d0d15; border: 1px solid var(--bg-card-border); border-radius: var(--radius-sm);">
+                          <div style="flex: 1; min-width: 0;">
+                            <div style="font-weight: 600; color: #fff; font-size: 0.85rem;">${escapeHtml(dl.name)}</div>
+                            <a href="${escapeHtml(dl.link)}" target="_blank" style="font-size: 0.75rem; color: var(--primary); text-decoration: none; font-family: monospace; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(dl.link)}</a>
+                          </div>
+                          <button class="btn btn-outline btn-sm" onclick="copyToClipboard('${escapeHtml(dl.link)}')" style="font-size: 0.7rem; white-space: nowrap;">📋 Copy Link</button>
+                        </div>
+                      `).join('')}
+                    </div>
+                  </div>
+                ` : ''}
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-dim); margin-top: 1rem;">
+                  <span>Order: #${escapeHtml(o.order_code)}</span>
+                  <span>Delivered: ${formatDate(o.delivery_delivered_at || o.created_at)}</span>
+                </div>
+              </div>
+            `;
+          });
+
+          // Pending/Failed deliveries
+          const pendingOrders = orders.filter(o => 
+            o.delivery_display_status === 'pending' || o.delivery_display_status === 'failed' || o.delivery_display_status === 'flagged'
+          );
+          
+          pendingOrders.forEach(o => {
+            const isPending = o.delivery_display_status === 'pending';
+            const isFailed = o.delivery_display_status === 'failed';
+            const isFlagged = o.delivery_display_status === 'flagged';
+            
+            html += `
+              <div style="background: #0d0d15; border: 1px solid ${isFailed || isFlagged ? 'var(--danger)' : 'var(--warning)'}; border-radius: var(--radius-md); padding: 1.25rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                  <strong style="color: #fff; font-size: 1.05rem;">${escapeHtml(o.product_name)}</strong>
+                  <span class="badge badge-${isFailed || isFlagged ? 'danger' : 'warning'}">
+                    ${isPending ? '⏳ Preparing...' : isFlagged ? '🔴 Needs Admin Review' : '❌ Failed'}
+                  </span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-dim); margin-bottom: 0.5rem;">
+                  <span>Plan: ${escapeHtml(o.plan_name)} (${o.days} days)</span>
+                  <span>Attempts: ${o.delivery_attempts || 0}/${o.delivery_max_attempts || 5}</span>
+                </div>
+                ${o.delivery_last_error ? `
+                  <div style="margin: 0.75rem 0; padding: 0.75rem; background: rgba(220,38,38,0.1); border: 1px solid var(--danger); border-radius: var(--radius-sm); font-size: 0.75rem; color: var(--danger);">
+                    Error: ${escapeHtml(o.delivery_last_error.substring(0, 200))}
+                  </div>
+                ` : ''}
+                ${isPending ? `
+                  <div style="display: flex; align-items: center; gap: 0.75rem; color: var(--primary); font-size: 0.85rem;">
+                    <span class="spinner" style="width: 16px; height: 16px; border: 2px solid var(--primary); border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite;"></span>
+                    Your key is being prepared... (auto-refresh in 10s)
+                  </div>
+                  <style>
+                    @keyframes spin { to { transform: rotate(360deg); } }
+                  </style>
+                ` : isFailed ? `
+                  <div style="margin-top: 1rem; color: var(--text-muted); font-size: 0.8rem;">
+                    Delivery failed after ${o.delivery_attempts} attempts. 
+                    <a href="/support.html" style="color: var(--primary);">Contact support</a> for assistance or wait for admin retry.
+                  </div>
+                ` : isFlagged ? `
+                  <div style="margin-top: 1rem; color: var(--warning); font-size: 0.8rem;">
+                    ⚠️ Delivery timed out - supplier may have created keys. Admin review required.
+                  </div>
+                ` : ''}
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-dim); margin-top: 1rem;">
+                  <span>Order: #${escapeHtml(o.order_code)}</span>
+                  <span>Placed: ${formatDate(o.created_at)}</span>
+                </div>
+              </div>
+            `;
+          });
+          
+          html += '</div>';
+          keysContainer.innerHTML = html;
         }
 
-        // Render Orders Table
+        // ============ Render Orders Table ============
         if (orders.length === 0) {
           ordersTbody.innerHTML = `
             <tr>
-              <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-dim);">
+              <td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-dim);">
                 No orders placed yet.
               </td>
             </tr>
@@ -256,6 +377,13 @@
             let statusBadge = '<span class="badge badge-warning">Pending</span>';
             if (o.status === 'approved') statusBadge = '<span class="badge badge-undetected">Approved</span>';
             if (o.status === 'rejected') statusBadge = `<span class="badge badge-danger" title="${escapeHtml(o.reject_reason || '')}">Rejected</span>`;
+            if (o.status === 'pending_delivery') statusBadge = '<span class="badge badge-warning">⏳ Preparing</span>';
+
+            let deliveryBadge = '';
+            if (o.delivery_display_status === 'delivered') deliveryBadge = '<span class="badge badge-undetected">✅ Delivered</span>';
+            else if (o.delivery_display_status === 'pending') deliveryBadge = '<span class="badge badge-warning">⏳ Pending</span>';
+            else if (o.delivery_display_status === 'failed') deliveryBadge = '<span class="badge badge-danger">❌ Failed</span>';
+            else if (o.delivery_display_status === 'flagged') deliveryBadge = '<span class="badge badge-danger">🔴 Flagged</span>';
 
             return `
               <tr>
@@ -264,7 +392,8 @@
                 <td>${escapeHtml(o.plan_name)} (${o.days} ${o.duration_type})</td>
                 <td>$${parseFloat(o.amount_usd).toFixed(2)}</td>
                 <td>${statusBadge}</td>
-                <td style="color: var(--text-muted); font-size: 0.82rem;">${new Date(o.created_at).toLocaleDateString()}</td>
+                <td>${deliveryBadge}</td>
+                <td style="color: var(--text-muted); font-size: 0.82rem;">${formatDate(o.created_at)}</td>
               </tr>
             `;
           }).join('');
@@ -274,6 +403,70 @@
         console.error('Dashboard load error:', err);
       }
     }
+
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        // Show toast notification
+        const toast = document.createElement('div');
+        toast.style.cssText = `
+          position: fixed; bottom: 2rem; right: 2rem; z-index: 9999;
+          background: var(--primary); color: #000; padding: 0.75rem 1.25rem;
+          border-radius: var(--radius-md); font-weight: 600; font-size: 0.85rem;
+          box-shadow: 0 4px 20px rgba(56, 189, 248, 0.4);
+          animation: slideIn 0.3s ease;
+        `;
+        toast.textContent = '✅ Copied to clipboard!';
+        document.body.appendChild(toast);
+        setTimeout(() => {
+          toast.style.animation = 'slideOut 0.3s ease forwards';
+          setTimeout(() => toast.remove(), 300);
+        }, 2000);
+      }).catch(() => {
+        alert('Failed to copy. Please select and copy manually.');
+      });
+    }
+
+    // Start polling for pending deliveries
+    function startDeliveryPolling() {
+      if (pollingInterval) clearInterval(pollingInterval);
+      
+      pollingInterval = setInterval(async () => {
+        if (pendingOrderIds.size === 0) return;
+        
+        try {
+          const res = await fetch('/api/orders/my-orders');
+          const data = await res.json();
+          if (!data.success) return;
+          
+          const orders = data.orders || [];
+          let hasPending = false;
+          
+          orders.forEach(o => {
+            if (pendingOrderIds.has(o.id)) {
+              if (o.delivery_display_status === 'delivered') {
+                // Key delivered! Reload page to show key
+                pendingOrderIds.delete(o.id);
+                location.reload();
+              } else if (o.delivery_display_status === 'pending' || o.delivery_display_status === 'failed') {
+                hasPending = true;
+              }
+            }
+          });
+          
+          if (!hasPending) {
+            clearInterval(pollingInterval);
+            pollingInterval = null;
+          }
+        } catch (e) {
+          console.error('Polling error:', e);
+        }
+      }, 10000); // Poll every 10 seconds
+    }
+
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', () => {
+      if (pollingInterval) clearInterval(pollingInterval);
+    });
   </script>
 </body>
 </html>
