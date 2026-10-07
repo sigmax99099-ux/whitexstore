@@ -10,6 +10,7 @@ export default async function handler(req, res) {
   // 1. GET ALL SUPPLIER APIS
   if (req.method === 'GET') {
     try {
+      console.log('[supplier-apis] GET request - executing query');
       const apisRes = await query(`
         SELECT sa.id, sa.name, sa.api_url, sa.api_key, sa.api_type, sa.status, sa.notes, sa.created_at,
                COUNT(sv.id)::int as total_mapped_variants
@@ -18,6 +19,7 @@ export default async function handler(req, res) {
         GROUP BY sa.id
         ORDER BY sa.id ASC
       `);
+      console.log('[supplier-apis] Query result rows:', apisRes.rows.length);
       return res.status(200).json({ success: true, apis: apisRes.rows });
     } catch (err) {
       console.error('Admin get supplier APIs error:', err);
@@ -29,6 +31,7 @@ export default async function handler(req, res) {
   if (req.method === 'POST') {
     try {
       const { name, api_url, api_key, api_type, status, notes } = req.body || {};
+      console.log('[supplier-apis] POST request body:', JSON.stringify(req.body, null, 2));
 
       if (!name || !api_url) {
         return res.status(400).json({ success: false, message: 'Supplier Name and API URL are required.' });
@@ -48,6 +51,7 @@ export default async function handler(req, res) {
         ]
       );
 
+      console.log('[supplier-apis] INSERT result:', insertRes.rows[0]?.api_type);
       return res.status(201).json({
         success: true,
         message: 'Supplier API added successfully!',
@@ -63,6 +67,7 @@ export default async function handler(req, res) {
   if (req.method === 'PUT') {
     try {
       const { id, name, api_url, api_key, api_type, status, notes } = req.body || {};
+      console.log('[supplier-apis] PUT request body:', JSON.stringify(req.body, null, 2));
       if (!id) {
         return res.status(400).json({ success: false, message: 'API ID is required.' });
       }
@@ -88,6 +93,7 @@ export default async function handler(req, res) {
         ]
       );
 
+      console.log('[supplier-apis] PUT query result:', updateRes.rows.length, updateRes.rows);
       if (updateRes.rows.length === 0) {
         return res.status(404).json({ success: false, message: 'Supplier API not found.' });
       }
