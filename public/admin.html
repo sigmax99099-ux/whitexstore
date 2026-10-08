@@ -1677,7 +1677,7 @@
        ============================================================== */
     async function loadDashboardData() {
       try {
-        const res = await fetch('/api/admin/stats', { ...{ credentials: "include" }, credentials: "include" });
+        const res = await fetch('/api/admin/stats', { credentials: "include" });
         const data = await res.json();
 
         if (data.success && data.stats) {
@@ -1700,7 +1700,7 @@
     async function loadDashboardPendingLists() {
       // Pending orders
       try {
-        const oRes = await fetch('/api/admin/orders?status=pending', { ...{ credentials: "include" }, credentials: "include" });
+        const oRes = await fetch('/api/admin/orders?status=pending', { credentials: "include" });
         const oData = await oRes.json();
         const oList = document.getElementById('dash-pending-orders-list');
         if (oData.orders && oData.orders.length > 0) {
@@ -1720,7 +1720,7 @@
 
       // Pending wallets
       try {
-        const wRes = await fetch('/api/admin/wallets?status=pending', { ...{ credentials: "include" }, credentials: "include" });
+        const wRes = await fetch('/api/admin/wallets?status=pending', { credentials: "include" });
         const wData = await wRes.json();
         const wList = document.getElementById('dash-pending-wallets-list');
         if (wData.transactions && wData.transactions.length > 0) {
@@ -1808,7 +1808,7 @@
       try {
         const res = await fetch('/api/admin/approve-order', { ...
           method: 'POST',
-          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
           body: JSON.stringify({ order_id, manual_key })
         });
         const data = await res.json();
@@ -1839,7 +1839,7 @@
       try {
         const res = await fetch('/api/admin/reject-order', { ...
           method: 'POST',
-          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
           body: JSON.stringify({ order_id, reason })
         });
         const data = await res.json();
@@ -1864,7 +1864,7 @@
       const tbody = document.getElementById('admin-wallets-tbody');
 
       try {
-        const res = await fetch(`/api/admin/wallets?status=${status}`, { ...{ credentials: "include" }, credentials: "include" });
+        const res = await fetch(`/api/admin/wallets?status=${status}`, { credentials: "include" });
         const data = await res.json();
 
         if (!data.transactions || data.transactions.length === 0) {
@@ -1921,7 +1921,7 @@
       try {
         const res = await fetch('/api/admin/approve-wallet', { ...
           method: 'POST',
-          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
           body: JSON.stringify({ transaction_id: id, custom_npr_amount: customNpr })
         });
         const data = await res.json();
@@ -1944,7 +1944,7 @@
       try {
         const res = await fetch('/api/admin/reject-wallet', { ...
           method: 'POST',
-          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
           body: JSON.stringify({ transaction_id: id, reason })
         });
         const data = await res.json();
@@ -1968,7 +1968,7 @@
     async function loadAdminPaymentMethods() {
       const tbody = document.getElementById('admin-payment-methods-tbody');
       try {
-        const res = await fetch('/api/admin/payment-methods', { ...{ credentials: "include" }, credentials: "include" });
+        const res = await fetch('/api/admin/payment-methods', { credentials: "include" });
         const data = await res.json();
         globalPaymentMethods = data.methods || [];
 
@@ -2216,7 +2216,7 @@
       try {
         await fetch('/api/admin/payment-methods', { ...
           method: 'PUT',
-          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
           body: JSON.stringify({ id, is_active: !isCurrentlyActive })
         });
         loadAdminPaymentMethods();
@@ -2465,7 +2465,7 @@
         
         const res = await fetch('/api/admin/payment-methods', { ...
           method: id ? 'PUT' : 'POST',
-          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
           body: JSON.stringify(payload)
         });
         
@@ -2527,20 +2527,20 @@
     async function ensureProductsLoaded(force = false) {
       if (force || !globalProducts || globalProducts.length === 0) {
         try {
-          const res = await fetch('/api/admin/products', { ...{ credentials: "include" }, credentials: "include" });
+          const res = await fetch('/api/admin/products', { credentials: "include" });
           const data = await res.json();
           if (data && data.products) {
             globalProducts = data.products;
           } else {
             // Public products list fallback
-            const pubRes = await fetch('/api/products/list', { ...{ credentials: "include" }, credentials: "include" });
+            const pubRes = await fetch('/api/products/list', { credentials: "include" });
             const pubData = await pubRes.json();
             globalProducts = pubData.products || [];
           }
           updateProductDropdowns();
         } catch (e) {
           try {
-            const pubRes = await fetch('/api/products/list', { ...{ credentials: "include" }, credentials: "include" });
+            const pubRes = await fetch('/api/products/list', { credentials: "include" });
             const pubData = await pubRes.json();
             globalProducts = pubData.products || [];
             updateProductDropdowns();
@@ -2554,7 +2554,7 @@
     async function loadAdminProducts() {
       const tbody = document.getElementById('admin-products-tbody');
       try {
-        const res = await fetch('/api/admin/products', { ...{ credentials: "include" }, credentials: "include" });
+        const res = await fetch('/api/admin/products', { credentials: "include" });
         const data = await res.json();
         globalProducts = data.products || [];
 
@@ -2629,7 +2629,7 @@
       try {
         const res = await fetch('/api/admin/products', { ...
           method: 'PUT',
-          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
           body: JSON.stringify({ id: productId, sort_order: val })
         });
         const data = await res.json();
@@ -2648,7 +2648,7 @@
       try {
         const res = await fetch('/api/admin/products', { ...
           method: 'PUT',
-          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
           body: JSON.stringify({ id, featured: !currentFeatured })
         });
         const data = await res.json();
@@ -2690,7 +2690,7 @@
 
     async function loadCategories() {
       try {
-        const res = await fetch('/api/categories', { ...{ credentials: "include" }, credentials: "include" });
+        const res = await fetch('/api/categories', { credentials: "include" });
         const data = await res.json();
         if (data.success && data.categories) {
           globalCategories = data.categories;
@@ -2858,7 +2858,7 @@
       try {
         const res = await fetch('/api/admin/wallet/adjust', { ...
           method: 'POST',
-          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
           body: JSON.stringify({ userId, action, amount: numAmount, description })
         });
         const data = await res.json();
@@ -2925,7 +2925,7 @@
       try {
         const res = await fetch('/api/categories', { ...
           method: 'POST',
-          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
           body: JSON.stringify({ name: trimmedName })
         });
         const data = await res.json();
@@ -3058,7 +3058,7 @@
       try {
         const res = await fetch('/api/admin/add-product', { ...
           method: 'POST',
-          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
           body: JSON.stringify(payload)
         });
         const data = await res.json();
@@ -3080,7 +3080,7 @@
       try {
         const res = await fetch('/api/admin/products', { ...
           method: 'PUT',
-          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
           body: JSON.stringify(payload)
         });
         const data = await res.json();
@@ -3103,7 +3103,7 @@
       try {
         const res = await fetch('/api/admin/products', { ...
           method: 'PUT',
-          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
           body: JSON.stringify({ id, status: newStatus })
         });
         const data = await res.json();
@@ -3142,7 +3142,7 @@
     async function loadAdminPlans() {
       const tbody = document.getElementById('admin-plans-tbody');
       try {
-        const res = await fetch('/api/admin/plans', { ...{ credentials: "include" }, credentials: "include" });
+        const res = await fetch('/api/admin/plans', { credentials: "include" });
         const data = await res.json();
         globalPlans = data.plans || [];
 
@@ -3197,7 +3197,7 @@
       try {
         const res = await fetch('/api/admin/add-plan', { ...
           method: 'POST',
-          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
           body: JSON.stringify({
             product_id,
             plan_name,
@@ -3288,7 +3288,7 @@
       try {
         const res = await fetch('/api/admin/add-keys', { ...
           method: 'POST',
-          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
           body: JSON.stringify({ product_id, days, keys_text })
         });
         const data = await res.json();
@@ -3310,7 +3310,7 @@
       if (!confirm('Revoke this key?')) return;
       await fetch('/api/admin/keys', { ...
         method: 'PUT',
-        headers: { credentials: "include", ... 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' }, credentials: 'include',
         body: JSON.stringify({ id, status: 'revoked' })
       });
       loadAdminKeys();
@@ -3326,7 +3326,7 @@
     async function ensureSupplierApisLoaded() {
       if (!globalSupplierApis || globalSupplierApis.length === 0) {
         try {
-          const res = await fetch('/api/admin/supplier-apis', { ...{ credentials: "include" }, credentials: "include" });
+          const res = await fetch('/api/admin/supplier-apis', { credentials: "include" });
           const data = await res.json();
           globalSupplierApis = data.supplier_apis || [];
         } catch (e) {}
@@ -3336,7 +3336,7 @@
     async function loadAdminSupplierApis() {
       const tbody = document.getElementById('admin-supplier-apis-tbody');
       try {
-        const res = await fetch('/api/admin/supplier-apis', { ...{ credentials: "include" }, credentials: "include" });
+        const res = await fetch('/api/admin/supplier-apis', { credentials: "include" });
         const data = await res.json();
         globalSupplierApis = data.apis || [];
 
@@ -3422,13 +3422,13 @@
           payload.id = parseInt(id, 10);
           res = await fetch('/api/admin/supplier-apis', { ...
             method: 'PUT',
-            headers: { credentials: "include", ... 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json' }, credentials: 'include',
             body: JSON.stringify(payload)
           });
         } else {
           res = await fetch('/api/admin/supplier-apis', { ...
             method: 'POST',
-            headers: { credentials: "include", ... 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json' }, credentials: 'include',
             body: JSON.stringify(payload)
           });
         }
@@ -3459,7 +3459,7 @@
       if (searchInput) searchInput.value = '';
       
       try {
-        const res = await fetch('/api/admin/supplier-variants?catalog=1', { ...{ credentials: "include" }, credentials: "include" });
+        const res = await fetch('/api/admin/supplier-variants?catalog=1', { credentials: "include" });
         const data = await res.json();
         
         if (!data.success) {
@@ -3529,7 +3529,7 @@
       const tbody = document.getElementById('sv-mappings-tbody');
       try {
         console.log('[SVC] Loading mappings...');
-        const res = await fetch('/api/admin/supplier-variants', { ...{ credentials: "include" }, credentials: "include" });
+        const res = await fetch('/api/admin/supplier-variants', { credentials: "include" });
         console.log('[SVC] Response status:', res.status);
         const data = await res.json();
         console.log('[SVC] Response data:', data);
@@ -3678,7 +3678,7 @@
         console.log('[SVC] Saving mapping:', payload);
         const res = await fetch('/api/admin/supplier-variants', { ...
           method: 'POST',
-          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
           body: JSON.stringify(payload)
         });
         
@@ -3746,7 +3746,7 @@
       try {
         const res = await fetch('/api/admin/supplier-variants', { ...
           method: 'PUT',
-          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
           body: JSON.stringify({
             id: editId,
             supplier_variant_id: variantId
@@ -3780,7 +3780,7 @@
     
     async function editSvmMapping(id) {
       try {
-        const res = await fetch('/api/admin/supplier-variants', { ...{ credentials: "include" }, credentials: "include" });
+        const res = await fetch('/api/admin/supplier-variants', { credentials: "include" });
         const data = await res.json();
         const mapping = (data.mappings || []).find(m => m.id == id);
         if (mapping) openSvmMappingModal(mapping);
@@ -3881,7 +3881,7 @@
       try {
         const res = await fetch('/api/admin/users', { ...
           method: 'PUT',
-          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
           body: JSON.stringify({ id, status })
         });
         const data = await res.json();
@@ -3907,7 +3907,7 @@
       try {
         const res = await fetch('/api/admin/users', { ...
           method: 'PUT',
-          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
           body: JSON.stringify({ id, user_type: 'reseller', reseller_discount: numDisc })
         });
         const data = await res.json();
@@ -3931,7 +3931,7 @@
       try {
         const res = await fetch('/api/admin/users', { ...
           method: 'PUT',
-          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
           body: JSON.stringify({ id, user_type: newType.trim().toLowerCase(), reseller_discount: parseFloat(newDisc) || 0 })
         });
         const data = await res.json();
@@ -3952,7 +3952,7 @@
     async function loadAdminResellerPrices() {
       const tbody = document.getElementById('admin-reseller-prices-tbody');
       try {
-        const res = await fetch('/api/admin/reseller-prices', { ...{ credentials: "include" }, credentials: "include" });
+        const res = await fetch('/api/admin/reseller-prices', { credentials: "include" });
         const data = await res.json();
 
         if (!data.reseller_prices || data.reseller_prices.length === 0) {
@@ -3998,7 +3998,7 @@
 
       await fetch('/api/admin/reseller-prices', { ...
         method: 'POST',
-        headers: { credentials: "include", ... 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' }, credentials: 'include',
         body: JSON.stringify({ user_id: user.id, plan_id: parseInt(planId, 10), custom_price_usd: parseFloat(customPrice) })
       });
 
@@ -4017,7 +4017,7 @@
        ============================================================== */
     async function loadAdminSettings() {
       try {
-        const res = await fetch('/api/admin/settings', { ...{ credentials: "include" }, credentials: "include" });
+        const res = await fetch('/api/admin/settings', { credentials: "include" });
         const data = await res.json();
         if (data.settings) {
           const s = data.settings;
@@ -4049,7 +4049,7 @@
       try {
         const res = await fetch('/api/admin/settings', { ...
           method: 'POST',
-          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
           body: JSON.stringify(payload)
         });
         const data = await res.json();
@@ -4068,7 +4068,7 @@
       try {
         const res = await fetch('/api/notify', { ...
           method: 'POST',
-          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
           body: JSON.stringify({
             title: 'Test Notification',
             description: 'White X Store Discord integration is fully functional and responsive! 🚀',
@@ -4091,7 +4091,7 @@
       try {
         const res = await fetch('/api/notify', { ...
           method: 'POST',
-          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
           body: JSON.stringify({
             title: '💰 New Wallet Top-up Request (Pending Approval) [TEST]',
             description: 'A new wallet top-up request has been submitted and requires admin verification. (This is a test notification)',
@@ -4126,7 +4126,7 @@
       box.innerHTML = 'Connecting to KeyLicense API...';
 
       try {
-        const res = await fetch('/api/admin/keylicense-check', { ...{ credentials: "include" }, credentials: "include" });
+        const res = await fetch('/api/admin/keylicense-check', { credentials: "include" });
         const data = await res.json();
 
         box.innerHTML = `
@@ -4146,7 +4146,7 @@
     async function loadAdminResets() {
       const tbody = document.getElementById('admin-resets-tbody');
       try {
-        const res = await fetch('/api/admin/resets', { ...{ credentials: "include" }, credentials: "include" });
+        const res = await fetch('/api/admin/resets', { credentials: "include" });
         const data = await res.json();
 
         if (!data.resets || data.resets.length === 0) {
@@ -4178,7 +4178,7 @@
     async function loadAdminDownloadLinks() {
       const tbody = document.getElementById('admin-download-links-tbody');
       try {
-        const res = await fetch('/api/admin/download-links', { ...{ credentials: "include" }, credentials: "include" });
+        const res = await fetch('/api/admin/download-links', { credentials: "include" });
         const data = await res.json();
 
         if (!data.success) {
@@ -4228,7 +4228,7 @@
 
     async function loadCategoriesForDL() {
       try {
-        const res = await fetch('/api/categories', { ...{ credentials: "include" }, credentials: "include" });
+        const res = await fetch('/api/categories', { credentials: "include" });
         const data = await res.json();
         if (data.success && data.categories) {
           const select = document.getElementById('dl-category');
@@ -4377,7 +4377,7 @@
 
         const res = await fetch('/api/admin/download-links', { ...
           method: editId ? 'PUT' : 'POST',
-          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
           body: JSON.stringify(payload)
         });
 
@@ -4405,7 +4405,7 @@
     async function loadSupplierSettings() {
       try {
         // Load settings
-        const settingsRes = await fetch('/api/admin/supplier-settings', { ...{ credentials: "include" }, credentials: "include" });
+        const settingsRes = await fetch('/api/admin/supplier-settings', { credentials: "include" });
         const settingsData = await settingsRes.json();
         
         if (settingsData.success && settingsData.settings) {
@@ -4436,7 +4436,7 @@
       try {
         const res = await fetch('/api/admin/supplier-settings', { ...
           method: 'POST',
-          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
           body: JSON.stringify({ action: 'test_connection' })
         });
         
@@ -4484,7 +4484,7 @@
       try {
         const res = await fetch('/api/admin/supplier-settings', { ...
           method: 'POST',
-          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
           body: JSON.stringify({ action: 'refresh_balance' })
         });
         
@@ -4519,7 +4519,7 @@
       try {
         const res = await fetch('/api/admin/supplier-settings', { ...
           method: 'POST',
-          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
           body: JSON.stringify({ [key]: value })
         });
         const data = await res.json();
@@ -4541,7 +4541,7 @@
     async function loadProductMappings() {
       const tbody = document.getElementById('admin-mappings-tbody');
       try {
-        const res = await fetch('/api/admin/product-mappings', { ...{ credentials: "include" }, credentials: "include" });
+        const res = await fetch('/api/admin/product-mappings', { credentials: "include" });
         const data = await res.json();
         
         if (!data.success) {
@@ -4623,7 +4623,7 @@
       try {
         const res = await fetch('/api/admin/product-mappings', { ...
           method: 'PUT',
-          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
           body: JSON.stringify({ id, [field]: value })
         });
         const data = await res.json();
@@ -4671,7 +4671,7 @@
       try {
         const res = await fetch('/api/admin/product-mappings', { ...
           method: 'POST',
-          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
           body: JSON.stringify({
             product_id: parseInt(productId),
             plan_id: parseInt(planId),
@@ -4805,7 +4805,7 @@
       try {
         const res = await fetch('/api/admin/deliveries', { ...
           method: 'POST',
-          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
           body: JSON.stringify({ action: 'retry', delivery_id: id })
         });
         const data = await res.json();
@@ -4826,7 +4826,7 @@
       try {
         const res = await fetch('/api/admin/deliveries', { ...
           method: 'POST',
-          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
           body: JSON.stringify({ action: 'refund', delivery_id: id })
         });
         const data = await res.json();
@@ -4847,7 +4847,7 @@
     async function loadHwidLogs() {
       const tbody = document.getElementById('admin-hwid-logs-tbody');
       try {
-        const res = await fetch('/api/admin/hwid-reset?limit=50', { ...{ credentials: "include" }, credentials: "include" });
+        const res = await fetch('/api/admin/hwid-reset?limit=50', { credentials: "include" });
         const data = await res.json();
         
         if (!data.success) {
@@ -4899,7 +4899,7 @@
       try {
         const res = await fetch('/api/admin/hwid-reset', { ... ...
           method: 'POST',
-          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
           body: JSON.stringify({ key })
         });
         
