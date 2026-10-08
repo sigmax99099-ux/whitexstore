@@ -3570,11 +3570,6 @@
       }
     }
     
-    } catch (err) {
-        tbody.innerHTML = `<tr><td colspan="7" style="color:var(--danger); text-align:center;">Failed to load mappings.</td></tr>`;
-      }
-    }
-    
     async function loadSvmDropdowns() {
       console.log('[SVC] Loading dropdown data...');
       await ensureProductsLoaded(true);
