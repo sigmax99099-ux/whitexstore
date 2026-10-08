@@ -13,10 +13,8 @@ export default async function handler(req, res) {
       console.log('[supplier-apis] GET request - executing query');
       const apisRes = await query(`
         SELECT sa.id, sa.name, sa.api_url, sa.api_key, sa.api_type, sa.status, sa.notes, sa.created_at,
-               COUNT(sv.id)::int as total_mapped_variants
+               (SELECT COUNT(*)::int FROM supplier_variants) as total_mapped_variants
         FROM supplier_apis sa
-        LEFT JOIN supplier_variants sv ON sv.supplier_api_id = sa.id
-        GROUP BY sa.id
         ORDER BY sa.id ASC
       `);
       console.log('[supplier-apis] Query result rows:', apisRes.rows.length);
