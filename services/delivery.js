@@ -25,11 +25,69 @@ export const DeliveryStatus = {
  */
 const BACKOFF_MINUTES = [1, 5, 15, 30, 60];
 
+let schemaEnsured = false;
+async function ensureDeliverySchema() {
+  if (schemaEnsured) return;
+  try {
+    await query(`
+      CREATE TABLE IF NOT EXISTS product_mappings (
+        id SERIAL PRIMARY KEY,
+        product_id INT NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+        plan_id INT NOT NULL REFERENCES plans(id) ON DELETE CASCADE,
+        supplier_product_id INT NOT NULL,
+        supplier_product_name TEXT NOT NULL,
+        supplier_plan_days INT NOT NULL,
+        supplier_plan_count INT NOT NULL DEFAULT 1,
+        auto_delivery BOOLEAN NOT NULL DEFAULT true,
+        is_active BOOLEAN NOT NULL DEFAULT true,
+        supplier_status TEXT NOT NULL DEFAULT 'active',
+        notes TEXT,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        UNIQUE (product_id, plan_id)
+      );
+
+      CREATE TABLE IF NOT EXISTS deliveries (
+        id SERIAL PRIMARY KEY,
+        order_id INT NOT NULL UNIQUE REFERENCES orders(id) ON DELETE CASCADE,
+        product_mapping_id INT REFERENCES product_mappings(id) ON DELETE SET NULL,
+        status TEXT NOT NULL DEFAULT 'pending',
+        keys TEXT[],
+        unit_price NUMERIC,
+        total_cost NUMERIC,
+        balance_left NUMERIC,
+        expires_at TIMESTAMP WITH TIME ZONE,
+        attempts INT NOT NULL DEFAULT 0,
+        max_attempts INT NOT NULL DEFAULT 5,
+        last_error TEXT,
+        next_retry_at TIMESTAMP WITH TIME ZONE,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        delivered_at TIMESTAMP WITH TIME ZONE
+      );
+
+      CREATE TABLE IF NOT EXISTS supplier_settings (
+        id SERIAL PRIMARY KEY,
+        auto_delivery_enabled BOOLEAN DEFAULT true,
+        low_balance_threshold NUMERIC DEFAULT 10.00,
+        last_known_balance NUMERIC,
+        last_balance_check TIMESTAMP WITH TIME ZONE,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      );
+      INSERT INTO supplier_settings (id, auto_delivery_enabled) VALUES (1, true) ON CONFLICT (id) DO NOTHING;
+    `);
+    schemaEnsured = true;
+  } catch (e) {
+    console.warn('[Delivery Schema] Note:', e.message);
+    schemaEnsured = true;
+  }
+}
+
 /**
  * Main delivery function - idempotent via UNIQUE order_id in deliveries table
  * Called from submit.js after wallet deduction succeeds
  */
 export async function deliverOrder(orderId) {
+  await ensureDeliverySchema();
   const client = await getClient();
   
   try {
@@ -63,10 +121,10 @@ export async function deliverOrder(orderId) {
       return { success: false, error: 'Auto-delivery is disabled globally', code: 'AUTO_DELIVERY_DISABLED' };
     }
     
-    // 3. Get product mapping (validates is_active, auto_delivery, supplier_status)
+    // 3. Get product mapping (checks supplier_variants first, then product_mappings)
     const mapping = await getProductMapping(order.product_id, order.plan_id);
     if (!mapping) {
-      return { success: false, error: 'No active product mapping found', code: 'NO_MAPPING' };
+      return { success: false, error: 'No active product mapping found for this product/plan', code: 'NO_MAPPING' };
     }
     
     // 4. Idempotency: Upsert delivery record with FOR UPDATE to prevent race conditions
@@ -76,12 +134,13 @@ export async function deliverOrder(orderId) {
        VALUES ($1, $2, 'pending', 0, 5, NOW())
        ON CONFLICT (order_id) DO UPDATE SET
          attempts = deliveries.attempts,
+         product_mapping_id = COALESCE($2, deliveries.product_mapping_id),
          status = CASE 
            WHEN deliveries.status IN ('delivered') THEN deliveries.status
            ELSE 'pending'
          END
        RETURNING id, status, attempts, delivered_at`,
-      [orderId, mapping.mappingId]
+      [orderId, mapping.mappingId || null]
     );
     
     const delivery = upsertRes.rows[0];
@@ -125,11 +184,17 @@ async function attemptDelivery(client, order, mapping, deliveryId) {
   const note = `order-${order.id}`;
   
   try {
+    const supProdId = parseInt(mapping.supplierProductId || mapping.supplier_product_id, 10);
+    const supDays = parseInt(mapping.supplierPlanDays || mapping.supplier_plan_days, 10);
+    const supCount = parseInt(mapping.supplierPlanCount || mapping.supplier_plan_count, 10) || 1;
+
+    console.log(`[Delivery] Creating licenses for Order #${order.id}: Product ${supProdId}, Days ${supDays}, Count ${supCount}`);
+
     // Call supplier API
     const supplierResult = await createLicenses({
-      productId: mapping.supplierProductId,
-      days: mapping.supplierPlanDays,
-      count: mapping.supplierPlanCount,
+      productId: supProdId,
+      days: supDays,
+      count: supCount,
       note
     });
     
@@ -167,7 +232,7 @@ async function attemptDelivery(client, order, mapping, deliveryId) {
            status = 'sold',
            assigned_order_id = EXCLUDED.assigned_order_id,
            assigned_user_id = EXCLUDED.assigned_user_id`,
-        [order.product_id, key, mapping.supplierPlanDays, order.id, order.user_id]
+        [order.product_id, key, supDays, order.id, order.user_id]
       );
     }
     
@@ -380,15 +445,20 @@ export async function retryPendingDeliveries() {
       
       if (orderRes.rows.length === 0) continue;
       
-      const mappingRes = await client.query(
-        'SELECT * FROM product_mappings WHERE id = $1',
-        [delivery.product_mapping_id]
-      );
-      
-      if (mappingRes.rows.length === 0) continue;
+      let mapping = null;
+      if (delivery.product_mapping_id) {
+        const mappingRes = await client.query(
+          'SELECT * FROM product_mappings WHERE id = $1',
+          [delivery.product_mapping_id]
+        );
+        if (mappingRes.rows.length > 0) mapping = mappingRes.rows[0];
+      }
       
       const order = orderRes.rows[0];
-      const mapping = mappingRes.rows[0];
+      if (!mapping) {
+        mapping = await getProductMapping(order.product_id, order.plan_id);
+      }
+      if (!mapping) continue;
       
       // Reset delivery status to pending for retry
       await client.query(
@@ -435,17 +505,24 @@ export async function adminRetryDelivery(deliveryId) {
     }
     
     const delivery = deliveryRes.rows[0];
-    const mappingRes = await client.query(
-      'SELECT * FROM product_mappings WHERE id = $1',
-      [delivery.product_mapping_id]
-    );
-    
-    if (mappingRes.rows.length === 0) {
-      return { success: false, error: 'Product mapping not found' };
+    const order = deliveryRes.rows[0];
+    let mapping = null;
+
+    if (delivery.product_mapping_id) {
+      const mappingRes = await client.query(
+        'SELECT * FROM product_mappings WHERE id = $1',
+        [delivery.product_mapping_id]
+      );
+      if (mappingRes.rows.length > 0) mapping = mappingRes.rows[0];
     }
     
-    const mapping = mappingRes.rows[0];
-    const order = deliveryRes.rows[0];
+    if (!mapping) {
+      mapping = await getProductMapping(order.product_id, order.plan_id);
+    }
+    
+    if (!mapping) {
+      return { success: false, error: 'Product mapping not found for this product/plan' };
+    }
     
     // Reset for retry
     await client.query(

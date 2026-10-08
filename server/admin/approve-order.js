@@ -1,6 +1,7 @@
 import { getClient } from '../../lib/db.js';
 import { getAuthAdmin } from '../../lib/auth.js';
 import { notifyOrderApproved } from '../../lib/discord.js';
+import { deliverOrder } from '../../services/delivery.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -98,11 +99,25 @@ export default async function handler(req, res) {
           [order.id, order.user_id, localKey.id]
         );
       } else {
+        // No local keys in stock — attempt delivery via Supplier API variant mapping
         try { await client.query('ROLLBACK'); } catch(e) {}
         client.release && client.release();
+
+        const deliveryResult = await deliverOrder(order.id);
+        if (deliveryResult.success && deliveryResult.keys && deliveryResult.keys.length > 0) {
+          return res.status(200).json({
+            success: true,
+            message: `Order ${order.order_code} approved & auto-delivered via Supplier API!`,
+            assigned_key: deliveryResult.keys.join(', '),
+            download_links: []
+          });
+        }
+
         return res.status(400).json({
           success: false,
-          message: 'No available license keys in stock for this plan. Please enter a manual key or add keys first.'
+          message: deliveryResult.error
+            ? `Supplier auto-delivery failed: ${deliveryResult.error}`
+            : 'No available license keys in stock and no active supplier mapping found for this plan. Please enter a manual key or add keys first.'
         });
       }
     }

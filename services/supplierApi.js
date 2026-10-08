@@ -318,34 +318,145 @@ async function checkLowBalanceAlert(balanceLeft) {
 }
 
 /**
- * Get active product mapping for a store product/plan
- * Returns the supplier product_id, days, count to use
+ * Get active product mapping for a store product/plan.
+ * First checks supplier_variants (Variant ID system), dynamically resolving
+ * supplier_product_id and days from supplier catalog if needed, then falls back to product_mappings.
  */
 export async function getProductMapping(productId, planId) {
+  const prodId = parseInt(productId, 10);
+  const plId = parseInt(planId, 10);
+
+  if (!prodId || !plId) return null;
+
   try {
-    const res = await query(
-      `SELECT pm.*, p.name as product_name, pl.plan_name, pl.days as plan_days
-       FROM product_mappings pm
-       JOIN products p ON pm.product_id = p.id
-       JOIN plans pl ON pm.plan_id = pl.id
-       WHERE pm.product_id = $1 AND pm.plan_id = $2
-         AND pm.is_active = true
-         AND pm.auto_delivery = true
-         AND pm.supplier_status = 'active'
-       LIMIT 1`,
-      [productId, planId]
-    );
-    
-    if (res.rows.length === 0) return null;
-    
-    const mapping = res.rows[0];
-    return {
-      supplierProductId: mapping.supplier_product_id,
-      supplierProductName: mapping.supplier_product_name,
-      supplierPlanDays: mapping.supplier_plan_days,
-      supplierPlanCount: mapping.supplier_plan_count,
-      mappingId: mapping.id
-    };
+    // 1. Look up in supplier_variants (Variant ID mapping table)
+    let svRes = null;
+    try {
+      svRes = await query(
+        `SELECT sv.*, p.name as product_name, pl.plan_name, pl.days as plan_days
+         FROM supplier_variants sv
+         LEFT JOIN products p ON sv.product_id = p.id
+         LEFT JOIN plans pl ON sv.plan_id = pl.id
+         WHERE sv.product_id = $1 AND sv.plan_id = $2
+           AND sv.is_active = true
+           AND sv.auto_delivery = true
+         LIMIT 1`,
+        [prodId, plId]
+      );
+    } catch (svErr) {
+      console.warn('[getProductMapping] Error querying supplier_variants:', svErr.message);
+    }
+
+    if (svRes && svRes.rows.length > 0) {
+      const sv = svRes.rows[0];
+      let supProdId = parseInt(sv.supplier_product_id, 10) || 0;
+      let supDays = parseInt(sv.supplier_plan_days, 10) || 0;
+      let supProdName = sv.supplier_product_name;
+
+      // If supplier_product_id is missing or 0, dynamically resolve from live supplier catalog using supplier_variant_id
+      if ((supProdId <= 0 || supDays <= 0) && sv.supplier_variant_id) {
+        try {
+          console.log(`[getProductMapping] Resolving variant ID ${sv.supplier_variant_id} from supplier catalog...`);
+          const accountInfo = await getAccountInfo();
+          const targetVariantId = String(sv.supplier_variant_id).trim();
+
+          for (const sp of (accountInfo.permitted_products || [])) {
+            for (const spPlan of (sp.plans || [])) {
+              if (String(spPlan.id).trim() === targetVariantId) {
+                supProdId = parseInt(sp.id, 10);
+                supDays = parseInt(spPlan.duration_days, 10) || 1;
+                supProdName = sp.name;
+
+                // Persist resolved IDs back into supplier_variants
+                await query(
+                  `UPDATE supplier_variants
+                   SET supplier_product_id = $1, supplier_product_name = $2, supplier_plan_days = $3, updated_at = NOW()
+                   WHERE id = $4`,
+                  [supProdId, supProdName, supDays, sv.id]
+                );
+                console.log(`[getProductMapping] Successfully resolved variant ID ${targetVariantId} -> Product ${supProdId} (${supProdName}), ${supDays} Days`);
+                break;
+              }
+            }
+            if (supProdId > 0) break;
+          }
+        } catch (catErr) {
+          console.warn('[getProductMapping] Failed to resolve variant ID from live catalog:', catErr.message);
+        }
+      }
+
+      // If resolved, ensure corresponding entry in product_mappings for foreign keys
+      let pmId = null;
+      if (supProdId > 0 && supDays > 0) {
+        try {
+          const pmUpsert = await query(
+            `INSERT INTO product_mappings 
+             (product_id, plan_id, supplier_product_id, supplier_product_name, supplier_plan_days, supplier_plan_count, auto_delivery, is_active, supplier_status, updated_at)
+             VALUES ($1, $2, $3, $4, $5, 1, true, true, 'active', NOW())
+             ON CONFLICT (product_id, plan_id) DO UPDATE SET
+               supplier_product_id = EXCLUDED.supplier_product_id,
+               supplier_product_name = EXCLUDED.supplier_product_name,
+               supplier_plan_days = EXCLUDED.supplier_plan_days,
+               is_active = true,
+               auto_delivery = true,
+               updated_at = NOW()
+             RETURNING id`,
+            [prodId, plId, supProdId, supProdName || 'Supplier Product', supDays]
+          );
+          pmId = pmUpsert.rows[0]?.id || null;
+        } catch (pmErr) {
+          // product_mappings table might not exist yet; non-blocking
+        }
+
+        return {
+          supplierProductId: supProdId,
+          supplier_product_id: supProdId,
+          supplierProductName: supProdName || 'Supplier Product',
+          supplier_product_name: supProdName || 'Supplier Product',
+          supplierPlanDays: supDays,
+          supplier_plan_days: supDays,
+          supplierPlanCount: 1,
+          supplier_plan_count: 1,
+          mappingId: pmId,
+          variantId: sv.supplier_variant_id
+        };
+      }
+    }
+
+    // 2. Fallback to product_mappings table
+    try {
+      const res = await query(
+        `SELECT pm.*, p.name as product_name, pl.plan_name, pl.days as plan_days
+         FROM product_mappings pm
+         JOIN products p ON pm.product_id = p.id
+         JOIN plans pl ON pm.plan_id = pl.id
+         WHERE pm.product_id = $1 AND pm.plan_id = $2
+           AND pm.is_active = true
+           AND pm.auto_delivery = true
+           AND pm.supplier_status = 'active'
+         LIMIT 1`,
+        [prodId, plId]
+      );
+      
+      if (res.rows.length > 0) {
+        const mapping = res.rows[0];
+        return {
+          supplierProductId: mapping.supplier_product_id,
+          supplier_product_id: mapping.supplier_product_id,
+          supplierProductName: mapping.supplier_product_name,
+          supplier_product_name: mapping.supplier_product_name,
+          supplierPlanDays: mapping.supplier_plan_days,
+          supplier_plan_days: mapping.supplier_plan_days,
+          supplierPlanCount: mapping.supplier_plan_count || 1,
+          supplier_plan_count: mapping.supplier_plan_count || 1,
+          mappingId: mapping.id
+        };
+      }
+    } catch (pmErr) {
+      // product_mappings query failed
+    }
+
+    return null;
   } catch (e) {
     console.error('getProductMapping error:', e.message);
     return null;
@@ -358,9 +469,10 @@ export async function getProductMapping(productId, planId) {
 export async function isAutoDeliveryEnabled() {
   try {
     const res = await query('SELECT auto_delivery_enabled FROM supplier_settings WHERE id = 1');
-    return res.rows[0]?.auto_delivery_enabled === true;
+    if (res.rows.length === 0) return true;
+    return res.rows[0]?.auto_delivery_enabled !== false;
   } catch (e) {
-    return true; // Default to enabled if DB unavailable
+    return true; // Default to enabled if table/DB not configured
   }
 }
 

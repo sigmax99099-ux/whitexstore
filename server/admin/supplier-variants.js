@@ -225,6 +225,24 @@ export default async function handler(req, res) {
           ]
         );
 
+        if (supplierProductId > 0) {
+          try {
+            await query(
+              `INSERT INTO product_mappings 
+               (product_id, plan_id, supplier_product_id, supplier_product_name, supplier_plan_days, supplier_plan_count, auto_delivery, is_active, supplier_status, updated_at)
+               VALUES ($1, $2, $3, $4, $5, 1, true, true, 'active', NOW())
+               ON CONFLICT (product_id, plan_id) DO UPDATE SET
+                 supplier_product_id = EXCLUDED.supplier_product_id,
+                 supplier_product_name = EXCLUDED.supplier_product_name,
+                 supplier_plan_days = EXCLUDED.supplier_plan_days,
+                 is_active = true,
+                 auto_delivery = true,
+                 updated_at = NOW()`,
+              [prodId, planId, supplierProductId, supplierProductName || 'Supplier Product', supplierDays || 30]
+            );
+          } catch (pmSyncErr) {}
+        }
+
         console.log('[supplier-variants] Updated existing mapping ID:', existingId);
         return res.status(200).json({
           success: true,
@@ -249,6 +267,24 @@ export default async function handler(req, res) {
           supplierPrice
         ]
       );
+
+      if (supplierProductId > 0) {
+        try {
+          await query(
+            `INSERT INTO product_mappings 
+             (product_id, plan_id, supplier_product_id, supplier_product_name, supplier_plan_days, supplier_plan_count, auto_delivery, is_active, supplier_status, updated_at)
+             VALUES ($1, $2, $3, $4, $5, 1, true, true, 'active', NOW())
+             ON CONFLICT (product_id, plan_id) DO UPDATE SET
+               supplier_product_id = EXCLUDED.supplier_product_id,
+               supplier_product_name = EXCLUDED.supplier_product_name,
+               supplier_plan_days = EXCLUDED.supplier_plan_days,
+               is_active = true,
+               auto_delivery = true,
+               updated_at = NOW()`,
+            [prodId, planId, supplierProductId, supplierProductName || 'Supplier Product', supplierDays || 30]
+          );
+        } catch (pmSyncErr) {}
+      }
 
       console.log('[supplier-variants] Created mapping ID:', insertRes.rows[0]?.id);
       return res.status(201).json({
