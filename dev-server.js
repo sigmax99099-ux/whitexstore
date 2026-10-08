@@ -82,7 +82,15 @@ const server = http.createServer(async (req, res) => {
 
     try {
       const modulePath = path.resolve('api', 'index.js');
-      const moduleUrl = url.pathToFileURL(modulePath).href + `?t=${Date.now()}`;
+      // Clear module cache to avoid caching issues with dynamic import
+      const { createRequire } = await import('module');
+      const require = createRequire(import.meta.url);
+      for (const key of Object.keys(require.cache)) {
+        if (key.includes('api') || key.includes('server') || key.includes('lib')) {
+          delete require.cache[key];
+        }
+      }
+      const moduleUrl = url.pathToFileURL(modulePath).href + `?t=${Date.now()}&r=${Math.random()}`;
       const { default: handler } = await import(moduleUrl);
       if (typeof handler === 'function') {
         await handler(req, res);
