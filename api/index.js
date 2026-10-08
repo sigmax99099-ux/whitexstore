@@ -166,6 +166,13 @@ export default async function handler(req, res) {
   // Attach and merge query params
   req.query = { ...parsedUrl.query, ...(req.query || {}) };
 
+  // Parse body if it came as a raw string
+  if (typeof req.body === 'string' && req.body.trim()) {
+    try {
+      req.body = JSON.parse(req.body);
+    } catch (e) {}
+  }
+
   // Resolve target pathname using multiple strategies
   let pathname = '';
 

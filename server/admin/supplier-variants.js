@@ -118,17 +118,17 @@ export default async function handler(req, res) {
           sv.supplier_status,
           sv.created_at,
           sv.updated_at,
-          p.id as product_id,
-          p.name as product_name,
-          pl.id as plan_id,
-          pl.plan_name,
-          pl.days,
-          pl.duration_type,
-          pl.price_usd
+          sv.product_id,
+          COALESCE(p.name, 'Unknown Product') as product_name,
+          sv.plan_id,
+          COALESCE(pl.plan_name, 'Unknown Plan') as plan_name,
+          COALESCE(pl.days, sv.supplier_plan_days, 1) as days,
+          COALESCE(pl.duration_type, 'days') as duration_type,
+          COALESCE(pl.price_usd, sv.supplier_plan_price, 0) as price_usd
         FROM supplier_variants sv
-        JOIN products p ON sv.product_id = p.id
-        JOIN plans pl ON sv.plan_id = pl.id
-        ORDER BY p.name ASC, pl.days ASC
+        LEFT JOIN products p ON sv.product_id = p.id
+        LEFT JOIN plans pl ON sv.plan_id = pl.id
+        ORDER BY sv.id DESC
       `);
 
       console.log(`[supplier-variants] Returning ${mappingsRes.rows.length} mappings`);
@@ -192,16 +192,44 @@ export default async function handler(req, res) {
       const supplierProductId = sp ? sp.id : 0;
       const supplierProductName = sp ? sp.name : 'Unknown (sync catalog to update)';
 
-      // Check for duplicate mapping (same store plan)
+      const catalogNote = foundVariant ? '' : ' (catalog metadata not verified — sync catalog to confirm)';
+
+      // Check if mapping for this product + plan already exists — if so, UPSERT (update it)
       const existing = await query(
         'SELECT id FROM supplier_variants WHERE product_id = $1 AND plan_id = $2',
         [prodId, planId]
       );
 
       if (existing.rows.length > 0) {
-        return res.status(400).json({ 
-          success: false, 
-          message: 'This store plan is already mapped. Edit the existing mapping instead.' 
+        const existingId = existing.rows[0].id;
+        const updateRes = await query(
+          `UPDATE supplier_variants 
+           SET supplier_variant_id = $1,
+               supplier_product_id = $2,
+               supplier_product_name = $3,
+               supplier_plan_days = $4,
+               supplier_plan_label = $5,
+               supplier_plan_price = $6,
+               is_active = true,
+               updated_at = NOW()
+           WHERE id = $7
+           RETURNING *`,
+          [
+            varId,
+            supplierProductId,
+            supplierProductName,
+            supplierDays,
+            supplierLabel,
+            supplierPrice,
+            existingId
+          ]
+        );
+
+        console.log('[supplier-variants] Updated existing mapping ID:', existingId);
+        return res.status(200).json({
+          success: true,
+          message: `Mapping updated successfully!${catalogNote}`,
+          mapping: updateRes.rows[0]
         });
       }
 
@@ -222,7 +250,6 @@ export default async function handler(req, res) {
         ]
       );
 
-      const catalogNote = foundVariant ? '' : ' (catalog metadata not verified — sync catalog to confirm)';
       console.log('[supplier-variants] Created mapping ID:', insertRes.rows[0]?.id);
       return res.status(201).json({
         success: true,

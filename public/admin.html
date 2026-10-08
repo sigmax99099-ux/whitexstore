@@ -681,7 +681,7 @@
         <!-- ADD MAPPING FORM -->
         <div class="admin-card" style="margin-bottom: 1.5rem;">
           <h3 style="color: var(--primary); margin-bottom: 1rem;">// MAP YOUR PRODUCT &rarr; KEY LICENSE VARIANT</h3>
-          <form id="form-sv-mapping">
+          <form id="form-sv-mapping" onsubmit="event.preventDefault(); handleSvmMappingSubmit(event); return false;">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;" class="admin-modal-grid">
               <div class="form-group">
                 <label class="form-label">YOUR PRODUCT *</label>
@@ -703,7 +703,7 @@
               <input type="text" id="svm-variant-id" class="form-input" required placeholder="e.g. 226" style="font-family: monospace;">
               <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 0.35rem;">Copy from the table above. Must match a Variant ID exactly.</div>
             </div>
-            <button type="submit" id="btn-svm-save" class="btn btn-primary btn-block btn-lg btn-glow">Save Mapping ⚡</button>
+            <button type="button" id="btn-svm-save" onclick="handleSvmMappingSubmit(event)" class="btn btn-primary btn-block btn-lg btn-glow">Save Mapping ⚡</button>
           </form>
         </div>
 
@@ -1428,7 +1428,7 @@
     <div class="modal-box" style="max-width: 580px; width: 95%;">
       <button class="modal-close" onclick="closeModal('modal-sv-mapping')">✕</button>
       <h3 id="svm-modal-title" style="color: #fff; margin-bottom: 1.25rem;">Edit Supplier Variant Mapping</h3>
-      <form id="form-modal-sv-mapping">
+      <form id="form-modal-sv-mapping" onsubmit="event.preventDefault(); handleModalSvmMappingSubmit(event); return false;">
         <input type="hidden" id="svm-modal-edit-id" value="">
         <div class="form-group">
           <label class="form-label">YOUR STORE PRODUCT</label>
@@ -1443,7 +1443,7 @@
           <input type="text" id="svm-modal-variant-id" class="form-input" required placeholder="e.g. 226" style="font-family: monospace;">
           <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 0.35rem;">Copy from the Supplier Catalog table above. Must match a Variant ID exactly.</div>
         </div>
-        <button type="submit" id="btn-svm-modal-save" class="btn btn-primary btn-block btn-lg btn-glow">Update Mapping ⚡</button>
+        <button type="button" id="btn-svm-modal-save" onclick="handleModalSvmMappingSubmit(event)" class="btn btn-primary btn-block btn-lg btn-glow">Update Mapping ⚡</button>
       </form>
     </div>
   </div>
@@ -3681,14 +3681,19 @@
           body: JSON.stringify(payload)
         });
         
-        const data = await res.json();
+        let data;
+        try {
+          data = await res.json();
+        } catch (jsonErr) {
+          data = { success: false, message: `Server error (${res.status})` };
+        }
         console.log('[SVC] Save response:', data);
         if (!res.ok || !data.success) {
           showToast(data.message || 'Error saving mapping', 'error');
           return false;
         }
         
-        showToast('Mapping created successfully! ⚡', 'success');
+        showToast(data.message || 'Mapping saved successfully! ⚡', 'success');
         
         // Reset variant input so another can be added quickly
         if (variantIdEl) variantIdEl.value = '';
@@ -3747,13 +3752,18 @@
           })
         });
         
-        const data = await res.json();
+        let data;
+        try {
+          data = await res.json();
+        } catch (jsonErr) {
+          data = { success: false, message: `Server error (${res.status})` };
+        }
         if (!res.ok || !data.success) {
           showToast(data.message || 'Error updating mapping', 'error');
           return false;
         }
         
-        showToast('Mapping updated successfully! ⚡', 'success');
+        showToast(data.message || 'Mapping updated successfully! ⚡', 'success');
         closeModal('modal-sv-mapping');
         await loadAdminSupplierMappings();
       } catch (err) {

@@ -11,8 +11,5 @@
       "path": "/api/admin/cron/retry-deliveries",
       "schedule": "0 0 * * *"
     }
-  ],
-  "env": {
-    "DATABASE_URL": "@database-url"
-  }
+  ]
 }

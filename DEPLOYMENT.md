@@ -23,7 +23,7 @@ In Vercel Dashboard → **Settings → Environment Variables**, add:
 |------|-------|-------------|
 | `DATABASE_URL` | `postgresql://user:pass@ep-xxx.us-east-1.aws.neon.tech/whitexstore?sslmode=require` | Production, Preview, Development |
 | `JWT_SECRET` | `your-super-secret-jwt-key-min-32-chars` | All |
-| `SUPPLIER_BASE_URL` | `https://protal.authzen.site/api/v1` | All |
+| `SUPPLIER_BASE_URL` | `https://portal.authzen.site/api/v1` | All |
 | `SUPPLIER_API_KEY` | `sk_live_your_key_here` | All |
 | `CRON_SECRET` | `random-secret-for-cron-jobs` | Production |
 | `DISCORD_WEBHOOK_URL` | `https://discord.com/api/webhooks/xxx/yyy` | All (optional) |
