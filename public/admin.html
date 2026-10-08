@@ -688,12 +688,14 @@
                 <select id="svm-store-product" class="form-select" required>
                   <option value="">-- Select Store Product --</option>
                 </select>
+                <div id="svm-product-error" style="font-size: 0.7rem; color: var(--danger); margin-top: 0.25rem; display: none;"></div>
               </div>
               <div class="form-group">
                 <label class="form-label">YOUR PLAN *</label>
-                <select id="svm-store-plan" class="form-select" required>
-                  <option value="">-- Select Store Plan --</option>
+                <select id="svm-store-plan" class="form-select" required disabled>
+                  <option value="">-- Select Store Product First --</option>
                 </select>
+                <div id="svm-plan-error" style="font-size: 0.7rem; color: var(--danger); margin-top: 0.25rem; display: none;"></div>
               </div>
             </div>
             <div class="form-group">
@@ -1619,7 +1621,7 @@
           if (tabId === 'tab-products') loadAdminProducts();
           if (tabId === 'tab-plans') loadAdminPlans();
           if (tabId === 'tab-keys') loadAdminKeys();
-          if (tabId === 'tab-supplier-apis') { loadAdminSupplierApis(); loadSupplierCatalog(); loadAdminSupplierMappings(); }
+          if (tabId === 'tab-supplier-apis') { loadAdminSupplierApis(); loadSupplierCatalog(); loadAdminSupplierMappings(); loadSvmDropdowns(); }
           if (tabId === 'tab-supplier-settings') loadSupplierSettings();
           if (tabId === 'tab-product-mappings') loadProductMappings();
           if (tabId === 'tab-deliveries') loadDeliveries();
@@ -3568,14 +3570,65 @@
       }
     }
     
-    function openSvmMappingModal(editMapping = null) {
-      document.getElementById('svm-edit-id').value = editMapping ? editMapping.id : '';
-      document.getElementById('form-sv-mapping').reset();
+    } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="7" style="color:var(--danger); text-align:center;">Failed to load mappings.</td></tr>`;
+      }
+    }
+    
+    async function loadSvmDropdowns() {
+      console.log('[SVC] Loading dropdown data...');
+      await ensureProductsLoaded(true);
+      await loadAdminPlans();
+      console.log('[SVC] Products loaded:', globalProducts?.length, 'Plans loaded:', globalPlans?.length);
       
       // Populate product dropdown
       const productSelect = document.getElementById('svm-store-product');
+      if (!productSelect) {
+        console.error('[SVC] Product select element not found!');
+        return;
+      }
+      
+      productSelect.innerHTML = '<option value="">-- Select Store Product --</option>' + 
+        (globalProducts || []).map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
+      
+      if (globalProducts.length === 0) {
+        console.warn('[SVC] No products loaded!');
+        productSelect.innerHTML += '<option value="" disabled style="color: var(--danger);">No products found - check Admin > Products</option>';
+      }
+      
+      // Reset plan dropdown
+      const planSelect = document.getElementById('svm-store-plan');
+      if (planSelect) {
+        planSelect.innerHTML = '<option value="">-- Select Store Product First --</option>';
+        planSelect.disabled = true;
+      }
+    }
+    
+    async function openSvmMappingModal(editMapping = null) {
+      document.getElementById('svm-edit-id').value = editMapping ? editMapping.id : '';
+      document.getElementById('form-sv-mapping').reset();
+      
+      // Ensure products and plans are loaded
+      console.log('[SVC] Loading products and plans...');
+      await ensureProductsLoaded(true);
+      await loadAdminPlans();
+      console.log('[SVC] Products loaded:', globalProducts?.length, 'Plans loaded:', globalPlans?.length);
+      
+      // Populate product dropdown
+      const productSelect = document.getElementById('svm-store-product');
+      if (!productSelect) {
+        console.error('[SVC] Product select element not found!');
+        showToast('Form element not found', 'error');
+        return;
+      }
+      
       productSelect.innerHTML = '<option value="">-- Select Store Product --</option>' + 
         (globalProducts || []).map(p => `<option value="${p.id}" ${editMapping && editMapping.product_id === p.id ? 'selected' : ''}>${escapeHtml(p.name)}</option>`).join('');
+      
+      if (globalProducts.length === 0) {
+        console.warn('[SVC] No products loaded!');
+        productSelect.innerHTML += '<option value="" disabled style="color: var(--danger);">No products found - check Admin > Products</option>';
+      }
       
       if (editMapping) {
         document.getElementById('svm-edit-id').value = editMapping.id;
@@ -3593,21 +3646,36 @@
     }
     
     function populateSvmPlans(selectedPlanId = null) {
+      console.log('[SVC] populateSvmPlans called, selectedPlanId:', selectedPlanId);
       const productId = parseInt(document.getElementById('svm-store-product').value, 10);
       const planSelect = document.getElementById('svm-store-plan');
+      const planError = document.getElementById('svm-plan-error');
+      
+      console.log('[SVC] productId:', productId, 'globalPlans:', globalPlans?.length);
       
       if (!productId) {
         planSelect.innerHTML = '<option value="">-- Select Store Product First --</option>';
         planSelect.disabled = true;
+        if (planError) { planError.style.display = 'none'; }
         return;
       }
       
       planSelect.disabled = false;
       const filteredPlans = (globalPlans || []).filter(p => p.product_id === productId);
+      console.log('[SVC] Filtered plans:', filteredPlans.length, 'for product', productId);
       
-      planSelect.innerHTML = filteredPlans.length === 0 
-        ? '<option value="">No plans for selected product</option>'
-        : filteredPlans.map(p => `<option value="${p.id}">${escapeHtml(p.plan_name)} (${p.days} ${p.duration_type} - $${p.price_usd})</option>`).join('');
+      if (filteredPlans.length === 0) {
+        planSelect.innerHTML = '<option value="">No plans for selected product</option>';
+        if (planError) { 
+          planError.textContent = 'No plans found for this product. Check Admin > Plans & Pricing.';
+          planError.style.display = 'block';
+        }
+        return;
+      }
+      
+      if (planError) { planError.style.display = 'none'; }
+      
+      planSelect.innerHTML = filteredPlans.map(p => `<option value="${p.id}">${escapeHtml(p.plan_name)} (${p.days} ${p.duration_type} - $${p.price_usd})</option>`).join('');
       
       if (selectedPlanId) {
         planSelect.value = selectedPlanId;
