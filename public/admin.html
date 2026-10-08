@@ -710,6 +710,7 @@
         <!-- SAVED MAPPINGS LIST -->
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
           <h2 style="color: #fff;">// SAVED MAPPINGS</h2>
+          <button class="btn btn-outline btn-sm" onclick="loadAdminSupplierMappings()">🔄 Refresh</button>
         </div>
         <div class="table-responsive">
           <table class="table-custom">
@@ -3529,9 +3530,13 @@
     async function loadAdminSupplierMappings() {
       const tbody = document.getElementById('sv-mappings-tbody');
       try {
+        console.log('[SVC] Loading mappings...');
         const res = await fetch('/api/admin/supplier-variants');
+        console.log('[SVC] Response status:', res.status);
         const data = await res.json();
+        console.log('[SVC] Response data:', data);
         const mappings = data.mappings || [];
+        console.log('[SVC] Mappings count:', mappings.length);
         
         if (mappings.length === 0) {
           tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 2rem; color: var(--text-dim);">No mappings configured. Use the form above to create mappings.</td></tr>`;
@@ -3566,7 +3571,8 @@
           </tr>
         `).join('');
       } catch (err) {
-        tbody.innerHTML = `<tr><td colspan="7" style="color:var(--danger); text-align:center;">Failed to load mappings.</td></tr>`;
+        console.error('[SVC] Error loading mappings:', err);
+        tbody.innerHTML = `<tr><td colspan="7" style="color:var(--danger); text-align:center;">Failed to load mappings: ${err.message}</td></tr>`;
       }
     }
     
@@ -3707,6 +3713,7 @@
         
         if (editId) payload.id = editId;
         
+        console.log('[SVC] Saving mapping:', payload);
         const res = await fetch('/api/admin/supplier-variants', {
           method: method,
           headers: { 'Content-Type': 'application/json' },
@@ -3714,6 +3721,7 @@
         });
         
         const data = await res.json();
+        console.log('[SVC] Save response:', data);
         if (!res.ok || !data.success) {
           showToast(data.message || 'Error saving mapping', 'error');
           return;
@@ -3721,9 +3729,15 @@
         
         showToast(isEdit ? 'Mapping updated!' : 'Mapping created!', 'success');
         closeModal('modal-sv-mapping');
-        loadAdminSupplierMappings();
+        
+        // Refresh mappings table
+        console.log('[SVC] Refreshing mappings table...');
+        await loadAdminSupplierMappings();
         loadSupplierCatalog(); // Refresh catalog too
+        
+        console.log('[SVC] Table refresh complete');
       } catch (err) {
+        console.error('[SVC] Save error:', err);
         showToast('Error: ' + err.message, 'error');
       } finally {
         btn.disabled = false;
