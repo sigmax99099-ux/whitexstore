@@ -6,27 +6,12 @@
 -- Enable UUID extension if not already enabled
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
--- Drop existing tables if re-initializing (in dependency order)
-DROP TABLE IF EXISTS login_attempts CASCADE;
-DROP TABLE IF EXISTS password_resets CASCADE;
-DROP TABLE IF EXISTS reseller_prices CASCADE;
-DROP TABLE IF EXISTS supplier_variants CASCADE;
-DROP TABLE IF EXISTS hwid_reset_log CASCADE;
-DROP TABLE IF EXISTS deliveries CASCADE;
-DROP TABLE IF EXISTS product_mappings CASCADE;
-DROP TABLE IF EXISTS supplier_settings CASCADE;
-DROP TABLE IF EXISTS settings CASCADE;
-DROP TABLE IF EXISTS wallet_transactions CASCADE;
-DROP TABLE IF EXISTS payment_methods CASCADE;
-DROP TABLE IF EXISTS license_keys CASCADE;
-DROP TABLE IF EXISTS orders CASCADE;
-DROP TABLE IF EXISTS plans CASCADE;
-DROP TABLE IF EXISTS products CASCADE;
-DROP TABLE IF EXISTS users CASCADE;
-DROP TABLE IF EXISTS admins CASCADE;
+-- ==========================================================
+-- TABLES (created if not exist - safe for production)
+-- ==========================================================
 
 -- 1. USERS TABLE
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
   email TEXT NOT NULL UNIQUE,
@@ -40,7 +25,7 @@ CREATE TABLE users (
 );
 
 -- 2. PRODUCTS TABLE
-CREATE TABLE products (
+CREATE TABLE IF NOT EXISTS products (
   id SERIAL PRIMARY KEY,
   name TEXT NOT NULL,
   category TEXT NOT NULL,
@@ -54,7 +39,7 @@ CREATE TABLE products (
 );
 
 -- 3. PLANS TABLE
-CREATE TABLE plans (
+CREATE TABLE IF NOT EXISTS plans (
   id SERIAL PRIMARY KEY,
   product_id INT NOT NULL REFERENCES products(id) ON DELETE CASCADE,
   plan_name TEXT NOT NULL,
@@ -66,7 +51,7 @@ CREATE TABLE plans (
 );
 
 -- 4. PAYMENT METHODS TABLE
-CREATE TABLE payment_methods (
+CREATE TABLE IF NOT EXISTS payment_methods (
   id SERIAL PRIMARY KEY,
   method_name TEXT NOT NULL,
   currency TEXT NOT NULL CHECK (currency IN ('NPR', 'INR', 'USD')),
@@ -79,7 +64,7 @@ CREATE TABLE payment_methods (
 );
 
 -- 5. ORDERS TABLE
-CREATE TABLE orders (
+CREATE TABLE IF NOT EXISTS orders (
   id SERIAL PRIMARY KEY,
   order_code TEXT NOT NULL UNIQUE,
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -92,7 +77,7 @@ CREATE TABLE orders (
 );
 
 -- 6. LICENSE KEYS TABLE
-CREATE TABLE license_keys (
+CREATE TABLE IF NOT EXISTS license_keys (
   id SERIAL PRIMARY KEY,
   product_id INT NOT NULL REFERENCES products(id) ON DELETE CASCADE,
   key_code TEXT NOT NULL UNIQUE,
@@ -105,7 +90,7 @@ CREATE TABLE license_keys (
 );
 
 -- 7. WALLET TRANSACTIONS TABLE
-CREATE TABLE wallet_transactions (
+CREATE TABLE IF NOT EXISTS wallet_transactions (
   id SERIAL PRIMARY KEY,
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   type TEXT NOT NULL CHECK (type IN ('credit', 'debit')),
@@ -121,14 +106,14 @@ CREATE TABLE wallet_transactions (
 );
 
 -- 8. SETTINGS TABLE
-CREATE TABLE settings (
+CREATE TABLE IF NOT EXISTS settings (
   id SERIAL PRIMARY KEY,
   setting_key TEXT NOT NULL UNIQUE,
   setting_value TEXT NOT NULL
 );
 
 -- 9. SUPPLIER VARIANTS TABLE
-CREATE TABLE supplier_variants (
+CREATE TABLE IF NOT EXISTS supplier_variants (
   id SERIAL PRIMARY KEY,
   product_id INT NOT NULL REFERENCES products(id) ON DELETE CASCADE,
   plan_id INT NOT NULL REFERENCES plans(id) ON DELETE CASCADE,
@@ -144,7 +129,7 @@ CREATE TABLE supplier_variants (
 );
 
 -- 10. RESELLER PRICES TABLE
-CREATE TABLE reseller_prices (
+CREATE TABLE IF NOT EXISTS reseller_prices (
   id SERIAL PRIMARY KEY,
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   plan_id INT NOT NULL REFERENCES plans(id) ON DELETE CASCADE,
@@ -153,7 +138,7 @@ CREATE TABLE reseller_prices (
 );
 
 -- 11. PASSWORD RESETS TABLE
-CREATE TABLE password_resets (
+CREATE TABLE IF NOT EXISTS password_resets (
   id SERIAL PRIMARY KEY,
   email TEXT NOT NULL,
   token TEXT NOT NULL,
@@ -163,14 +148,14 @@ CREATE TABLE password_resets (
 );
 
 -- 12. ADMINS TABLE
-CREATE TABLE admins (
+CREATE TABLE IF NOT EXISTS admins (
   id SERIAL PRIMARY KEY,
   username TEXT NOT NULL UNIQUE,
   password_hash TEXT NOT NULL
 );
 
 -- 13. LOGIN ATTEMPTS TABLE (Rate Limiting)
-CREATE TABLE login_attempts (
+CREATE TABLE IF NOT EXISTS login_attempts (
   id SERIAL PRIMARY KEY,
   ip_address TEXT NOT NULL,
   email TEXT,
