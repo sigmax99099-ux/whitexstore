@@ -160,7 +160,7 @@ export default async function handler(req, res) {
         return res.status(400).json({ success: false, message: 'Invalid product, plan, or variant ID.' });
       }
 
-      // Validate the variant ID exists in supplier catalog
+      // Try to look up variant metadata from supplier catalog (optional — saves even if catalog unreachable)
       let foundVariant = null;
       try {
         const accountInfo = await getAccountInfo();
@@ -175,21 +175,22 @@ export default async function handler(req, res) {
           }
           if (foundVariant) break;
         }
+        
+        if (!foundVariant) {
+          console.warn(`[supplier-variants] Variant ID "${varId}" not found in live catalog — saving with placeholder metadata.`);
+        }
       } catch (catErr) {
-        console.warn('[supplier-variants] Warning: Supplier API catalog check error:', catErr.message);
+        console.warn('[supplier-variants] Supplier API catalog check skipped:', catErr.message);
       }
 
-      if (!foundVariant) {
-        return res.status(400).json({ 
-          success: false, 
-          message: `Supplier Variant ID "${varId}" not found in supplier catalog. Please sync catalog first.` 
-        });
-      }
-
-      const { product: sp, plan: spPlan } = foundVariant;
-      const supplierDays = parseInt(spPlan.duration_days, 10) || 1;
-      const supplierPrice = parseFloat(spPlan.price) || 0;
-      const supplierLabel = spPlan.label || `${supplierDays} Days`;
+      // Extract metadata if catalog hit, otherwise use sensible defaults
+      const sp = foundVariant?.product;
+      const spPlan = foundVariant?.plan;
+      const supplierDays = spPlan ? (parseInt(spPlan.duration_days, 10) || 30) : 30;
+      const supplierPrice = spPlan ? (parseFloat(spPlan.price) || 0) : 0;
+      const supplierLabel = spPlan ? (spPlan.label || `${supplierDays} Days`) : `${supplierDays} Days`;
+      const supplierProductId = sp ? sp.id : 0;
+      const supplierProductName = sp ? sp.name : 'Unknown (sync catalog to update)';
 
       // Check for duplicate mapping (same store plan)
       const existing = await query(
@@ -213,18 +214,19 @@ export default async function handler(req, res) {
           prodId,
           planId,
           varId,
-          sp.id,
-          sp.name,
+          supplierProductId,
+          supplierProductName,
           supplierDays,
           supplierLabel,
           supplierPrice
         ]
       );
 
+      const catalogNote = foundVariant ? '' : ' (catalog metadata not verified — sync catalog to confirm)';
       console.log('[supplier-variants] Created mapping ID:', insertRes.rows[0]?.id);
       return res.status(201).json({
         success: true,
-        message: 'Mapping created successfully!',
+        message: `Mapping created successfully!${catalogNote}`,
         mapping: insertRes.rows[0]
       });
     } catch (err) {
@@ -273,28 +275,29 @@ export default async function handler(req, res) {
         });
       }
 
-      // If changing variant ID, validate it
+      // If changing variant ID, try to look up metadata (optional — saves even if catalog unreachable)
       let spInfo = null;
       if (supplier_variant_id) {
         const varId = String(supplier_variant_id).trim();
-        const accountInfo = await getAccountInfo();
-        const permittedProducts = accountInfo.permitted_products || [];
-        
-        for (const sp of permittedProducts) {
-          for (const spPlan of (sp.plans || [])) {
-            if (String(spPlan.id) === varId) {
-              spInfo = { product: sp, plan: spPlan };
-              break;
+        try {
+          const accountInfo = await getAccountInfo();
+          const permittedProducts = accountInfo.permitted_products || [];
+          
+          for (const sp of permittedProducts) {
+            for (const spPlan of (sp.plans || [])) {
+              if (String(spPlan.id) === varId) {
+                spInfo = { product: sp, plan: spPlan };
+                break;
+              }
             }
+            if (spInfo) break;
           }
-          if (spInfo) break;
-        }
 
-        if (!spInfo) {
-          return res.status(400).json({ 
-            success: false, 
-            message: `Supplier Variant ID "${varId}" not found in supplier catalog.` 
-          });
+          if (!spInfo) {
+            console.warn(`[supplier-variants] PUT: Variant ID "${varId}" not in live catalog — updating variant ID with placeholder metadata.`);
+          }
+        } catch (catErr) {
+          console.warn('[supplier-variants] PUT: Supplier API catalog check skipped:', catErr.message);
         }
       }
 
@@ -321,6 +324,16 @@ export default async function handler(req, res) {
             parseFloat(spPlan.price) || 0,
             mappingId
           ]
+        );
+      } else if (supplier_variant_id) {
+        // Catalog lookup was skipped but variant ID was provided — update just the variant ID
+        updateRes = await query(
+          `UPDATE supplier_variants
+           SET supplier_variant_id = $1,
+               updated_at = NOW()
+           WHERE id = $2
+           RETURNING *`,
+          [String(supplier_variant_id).trim(), mappingId]
         );
       } else {
         updateRes = await query(

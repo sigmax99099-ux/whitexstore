@@ -681,7 +681,7 @@
         <!-- ADD MAPPING FORM -->
         <div class="admin-card" style="margin-bottom: 1.5rem;">
           <h3 style="color: var(--primary); margin-bottom: 1rem;">// MAP YOUR PRODUCT &rarr; KEY LICENSE VARIANT</h3>
-          <form id="form-sv-mapping" onsubmit="handleSvmMappingSubmit(event); return false;">
+          <form id="form-sv-mapping">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;" class="admin-modal-grid">
               <div class="form-group">
                 <label class="form-label">YOUR PRODUCT *</label>
@@ -1428,7 +1428,7 @@
     <div class="modal-box" style="max-width: 580px; width: 95%;">
       <button class="modal-close" onclick="closeModal('modal-sv-mapping')">✕</button>
       <h3 id="svm-modal-title" style="color: #fff; margin-bottom: 1.25rem;">Edit Supplier Variant Mapping</h3>
-      <form id="form-modal-sv-mapping" onsubmit="handleModalSvmMappingSubmit(event); return false;">
+      <form id="form-modal-sv-mapping">
         <input type="hidden" id="svm-modal-edit-id" value="">
         <div class="form-group">
           <label class="form-label">YOUR STORE PRODUCT</label>
