@@ -232,7 +232,7 @@
       setupCaptcha('captcha-slot');
 
       // Authenticate
-      const userRes = await fetch('/api/auth/me');
+      const userRes = await fetch('/api/auth/me', { credentials: 'include' });
       const authData = await userRes.json();
 
       if (!authData.authenticated || !authData.user) {
@@ -259,7 +259,7 @@
 
     async function loadPaymentMethods() {
       try {
-        const res = await fetch('/api/wallet/methods');
+        const res = await fetch('/api/wallet/methods', { credentials: 'include' });
         const data = await res.json();
 
         if (data.success && data.methods) {
@@ -345,6 +345,11 @@
       document.getElementById('topup-form').addEventListener('submit', handleTopupSubmit);
     }
 
+    // Helper to get auth headers including cookie
+    function getAuthHeaders() {
+      return { 'Content-Type': 'application/json' };
+    }
+
     function updateEstimatedNpr() {
       const amount = parseFloat(document.getElementById('topup-amount').value || 0);
       const previewBox = document.getElementById('conversion-preview');
@@ -393,6 +398,7 @@
       try {
         const res = await fetch('/api/wallet/submit', {
           method: 'POST',
+          credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             amount,
@@ -432,7 +438,7 @@
 
     async function loadTransactionHistory() {
       try {
-        const res = await fetch('/api/wallet/history');
+        const res = await fetch('/api/wallet/history', { credentials: 'include' });
         const data = await res.json();
 
         if (!data.success) return;
