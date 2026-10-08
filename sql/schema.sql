@@ -265,6 +265,7 @@ ON CONFLICT (email) DO NOTHING;
 -- Default Settings
 INSERT INTO settings (setting_key, setting_value) VALUES
 ('discord_webhook', ''),
+('discord_notify_topup', 'true'),
 ('kl_api_token', ''),
 ('npr_usd_rate', '134.50'),
 ('inr_usd_rate', '84.00'),
