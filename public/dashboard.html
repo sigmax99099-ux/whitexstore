@@ -152,7 +152,7 @@
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
       // Authenticate
-      const userRes = await fetch('/api/auth/me');
+      const userRes = await fetch('/api/auth/me', { credentials: 'include' });
       const authData = await userRes.json();
 
       if (!authData.authenticated || !authData.user) {
@@ -214,7 +214,7 @@
 
     async function loadUserOrders() {
       try {
-        const res = await fetch('/api/orders/my-orders');
+        const res = await fetch('/api/orders/my-orders', { credentials: 'include' });
         const data = await res.json();
 
         if (!data.success) return;

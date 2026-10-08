@@ -1543,7 +1543,7 @@
 
     async function initAdminAuth() {
       try {
-        const res = await fetch('/api/admin/me');
+        const res = await fetch('/api/admin/me', { ...{ credentials: 'include' }, credentials: "include" });
         const data = await res.json();
 
         if (data.authenticated && data.admin) {
@@ -1569,6 +1569,7 @@
         try {
           const res = await fetch('/api/admin/login', {
             method: 'POST',
+            credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password })
           });
@@ -1595,7 +1596,7 @@
     }
 
     async function handleAdminLogout() {
-      await fetch('/api/auth/logout', { method: 'POST' });
+      await fetch('/api/auth/logout', { ...{ method: 'POST', credentials: 'include' }, credentials: "include" });
       window.location.reload();
     }
 
@@ -1676,7 +1677,7 @@
        ============================================================== */
     async function loadDashboardData() {
       try {
-        const res = await fetch('/api/admin/stats');
+        const res = await fetch('/api/admin/stats', { ...{ credentials: "include" }, credentials: "include" });
         const data = await res.json();
 
         if (data.success && data.stats) {
@@ -1699,7 +1700,7 @@
     async function loadDashboardPendingLists() {
       // Pending orders
       try {
-        const oRes = await fetch('/api/admin/orders?status=pending');
+        const oRes = await fetch('/api/admin/orders?status=pending', { ...{ credentials: "include" }, credentials: "include" });
         const oData = await oRes.json();
         const oList = document.getElementById('dash-pending-orders-list');
         if (oData.orders && oData.orders.length > 0) {
@@ -1719,7 +1720,7 @@
 
       // Pending wallets
       try {
-        const wRes = await fetch('/api/admin/wallets?status=pending');
+        const wRes = await fetch('/api/admin/wallets?status=pending', { ...{ credentials: "include" }, credentials: "include" });
         const wData = await wRes.json();
         const wList = document.getElementById('dash-pending-wallets-list');
         if (wData.transactions && wData.transactions.length > 0) {
@@ -1747,7 +1748,7 @@
       const tbody = document.getElementById('admin-orders-tbody');
 
       try {
-        const res = await fetch(`/api/admin/orders?status=${status}&search=${encodeURIComponent(search)}`);
+        const res = await fetch(`/api/admin/orders?status=${status}&search=${encodeURIComponent(search)}`, { credentials: "include" });
         const data = await res.json();
 
         if (!data.orders || data.orders.length === 0) {
@@ -1805,9 +1806,9 @@
       const manual_key = document.getElementById('approve-manual-key').value.trim();
 
       try {
-        const res = await fetch('/api/admin/approve-order', {
+        const res = await fetch('/api/admin/approve-order', { ...
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
           body: JSON.stringify({ order_id, manual_key })
         });
         const data = await res.json();
@@ -1836,9 +1837,9 @@
       const reason = document.getElementById('reject-order-reason').value.trim();
 
       try {
-        const res = await fetch('/api/admin/reject-order', {
+        const res = await fetch('/api/admin/reject-order', { ...
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
           body: JSON.stringify({ order_id, reason })
         });
         const data = await res.json();
@@ -1863,7 +1864,7 @@
       const tbody = document.getElementById('admin-wallets-tbody');
 
       try {
-        const res = await fetch(`/api/admin/wallets?status=${status}`);
+        const res = await fetch(`/api/admin/wallets?status=${status}`, { ...{ credentials: "include" }, credentials: "include" });
         const data = await res.json();
 
         if (!data.transactions || data.transactions.length === 0) {
@@ -1918,9 +1919,9 @@
       if (customNpr === null) return;
 
       try {
-        const res = await fetch('/api/admin/approve-wallet', {
+        const res = await fetch('/api/admin/approve-wallet', { ...
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
           body: JSON.stringify({ transaction_id: id, custom_npr_amount: customNpr })
         });
         const data = await res.json();
@@ -1941,9 +1942,9 @@
       if (reason === null) return;
 
       try {
-        const res = await fetch('/api/admin/reject-wallet', {
+        const res = await fetch('/api/admin/reject-wallet', { ...
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
           body: JSON.stringify({ transaction_id: id, reason })
         });
         const data = await res.json();
@@ -1967,7 +1968,7 @@
     async function loadAdminPaymentMethods() {
       const tbody = document.getElementById('admin-payment-methods-tbody');
       try {
-        const res = await fetch('/api/admin/payment-methods');
+        const res = await fetch('/api/admin/payment-methods', { ...{ credentials: "include" }, credentials: "include" });
         const data = await res.json();
         globalPaymentMethods = data.methods || [];
 
@@ -2213,9 +2214,9 @@
 
     async function togglePaymentMethod(id, isCurrentlyActive) {
       try {
-        await fetch('/api/admin/payment-methods', {
+        await fetch('/api/admin/payment-methods', { ...
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
           body: JSON.stringify({ id, is_active: !isCurrentlyActive })
         });
         loadAdminPaymentMethods();
@@ -2227,7 +2228,7 @@
     async function deletePaymentMethod(id) {
       if (!confirm('Are you sure you want to delete this payment method?')) return;
       try {
-        await fetch(`/api/admin/payment-methods?id=${id}`, { method: 'DELETE' });
+        await fetch(`/api/admin/payment-methods?id=${id}`, { ...{ method: 'DELETE' }, credentials: "include" });
         showToast('Payment method deleted', 'info');
         loadAdminPaymentMethods();
       } catch (err) {
@@ -2242,10 +2243,10 @@
       formData.append('type', type);
       if (gatewayId) formData.append('gateway_id', gatewayId);
       
-      const res = await fetch('/api/admin/upload/gateway-image', {
+      const res = await fetch('/api/admin/upload/gateway-image', { ...{
         method: 'POST',
         body: formData
-      });
+      }, credentials: "include" });
       return res.json();
     }
 
@@ -2462,9 +2463,9 @@
         
         if (id) payload.id = parseInt(id, 10);
         
-        const res = await fetch('/api/admin/payment-methods', {
+        const res = await fetch('/api/admin/payment-methods', { ...
           method: id ? 'PUT' : 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
         
@@ -2526,20 +2527,20 @@
     async function ensureProductsLoaded(force = false) {
       if (force || !globalProducts || globalProducts.length === 0) {
         try {
-          const res = await fetch('/api/admin/products');
+          const res = await fetch('/api/admin/products', { ...{ credentials: "include" }, credentials: "include" });
           const data = await res.json();
           if (data && data.products) {
             globalProducts = data.products;
           } else {
             // Public products list fallback
-            const pubRes = await fetch('/api/products/list');
+            const pubRes = await fetch('/api/products/list', { ...{ credentials: "include" }, credentials: "include" });
             const pubData = await pubRes.json();
             globalProducts = pubData.products || [];
           }
           updateProductDropdowns();
         } catch (e) {
           try {
-            const pubRes = await fetch('/api/products/list');
+            const pubRes = await fetch('/api/products/list', { ...{ credentials: "include" }, credentials: "include" });
             const pubData = await pubRes.json();
             globalProducts = pubData.products || [];
             updateProductDropdowns();
@@ -2553,7 +2554,7 @@
     async function loadAdminProducts() {
       const tbody = document.getElementById('admin-products-tbody');
       try {
-        const res = await fetch('/api/admin/products');
+        const res = await fetch('/api/admin/products', { ...{ credentials: "include" }, credentials: "include" });
         const data = await res.json();
         globalProducts = data.products || [];
 
@@ -2626,9 +2627,9 @@
       const val = parseInt(newOrder, 10);
       if (isNaN(val) || val < 1) return;
       try {
-        const res = await fetch('/api/admin/products', {
+        const res = await fetch('/api/admin/products', { ...
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
           body: JSON.stringify({ id: productId, sort_order: val })
         });
         const data = await res.json();
@@ -2645,9 +2646,9 @@
 
     async function toggleProductFeatured(id, currentFeatured) {
       try {
-        const res = await fetch('/api/admin/products', {
+        const res = await fetch('/api/admin/products', { ...
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
           body: JSON.stringify({ id, featured: !currentFeatured })
         });
         const data = await res.json();
@@ -2689,7 +2690,7 @@
 
     async function loadCategories() {
       try {
-        const res = await fetch('/api/categories');
+        const res = await fetch('/api/categories', { ...{ credentials: "include" }, credentials: "include" });
         const data = await res.json();
         if (data.success && data.categories) {
           globalCategories = data.categories;
@@ -2855,9 +2856,9 @@
       if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
       
       try {
-        const res = await fetch('/api/admin/wallet/adjust', {
+        const res = await fetch('/api/admin/wallet/adjust', { ...
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId, action, amount: numAmount, description })
         });
         const data = await res.json();
@@ -2922,9 +2923,9 @@
       if (errorEl) errorEl.style.display = 'none';
 
       try {
-        const res = await fetch('/api/categories', {
+        const res = await fetch('/api/categories', { ...
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
           body: JSON.stringify({ name: trimmedName })
         });
         const data = await res.json();
@@ -3055,9 +3056,9 @@
 
     async function sendAddProduct(payload) {
       try {
-        const res = await fetch('/api/admin/add-product', {
+        const res = await fetch('/api/admin/add-product', { ...
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
         const data = await res.json();
@@ -3077,9 +3078,9 @@
 
     async function sendUpdateProduct(payload) {
       try {
-        const res = await fetch('/api/admin/products', {
+        const res = await fetch('/api/admin/products', { ...
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
         const data = await res.json();
@@ -3100,9 +3101,9 @@
     async function toggleProductStatus(id, currentStatus) {
       const newStatus = currentStatus === 'active' ? 'hidden' : 'active';
       try {
-        const res = await fetch('/api/admin/products', {
+        const res = await fetch('/api/admin/products', { ...
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
           body: JSON.stringify({ id, status: newStatus })
         });
         const data = await res.json();
@@ -3120,7 +3121,7 @@
     async function deleteProduct(id) {
       if (!confirm('Are you sure you want to delete this product? All attached plans will be removed.')) return;
       try {
-        const res = await fetch(`/api/admin/products?id=${id}`, { method: 'DELETE' });
+        const res = await fetch(`/api/admin/products?id=${id}`, { ...{ method: 'DELETE' }, credentials: "include" });
         const data = await res.json();
         if (!res.ok || !data.success) {
           showToast(data.message || 'Failed to delete product', 'error');
@@ -3141,7 +3142,7 @@
     async function loadAdminPlans() {
       const tbody = document.getElementById('admin-plans-tbody');
       try {
-        const res = await fetch('/api/admin/plans');
+        const res = await fetch('/api/admin/plans', { ...{ credentials: "include" }, credentials: "include" });
         const data = await res.json();
         globalPlans = data.plans || [];
 
@@ -3194,9 +3195,9 @@
       const supplier_variant_id = document.getElementById('plan-supplier-variant').value.trim();
 
       try {
-        const res = await fetch('/api/admin/add-plan', {
+        const res = await fetch('/api/admin/add-plan', { ...
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
           body: JSON.stringify({
             product_id,
             plan_name,
@@ -3224,7 +3225,7 @@
 
     async function deletePlan(id) {
       if (!confirm('Are you sure you want to delete this plan?')) return;
-      await fetch(`/api/admin/plans?id=${id}`, { method: 'DELETE' });
+      await fetch(`/api/admin/plans?id=${id}`, { ...{ method: 'DELETE' }, credentials: "include" });
       loadAdminPlans();
     }
 
@@ -3238,7 +3239,7 @@
       const tbody = document.getElementById('admin-keys-tbody');
 
       try {
-        const res = await fetch(`/api/admin/keys?product_id=${product_id}&status=${status}&search=${encodeURIComponent(search)}`);
+        const res = await fetch(`/api/admin/keys?product_id=${product_id}&status=${status}&search=${encodeURIComponent(search)}`, { credentials: "include" });
         const data = await res.json();
 
         if (!data.keys || data.keys.length === 0) {
@@ -3285,9 +3286,9 @@
       const keys_text = document.getElementById('keys-import-text').value;
 
       try {
-        const res = await fetch('/api/admin/add-keys', {
+        const res = await fetch('/api/admin/add-keys', { ...
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
           body: JSON.stringify({ product_id, days, keys_text })
         });
         const data = await res.json();
@@ -3307,9 +3308,9 @@
 
     async function revokeKey(id) {
       if (!confirm('Revoke this key?')) return;
-      await fetch('/api/admin/keys', {
+      await fetch('/api/admin/keys', { ...
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { credentials: "include", ... 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, status: 'revoked' })
       });
       loadAdminKeys();
@@ -3325,7 +3326,7 @@
     async function ensureSupplierApisLoaded() {
       if (!globalSupplierApis || globalSupplierApis.length === 0) {
         try {
-          const res = await fetch('/api/admin/supplier-apis');
+          const res = await fetch('/api/admin/supplier-apis', { ...{ credentials: "include" }, credentials: "include" });
           const data = await res.json();
           globalSupplierApis = data.supplier_apis || [];
         } catch (e) {}
@@ -3335,7 +3336,7 @@
     async function loadAdminSupplierApis() {
       const tbody = document.getElementById('admin-supplier-apis-tbody');
       try {
-        const res = await fetch('/api/admin/supplier-apis');
+        const res = await fetch('/api/admin/supplier-apis', { ...{ credentials: "include" }, credentials: "include" });
         const data = await res.json();
         globalSupplierApis = data.apis || [];
 
@@ -3395,7 +3396,7 @@
     async function deleteSupplierApi(id) {
       if (!confirm('Are you sure you want to delete this supplier API?')) return;
       try {
-        await fetch(`/api/admin/supplier-apis?id=${id}`, { method: 'DELETE' });
+        await fetch(`/api/admin/supplier-apis?id=${id}`, { ...{ method: 'DELETE' }, credentials: "include" });
         showToast('Supplier API deleted', 'info');
         loadAdminSupplierApis();
       } catch (err) {
@@ -3419,15 +3420,15 @@
         let res;
         if (id) {
           payload.id = parseInt(id, 10);
-          res = await fetch('/api/admin/supplier-apis', {
+          res = await fetch('/api/admin/supplier-apis', { ...
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { credentials: "include", ... 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
           });
         } else {
-          res = await fetch('/api/admin/supplier-apis', {
+          res = await fetch('/api/admin/supplier-apis', { ...
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { credentials: "include", ... 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
           });
         }
@@ -3458,7 +3459,7 @@
       if (searchInput) searchInput.value = '';
       
       try {
-        const res = await fetch('/api/admin/supplier-variants?catalog=1');
+        const res = await fetch('/api/admin/supplier-variants?catalog=1', { ...{ credentials: "include" }, credentials: "include" });
         const data = await res.json();
         
         if (!data.success) {
@@ -3528,7 +3529,7 @@
       const tbody = document.getElementById('sv-mappings-tbody');
       try {
         console.log('[SVC] Loading mappings...');
-        const res = await fetch('/api/admin/supplier-variants');
+        const res = await fetch('/api/admin/supplier-variants', { ...{ credentials: "include" }, credentials: "include" });
         console.log('[SVC] Response status:', res.status);
         const data = await res.json();
         console.log('[SVC] Response data:', data);
@@ -3675,9 +3676,9 @@
         };
         
         console.log('[SVC] Saving mapping:', payload);
-        const res = await fetch('/api/admin/supplier-variants', {
+        const res = await fetch('/api/admin/supplier-variants', { ...
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
         
@@ -3743,9 +3744,9 @@
       }
       
       try {
-        const res = await fetch('/api/admin/supplier-variants', {
+        const res = await fetch('/api/admin/supplier-variants', { ...
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
           body: JSON.stringify({
             id: editId,
             supplier_variant_id: variantId
@@ -3779,7 +3780,7 @@
     
     async function editSvmMapping(id) {
       try {
-        const res = await fetch('/api/admin/supplier-variants');
+        const res = await fetch('/api/admin/supplier-variants', { ...{ credentials: "include" }, credentials: "include" });
         const data = await res.json();
         const mapping = (data.mappings || []).find(m => m.id == id);
         if (mapping) openSvmMappingModal(mapping);
@@ -3791,7 +3792,7 @@
     async function deleteSvmMapping(id) {
       if (!confirm('Delete this mapping?')) return;
       try {
-        await fetch(`/api/admin/supplier-variants?id=${id}`, { method: 'DELETE' });
+        await fetch(`/api/admin/supplier-variants?id=${id}`, { ...{ method: 'DELETE' }, credentials: "include" });
         showToast('Mapping deleted', 'info');
         loadAdminSupplierMappings();
       } catch (err) {
@@ -3816,7 +3817,7 @@
       const tbody = document.getElementById('admin-users-tbody');
 
       try {
-        const res = await fetch(`/api/admin/users?user_type=${type}&search=${encodeURIComponent(search)}`);
+        const res = await fetch(`/api/admin/users?user_type=${type}&search=${encodeURIComponent(search)}`, { credentials: "include" });
         const data = await res.json();
 
         if (!data.users || data.users.length === 0) {
@@ -3878,9 +3879,9 @@
       const actionText = status === 'blocked' ? 'block' : 'unblock';
       if (!confirm(`Are you sure you want to ${actionText} this user?`)) return;
       try {
-        const res = await fetch('/api/admin/users', {
+        const res = await fetch('/api/admin/users', { ...
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
           body: JSON.stringify({ id, status })
         });
         const data = await res.json();
@@ -3904,9 +3905,9 @@
         return;
       }
       try {
-        const res = await fetch('/api/admin/users', {
+        const res = await fetch('/api/admin/users', { ...
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
           body: JSON.stringify({ id, user_type: 'reseller', reseller_discount: numDisc })
         });
         const data = await res.json();
@@ -3928,9 +3929,9 @@
       if (newDisc === null) return;
 
       try {
-        const res = await fetch('/api/admin/users', {
+        const res = await fetch('/api/admin/users', { ...
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
           body: JSON.stringify({ id, user_type: newType.trim().toLowerCase(), reseller_discount: parseFloat(newDisc) || 0 })
         });
         const data = await res.json();
@@ -3951,7 +3952,7 @@
     async function loadAdminResellerPrices() {
       const tbody = document.getElementById('admin-reseller-prices-tbody');
       try {
-        const res = await fetch('/api/admin/reseller-prices');
+        const res = await fetch('/api/admin/reseller-prices', { ...{ credentials: "include" }, credentials: "include" });
         const data = await res.json();
 
         if (!data.reseller_prices || data.reseller_prices.length === 0) {
@@ -3981,7 +3982,7 @@
       if (!email) return;
 
       // Find user
-      const uRes = await fetch(`/api/admin/users?search=${encodeURIComponent(email)}`);
+      const uRes = await fetch(`/api/admin/users?search=${encodeURIComponent(email)}`, { credentials: "include" });
       const uData = await uRes.json();
       const user = (uData.users || []).find(u => u.email.toLowerCase() === email.toLowerCase());
       if (!user) {
@@ -3995,9 +3996,9 @@
       const customPrice = prompt('Enter custom price in USD:');
       if (!customPrice) return;
 
-      await fetch('/api/admin/reseller-prices', {
+      await fetch('/api/admin/reseller-prices', { ...
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { credentials: "include", ... 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id: user.id, plan_id: parseInt(planId, 10), custom_price_usd: parseFloat(customPrice) })
       });
 
@@ -4007,7 +4008,7 @@
 
     async function deleteResellerPrice(id) {
       if (!confirm('Remove this custom price override?')) return;
-      await fetch(`/api/admin/reseller-prices?id=${id}`, { method: 'DELETE' });
+      await fetch(`/api/admin/reseller-prices?id=${id}`, { ...{ method: 'DELETE' }, credentials: "include" });
       loadAdminResellerPrices();
     }
 
@@ -4016,7 +4017,7 @@
        ============================================================== */
     async function loadAdminSettings() {
       try {
-        const res = await fetch('/api/admin/settings');
+        const res = await fetch('/api/admin/settings', { ...{ credentials: "include" }, credentials: "include" });
         const data = await res.json();
         if (data.settings) {
           const s = data.settings;
@@ -4046,9 +4047,9 @@
       };
 
       try {
-        const res = await fetch('/api/admin/settings', {
+        const res = await fetch('/api/admin/settings', { ...
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
         const data = await res.json();
@@ -4065,9 +4066,9 @@
     async function testDiscordWebhook() {
       showToast('Sending test notification to Discord...', 'info');
       try {
-        const res = await fetch('/api/notify', {
+        const res = await fetch('/api/notify', { ...
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
           body: JSON.stringify({
             title: 'Test Notification',
             description: 'White X Store Discord integration is fully functional and responsive! 🚀',
@@ -4088,9 +4089,9 @@
     async function testDiscordWalletTopup() {
       showToast('Sending test wallet top-up notification to Discord...', 'info');
       try {
-        const res = await fetch('/api/notify', {
+        const res = await fetch('/api/notify', { ...
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
           body: JSON.stringify({
             title: '💰 New Wallet Top-up Request (Pending Approval) [TEST]',
             description: 'A new wallet top-up request has been submitted and requires admin verification. (This is a test notification)',
@@ -4125,7 +4126,7 @@
       box.innerHTML = 'Connecting to KeyLicense API...';
 
       try {
-        const res = await fetch('/api/admin/keylicense-check');
+        const res = await fetch('/api/admin/keylicense-check', { ...{ credentials: "include" }, credentials: "include" });
         const data = await res.json();
 
         box.innerHTML = `
@@ -4145,7 +4146,7 @@
     async function loadAdminResets() {
       const tbody = document.getElementById('admin-resets-tbody');
       try {
-        const res = await fetch('/api/admin/resets');
+        const res = await fetch('/api/admin/resets', { ...{ credentials: "include" }, credentials: "include" });
         const data = await res.json();
 
         if (!data.resets || data.resets.length === 0) {
@@ -4177,7 +4178,7 @@
     async function loadAdminDownloadLinks() {
       const tbody = document.getElementById('admin-download-links-tbody');
       try {
-        const res = await fetch('/api/admin/download-links');
+        const res = await fetch('/api/admin/download-links', { ...{ credentials: "include" }, credentials: "include" });
         const data = await res.json();
 
         if (!data.success) {
@@ -4227,7 +4228,7 @@
 
     async function loadCategoriesForDL() {
       try {
-        const res = await fetch('/api/categories');
+        const res = await fetch('/api/categories', { ...{ credentials: "include" }, credentials: "include" });
         const data = await res.json();
         if (data.success && data.categories) {
           const select = document.getElementById('dl-category');
@@ -4253,7 +4254,7 @@
       }
 
       try {
-        const res = await fetch(`/api/admin/products?category=${encodeURIComponent(category)}`);
+        const res = await fetch(`/api/admin/products?category=${encodeURIComponent(category)}`, { credentials: "include" });
         const data = await res.json();
         const products = data.products || [];
 
@@ -4320,7 +4321,7 @@
     async function deleteDownloadLink(id) {
       if (!confirm('Are you sure you want to delete this download link?')) return;
       try {
-        const res = await fetch(`/api/admin/download-links?id=${id}`, { method: 'DELETE' });
+        const res = await fetch(`/api/admin/download-links?id=${id}`, { ...{ method: 'DELETE' }, credentials: "include" });
         const data = await res.json();
         if (!res.ok || !data.success) {
           showToast(data.message || 'Failed to delete download link', 'error');
@@ -4374,9 +4375,9 @@
           payload.id = parseInt(editId, 10);
         }
 
-        const res = await fetch('/api/admin/download-links', {
+        const res = await fetch('/api/admin/download-links', { ...
           method: editId ? 'PUT' : 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
 
@@ -4404,7 +4405,7 @@
     async function loadSupplierSettings() {
       try {
         // Load settings
-        const settingsRes = await fetch('/api/admin/supplier-settings');
+        const settingsRes = await fetch('/api/admin/supplier-settings', { ...{ credentials: "include" }, credentials: "include" });
         const settingsData = await settingsRes.json();
         
         if (settingsData.success && settingsData.settings) {
@@ -4433,9 +4434,9 @@
       resultDiv.style.color = 'var(--primary)';
       
       try {
-        const res = await fetch('/api/admin/supplier-settings', {
+        const res = await fetch('/api/admin/supplier-settings', { ...
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
           body: JSON.stringify({ action: 'test_connection' })
         });
         
@@ -4481,9 +4482,9 @@
       btn.textContent = 'Refreshing...';
       
       try {
-        const res = await fetch('/api/admin/supplier-settings', {
+        const res = await fetch('/api/admin/supplier-settings', { ...
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
           body: JSON.stringify({ action: 'refresh_balance' })
         });
         
@@ -4516,9 +4517,9 @@
 
     async function saveSupplierSetting(key, value) {
       try {
-        const res = await fetch('/api/admin/supplier-settings', {
+        const res = await fetch('/api/admin/supplier-settings', { ...
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
           body: JSON.stringify({ [key]: value })
         });
         const data = await res.json();
@@ -4540,7 +4541,7 @@
     async function loadProductMappings() {
       const tbody = document.getElementById('admin-mappings-tbody');
       try {
-        const res = await fetch('/api/admin/product-mappings');
+        const res = await fetch('/api/admin/product-mappings', { ...{ credentials: "include" }, credentials: "include" });
         const data = await res.json();
         
         if (!data.success) {
@@ -4599,7 +4600,7 @@
       btn.textContent = 'Syncing...';
       
       try {
-        const res = await fetch('/api/admin/sync-products', { method: 'POST' });
+        const res = await fetch('/api/admin/sync-products', { ...{ method: 'POST' }, credentials: "include" });
         const data = await res.json();
         
         if (data.success) {
@@ -4620,9 +4621,9 @@
 
     async function updateMapping(id, field, value) {
       try {
-        const res = await fetch('/api/admin/product-mappings', {
+        const res = await fetch('/api/admin/product-mappings', { ...
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
           body: JSON.stringify({ id, [field]: value })
         });
         const data = await res.json();
@@ -4641,7 +4642,7 @@
     async function deleteMapping(id) {
       if (!confirm('Delete this mapping?')) return;
       try {
-        const res = await fetch('/api/admin/product-mappings?id=' + id, { method: 'DELETE' });
+        const res = await fetch('/api/admin/product-mappings?id=' + id, { method: 'DELETE', credentials: 'include' });
         const data = await res.json();
         if (data.success) {
           showToast('Mapping deleted', 'success');
@@ -4668,9 +4669,9 @@
       if (!supplierPlanDays) return;
       
       try {
-        const res = await fetch('/api/admin/product-mappings', {
+        const res = await fetch('/api/admin/product-mappings', { ...
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
           body: JSON.stringify({
             product_id: parseInt(productId),
             plan_id: parseInt(planId),
@@ -4711,7 +4712,7 @@
       if (search) url += '&search=' + encodeURIComponent(search);
       
       try {
-        const res = await fetch(url);
+        const res = await fetch(url, { credentials: "include" });
         const data = await res.json();
         
         if (!data.success) {
@@ -4802,9 +4803,9 @@
 
     async function retryDelivery(id) {
       try {
-        const res = await fetch('/api/admin/deliveries', {
+        const res = await fetch('/api/admin/deliveries', { ...
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
           body: JSON.stringify({ action: 'retry', delivery_id: id })
         });
         const data = await res.json();
@@ -4823,9 +4824,9 @@
       if (!confirm('Refund wallet for this failed delivery? This will mark the order as rejected.')) return;
       
       try {
-        const res = await fetch('/api/admin/deliveries', {
+        const res = await fetch('/api/admin/deliveries', { ...
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
           body: JSON.stringify({ action: 'refund', delivery_id: id })
         });
         const data = await res.json();
@@ -4846,7 +4847,7 @@
     async function loadHwidLogs() {
       const tbody = document.getElementById('admin-hwid-logs-tbody');
       try {
-        const res = await fetch('/api/admin/hwid-reset?limit=50');
+        const res = await fetch('/api/admin/hwid-reset?limit=50', { ...{ credentials: "include" }, credentials: "include" });
         const data = await res.json();
         
         if (!data.success) {
@@ -4896,9 +4897,9 @@
       resultDiv.style.display = 'none';
       
       try {
-        const res = await fetch('/api/admin/hwid-reset', {
+        const res = await fetch('/api/admin/hwid-reset', { ... ...
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { credentials: "include", ... 'Content-Type': 'application/json' },
           body: JSON.stringify({ key })
         });
         
@@ -4922,7 +4923,7 @@
         btn.disabled = false;
         btn.textContent = 'Reset HWID ⚡';
       }
-    });
+    , credentials: "include" };
 
     /* ==============================================================
        MODAL CONTROLLERS

@@ -198,7 +198,7 @@
 
     async function loadProduct(id) {
       try {
-        const res = await fetch(`/api/products/${id}`);
+        const res = await fetch(`/api/products/${id}`, { credentials: 'include' });
         const data = await res.json();
 
         if (!data.success || !data.product) {

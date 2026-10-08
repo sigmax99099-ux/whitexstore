@@ -147,7 +147,7 @@
           throw new Error('Please open this page via http://localhost:3000/products.html or your Vercel URL, not by opening the file directly.');
         }
 
-        const res = await fetch('/api/products/list');
+        const res = await fetch('/api/products/list', { credentials: 'include' });
         if (!res.ok) {
           throw new Error(`Server returned status ${res.status}`);
         }

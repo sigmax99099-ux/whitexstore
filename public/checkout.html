@@ -163,7 +163,7 @@
       }
 
       // Check Auth
-      const userRes = await fetch('/api/auth/me');
+      const userRes = await fetch('/api/auth/me', { credentials: 'include' });
       const authData = await userRes.json();
 
       if (!authData.authenticated || !authData.user) {
@@ -184,7 +184,7 @@
 
     async function loadOrderDetails() {
       try {
-        const res = await fetch(`/api/products/${productId}`);
+        const res = await fetch(`/api/products/${productId}`, { credentials: 'include' });
         const data = await res.json();
 
         if (!data.success || !data.product) {
@@ -242,6 +242,7 @@
       try {
         const res = await fetch('/api/orders/submit', {
           method: 'POST',
+          credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             product_id: parseInt(productId, 10),
