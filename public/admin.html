@@ -681,11 +681,11 @@
         <!-- ADD MAPPING FORM -->
         <div class="admin-card" style="margin-bottom: 1.5rem;">
           <h3 style="color: var(--primary); margin-bottom: 1rem;">// MAP YOUR PRODUCT &rarr; KEY LICENSE VARIANT</h3>
-          <form id="form-sv-mapping">
+          <form id="form-sv-mapping" onsubmit="handleSvmMappingSubmit(event); return false;">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;" class="admin-modal-grid">
               <div class="form-group">
                 <label class="form-label">YOUR PRODUCT *</label>
-                <select id="svm-store-product" class="form-select" required>
+                <select id="svm-store-product" class="form-select" required onchange="populateSvmPlans()">
                   <option value="">-- Select Store Product --</option>
                 </select>
                 <div id="svm-product-error" style="font-size: 0.7rem; color: var(--danger); margin-top: 0.25rem; display: none;"></div>
@@ -703,7 +703,7 @@
               <input type="text" id="svm-variant-id" class="form-input" required placeholder="e.g. 226" style="font-family: monospace;">
               <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 0.35rem;">Copy from the table above. Must match a Variant ID exactly.</div>
             </div>
-            <button type="submit" class="btn btn-primary btn-block btn-lg btn-glow">Save Mapping ⚡</button>
+            <button type="submit" id="btn-svm-save" class="btn btn-primary btn-block btn-lg btn-glow">Save Mapping ⚡</button>
           </form>
         </div>
 
@@ -1423,31 +1423,27 @@
     </div>
   </div>
 
-  <!-- VARIANT MAPPING MODAL (new structure) -->
+  <!-- VARIANT MAPPING MODAL (Edit structure) -->
   <div id="modal-sv-mapping" class="modal-backdrop">
     <div class="modal-box" style="max-width: 580px; width: 95%;">
       <button class="modal-close" onclick="closeModal('modal-sv-mapping')">✕</button>
-      <h3 id="svm-modal-title" style="color: #fff; margin-bottom: 1.25rem;">+ Map Product to Supplier Variant</h3>
-      <form id="form-sv-mapping">
-        <input type="hidden" id="svm-edit-id" value="">
+      <h3 id="svm-modal-title" style="color: #fff; margin-bottom: 1.25rem;">Edit Supplier Variant Mapping</h3>
+      <form id="form-modal-sv-mapping" onsubmit="handleModalSvmMappingSubmit(event); return false;">
+        <input type="hidden" id="svm-modal-edit-id" value="">
         <div class="form-group">
-          <label class="form-label">YOUR PRODUCT *</label>
-          <select id="svm-store-product" class="form-select" required onchange="populateSvmPlans()">
-            <option value="">-- Select Store Product --</option>
-          </select>
+          <label class="form-label">YOUR STORE PRODUCT</label>
+          <input type="text" id="svm-modal-product-display" class="form-input" readonly style="opacity: 0.85; cursor: not-allowed; background: rgba(255,255,255,0.05);">
         </div>
         <div class="form-group">
-          <label class="form-label">YOUR PLAN *</label>
-          <select id="svm-store-plan" class="form-select" required>
-            <option value="">-- Select Store Plan --</option>
-          </select>
+          <label class="form-label">YOUR STORE PLAN</label>
+          <input type="text" id="svm-modal-plan-display" class="form-input" readonly style="opacity: 0.85; cursor: not-allowed; background: rgba(255,255,255,0.05);">
         </div>
         <div class="form-group">
           <label class="form-label">KEY LICENSE VARIANT ID *</label>
-          <input type="text" id="svm-variant-id" class="form-input" required placeholder="e.g. 226" style="font-family: monospace;">
+          <input type="text" id="svm-modal-variant-id" class="form-input" required placeholder="e.g. 226" style="font-family: monospace;">
           <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 0.35rem;">Copy from the Supplier Catalog table above. Must match a Variant ID exactly.</div>
         </div>
-        <button type="submit" class="btn btn-primary btn-block btn-lg btn-glow">Save Mapping ⚡</button>
+        <button type="submit" id="btn-svm-modal-save" class="btn btn-primary btn-block btn-lg btn-glow">Update Mapping ⚡</button>
       </form>
     </div>
   </div>
@@ -1650,8 +1646,9 @@
       document.getElementById('form-add-plan').addEventListener('submit', handleAddPlanSubmit);
       document.getElementById('form-add-keys').addEventListener('submit', handleAddKeysSubmit);
       document.getElementById('form-payment-method').addEventListener('submit', handlePaymentMethodSubmit);
-      document.getElementById('form-supplier-api').addEventListener('submit', handleSupplierApiSubmit);
-      document.getElementById('form-sv-mapping').addEventListener('submit', handleSvmMappingSubmit);
+      document.getElementById('form-supplier-api')?.addEventListener('submit', handleSupplierApiSubmit);
+      document.getElementById('form-sv-mapping')?.addEventListener('submit', handleSvmMappingSubmit);
+      document.getElementById('form-modal-sv-mapping')?.addEventListener('submit', handleModalSvmMappingSubmit);
       document.getElementById('form-approve-order').addEventListener('submit', handleApproveOrderSubmit);
       document.getElementById('form-reject-order').addEventListener('submit', handleRejectOrderSubmit);
       document.getElementById('admin-settings-form').addEventListener('submit', handleSettingsSubmit);
@@ -3605,53 +3602,14 @@
       }
     }
     
-    async function openSvmMappingModal(editMapping = null) {
-      document.getElementById('svm-edit-id').value = editMapping ? editMapping.id : '';
-      document.getElementById('form-sv-mapping').reset();
-      
-      // Ensure products and plans are loaded
-      console.log('[SVC] Loading products and plans...');
-      await ensureProductsLoaded(true);
-      await loadAdminPlans();
-      console.log('[SVC] Products loaded:', globalProducts?.length, 'Plans loaded:', globalPlans?.length);
-      
-      // Populate product dropdown
-      const productSelect = document.getElementById('svm-store-product');
-      if (!productSelect) {
-        console.error('[SVC] Product select element not found!');
-        showToast('Form element not found', 'error');
-        return;
-      }
-      
-      productSelect.innerHTML = '<option value="">-- Select Store Product --</option>' + 
-        (globalProducts || []).map(p => `<option value="${p.id}" ${editMapping && editMapping.product_id === p.id ? 'selected' : ''}>${escapeHtml(p.name)}</option>`).join('');
-      
-      if (globalProducts.length === 0) {
-        console.warn('[SVC] No products loaded!');
-        productSelect.innerHTML += '<option value="" disabled style="color: var(--danger);">No products found - check Admin > Products</option>';
-      }
-      
-      if (editMapping) {
-        document.getElementById('svm-edit-id').value = editMapping.id;
-        document.getElementById('svm-variant-id').value = editMapping.supplier_variant_id;
-        document.getElementById('svm-modal-title').textContent = 'Edit Mapping';
-        
-        // Populate plans for the selected product
-        setTimeout(() => populateSvmPlans(editMapping.plan_id), 0);
-      } else {
-        document.getElementById('svm-edit-id').value = '';
-        document.getElementById('svm-modal-title').textContent = '+ Map Product to Supplier Variant';
-      }
-      
-      openModal('modal-sv-mapping');
-    }
-    
     function populateSvmPlans(selectedPlanId = null) {
       console.log('[SVC] populateSvmPlans called, selectedPlanId:', selectedPlanId);
-      const productId = parseInt(document.getElementById('svm-store-product').value, 10);
+      const prodEl = document.getElementById('svm-store-product');
       const planSelect = document.getElementById('svm-store-plan');
       const planError = document.getElementById('svm-plan-error');
+      if (!prodEl || !planSelect) return;
       
+      const productId = parseInt(prodEl.value, 10);
       console.log('[SVC] productId:', productId, 'globalPlans:', globalPlans?.length);
       
       if (!productId) {
@@ -3676,46 +3634,49 @@
       
       if (planError) { planError.style.display = 'none'; }
       
-      planSelect.innerHTML = filteredPlans.map(p => `<option value="${p.id}">${escapeHtml(p.plan_name)} (${p.days} ${p.duration_type} - $${p.price_usd})</option>`).join('');
+      planSelect.innerHTML = '<option value="">-- Select Store Plan --</option>' +
+        filteredPlans.map(p => `<option value="${p.id}">${escapeHtml(p.plan_name)} (${p.days} ${p.duration_type} - $${p.price_usd})</option>`).join('');
       
       if (selectedPlanId) {
         planSelect.value = selectedPlanId;
       }
     }
     
-    document.getElementById('svm-store-product')?.addEventListener('change', () => populateSvmPlans());
-    
     async function handleSvmMappingSubmit(e) {
-      e.preventDefault();
-      const editId = document.getElementById('svm-edit-id').value;
-      const storeProductId = parseInt(document.getElementById('svm-store-product').value, 10);
-      const storePlanId = parseInt(document.getElementById('svm-store-plan').value, 10);
-      const variantId = document.getElementById('svm-variant-id').value.trim();
-      
-      if (!storeProductId || !storePlanId || !variantId) {
-        showToast('All fields are required.', 'error');
-        return;
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
       }
       
-      const isEdit = !!document.getElementById('svm-edit-id').value;
-      const btn = e.target.querySelector('button[type="submit"]');
-      btn.disabled = true;
-      btn.textContent = 'Saving...';
+      const storeProductEl = document.getElementById('svm-store-product');
+      const storePlanEl = document.getElementById('svm-store-plan');
+      const variantIdEl = document.getElementById('svm-variant-id');
+      const btn = document.getElementById('btn-svm-save') || e?.target?.querySelector('button[type="submit"]');
+      
+      const storeProductId = parseInt(storeProductEl?.value, 10);
+      const storePlanId = parseInt(storePlanEl?.value, 10);
+      const variantId = variantIdEl?.value?.trim();
+      
+      if (!storeProductId || !storePlanId || !variantId) {
+        showToast('Please select a Product, a Plan, and enter a Variant ID.', 'error');
+        return false;
+      }
+      
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Saving Mapping... ⏳';
+      }
       
       try {
-        const method = editId ? 'PUT' : 'POST';
-        
         const payload = {
           store_product_id: storeProductId,
           store_plan_id: storePlanId,
-          supplier_variant_id: document.getElementById('svm-variant-id').value.trim()
+          supplier_variant_id: variantId
         };
-        
-        if (editId) payload.id = editId;
         
         console.log('[SVC] Saving mapping:', payload);
         const res = await fetch('/api/admin/supplier-variants', {
-          method: method,
+          method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
@@ -3724,29 +3685,89 @@
         console.log('[SVC] Save response:', data);
         if (!res.ok || !data.success) {
           showToast(data.message || 'Error saving mapping', 'error');
-          return;
+          return false;
         }
         
-        showToast(isEdit ? 'Mapping updated!' : 'Mapping created!', 'success');
-        closeModal('modal-sv-mapping');
+        showToast('Mapping created successfully! ⚡', 'success');
         
-        // Refresh mappings table
-        console.log('[SVC] Refreshing mappings table...');
+        // Reset variant input so another can be added quickly
+        if (variantIdEl) variantIdEl.value = '';
+        
+        // Refresh ONLY mappings table and catalog (never whole page, never dashboard)
         await loadAdminSupplierMappings();
-        loadSupplierCatalog(); // Refresh catalog too
-        
-        console.log('[SVC] Table refresh complete');
+        loadSupplierCatalog();
       } catch (err) {
         console.error('[SVC] Save error:', err);
         showToast('Error: ' + err.message, 'error');
       } finally {
-        btn.disabled = false;
-        btn.textContent = 'Save Mapping ⚡';
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = 'Save Mapping ⚡';
+        }
       }
+      return false;
+    }
+    
+    async function openSvmMappingModal(mapping) {
+      if (!mapping) return;
+      document.getElementById('svm-modal-edit-id').value = mapping.id;
+      document.getElementById('svm-modal-product-display').value = `${mapping.product_name} (ID: ${mapping.product_id})`;
+      document.getElementById('svm-modal-plan-display').value = `${mapping.plan_name} (${mapping.days || mapping.supplier_plan_days} Days - $${mapping.price_usd || mapping.supplier_plan_price})`;
+      document.getElementById('svm-modal-variant-id').value = mapping.supplier_variant_id;
+      openModal('modal-sv-mapping');
+    }
+
+    async function handleModalSvmMappingSubmit(e) {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      
+      const editId = document.getElementById('svm-modal-edit-id')?.value;
+      const variantId = document.getElementById('svm-modal-variant-id')?.value?.trim();
+      const btn = document.getElementById('btn-svm-modal-save');
+      
+      if (!editId || !variantId) {
+        showToast('Variant ID is required.', 'error');
+        return false;
+      }
+      
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Updating... ⏳';
+      }
+      
+      try {
+        const res = await fetch('/api/admin/supplier-variants', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: editId,
+            supplier_variant_id: variantId
+          })
+        });
+        
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          showToast(data.message || 'Error updating mapping', 'error');
+          return false;
+        }
+        
+        showToast('Mapping updated successfully! ⚡', 'success');
+        closeModal('modal-sv-mapping');
+        await loadAdminSupplierMappings();
+      } catch (err) {
+        showToast('Error: ' + err.message, 'error');
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = 'Update Mapping ⚡';
+        }
+      }
+      return false;
     }
     
     async function editSvmMapping(id) {
-      // Fetch mapping details
       try {
         const res = await fetch('/api/admin/supplier-variants');
         const data = await res.json();

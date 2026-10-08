@@ -125,7 +125,10 @@ CREATE TABLE IF NOT EXISTS supplier_variants (
   supplier_plan_price NUMERIC,              -- plan.price as numeric (e.g., 0.38)
   auto_delivery BOOLEAN DEFAULT true,       -- auto-dispatch keys
   is_active BOOLEAN DEFAULT true,           -- enable/disable this mapping
-  supplier_status TEXT DEFAULT 'active' CHECK (supplier_status IN ('active', 'upcoming', 'disabled'))
+  supplier_status TEXT DEFAULT 'active' CHECK (supplier_status IN ('active', 'upcoming', 'disabled')),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(product_id, plan_id)
 );
 
 -- 10. RESELLER PRICES TABLE

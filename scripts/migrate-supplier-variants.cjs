@@ -33,6 +33,8 @@ const migrations = [
   `ALTER TABLE supplier_variants ADD COLUMN IF NOT EXISTS auto_delivery BOOLEAN DEFAULT true;`,
   `ALTER TABLE supplier_variants ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;`,
   `ALTER TABLE supplier_variants ADD COLUMN IF NOT EXISTS supplier_status TEXT DEFAULT 'active' CHECK (supplier_status IN ('active', 'upcoming', 'disabled'));`,
+  `ALTER TABLE supplier_variants ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();`,
+  `ALTER TABLE supplier_variants ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();`,
   
   // Create indexes for faster lookups
   `CREATE INDEX IF NOT EXISTS idx_supplier_variants_supplier_variant_id ON supplier_variants(supplier_variant_id);`,
