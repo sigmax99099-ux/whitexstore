@@ -30,6 +30,11 @@ Thumbs.db
 coverage/
 .nyc_output/
 
+# Test files
+server/admin/*-test.js
+scripts/test-*.mjs
+scripts/test-*.cjs
+
 # Misc
 *.pem
 .vercel
