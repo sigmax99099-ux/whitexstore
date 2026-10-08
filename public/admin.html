@@ -3697,12 +3697,11 @@
       btn.textContent = 'Saving...';
       
       try {
-        const url = isEdit ? `/api/admin/supplier-variants` : `/api/admin/supplier-variants`;
-        const method = 'POST'; // Both create and update use POST (upsert)
+        const method = editId ? 'PUT' : 'POST';
         
         const payload = {
           store_product_id: storeProductId,
-          store_plan_id: storeProductId,
+          store_plan_id: storePlanId,
           supplier_variant_id: document.getElementById('svm-variant-id').value.trim()
         };
         
