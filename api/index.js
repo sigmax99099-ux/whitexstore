@@ -59,6 +59,7 @@ import adminSyncProducts from '../server/admin/sync-products.js';
 import adminDeliveries from '../server/admin/deliveries.js';
 import adminCronRetryDeliveries from '../server/admin/cron-retry-deliveries.js';
 import adminHwidReset from '../server/admin/hwid-reset.js';
+import adminDiscordTest from '../server/admin/discord-check.js';
 
 // Public Settings
 import publicSettings from '../server/settings.js';
@@ -131,6 +132,7 @@ const routes = {
   '/api/admin/deliveries': adminDeliveries,
   '/api/admin/cron/retry-deliveries': adminCronRetryDeliveries,
   '/api/admin/hwid-reset': adminHwidReset,
+  '/api/admin/discord-test': adminDiscordTest,
 };
 
 export default async function handler(req, res) {

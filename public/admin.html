@@ -1532,6 +1532,28 @@
 
   <script src="/assets/js/app.js?v=20261007"></script>
   <script>
+    // Bulletproof fetch wrapper: automatically passes credentials and Authorization Bearer header
+    const _originalFetch = window.fetch;
+    window.fetch = function(input, init) {
+      init = init || {};
+      init.credentials = init.credentials || 'include';
+      const token = localStorage.getItem('admin_token');
+      const urlStr = typeof input === 'string' ? input : (input && input.url ? input.url : '');
+      if (token && urlStr.includes('/api/admin/')) {
+        init.headers = init.headers || {};
+        if (init.headers instanceof Headers) {
+          if (!init.headers.has('Authorization')) init.headers.set('Authorization', 'Bearer ' + token);
+        } else if (Array.isArray(init.headers)) {
+          init.headers.push(['Authorization', 'Bearer ' + token]);
+        } else {
+          if (!init.headers['Authorization'] && !init.headers['authorization']) {
+            init.headers['Authorization'] = 'Bearer ' + token;
+          }
+        }
+      }
+      return _originalFetch.call(this, input, init);
+    };
+
     let globalProducts = [];
     let globalPlans = [];
 
@@ -1543,7 +1565,7 @@
 
     async function initAdminAuth() {
       try {
-        const res = await fetch('/api/admin/me', { ...{ credentials: 'include' }, credentials: "include" });
+        const res = await fetch('/api/admin/me', { credentials: 'include' });
         const data = await res.json();
 
         if (data.authenticated && data.admin) {
@@ -1582,6 +1604,10 @@
             return;
           }
 
+          if (data.token) {
+            localStorage.setItem('admin_token', data.token);
+          }
+
           showToast('Welcome, Administrator!', 'success');
           document.getElementById('admin-login-overlay').style.display = 'none';
           document.getElementById('admin-name-display').textContent = data.admin.username;
@@ -1596,7 +1622,8 @@
     }
 
     async function handleAdminLogout() {
-      await fetch('/api/auth/logout', { ...{ method: 'POST', credentials: 'include' }, credentials: "include" });
+      localStorage.removeItem('admin_token');
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
       window.location.reload();
     }
 
@@ -1806,9 +1833,10 @@
       const manual_key = document.getElementById('approve-manual-key').value.trim();
 
       try {
-        const res = await fetch('/api/admin/approve-order', { ...
+        const res = await fetch('/api/admin/approve-order', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ order_id, manual_key })
         });
         const data = await res.json();
@@ -1837,9 +1865,10 @@
       const reason = document.getElementById('reject-order-reason').value.trim();
 
       try {
-        const res = await fetch('/api/admin/reject-order', { ...
+        const res = await fetch('/api/admin/reject-order', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ order_id, reason })
         });
         const data = await res.json();
@@ -1919,9 +1948,10 @@
       if (customNpr === null) return;
 
       try {
-        const res = await fetch('/api/admin/approve-wallet', { ...
+        const res = await fetch('/api/admin/approve-wallet', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ transaction_id: id, custom_npr_amount: customNpr })
         });
         const data = await res.json();
@@ -1942,9 +1972,10 @@
       if (reason === null) return;
 
       try {
-        const res = await fetch('/api/admin/reject-wallet', { ...
+        const res = await fetch('/api/admin/reject-wallet', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ transaction_id: id, reason })
         });
         const data = await res.json();
@@ -2214,9 +2245,10 @@
 
     async function togglePaymentMethod(id, isCurrentlyActive) {
       try {
-        await fetch('/api/admin/payment-methods', { ...
+        const res = await fetch('/api/admin/payment-methods', {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({ id, is_active: !isCurrentlyActive })
         });
         loadAdminPaymentMethods();
@@ -2228,7 +2260,7 @@
     async function deletePaymentMethod(id) {
       if (!confirm('Are you sure you want to delete this payment method?')) return;
       try {
-        await fetch(`/api/admin/payment-methods?id=${id}`, { ...{ method: 'DELETE' }, credentials: "include" });
+        await fetch(`/api/admin/payment-methods?id=${id}`, { method: 'DELETE', credentials: 'include' });
         showToast('Payment method deleted', 'info');
         loadAdminPaymentMethods();
       } catch (err) {
@@ -2243,10 +2275,11 @@
       formData.append('type', type);
       if (gatewayId) formData.append('gateway_id', gatewayId);
       
-      const res = await fetch('/api/admin/upload/gateway-image', { ...{
+      const res = await fetch('/api/admin/upload/gateway-image', {
         method: 'POST',
-        body: formData
-      }, credentials: "include" });
+        body: formData,
+        credentials: 'include'
+      });
       return res.json();
     }
 
@@ -2463,7 +2496,7 @@
         
         if (id) payload.id = parseInt(id, 10);
         
-        const res = await fetch('/api/admin/payment-methods', { ...
+        const res = await fetch('/api/admin/payment-methods', { method: id ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
           method: id ? 'PUT' : 'POST',
           headers: { 'Content-Type': 'application/json' }, credentials: 'include',
           body: JSON.stringify(payload)
@@ -2627,9 +2660,10 @@
       const val = parseInt(newOrder, 10);
       if (isNaN(val) || val < 1) return;
       try {
-        const res = await fetch('/api/admin/products', { ...
+        const res = await fetch('/api/admin/products', {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({ id: productId, sort_order: val })
         });
         const data = await res.json();
@@ -2646,9 +2680,10 @@
 
     async function toggleProductFeatured(id, currentFeatured) {
       try {
-        const res = await fetch('/api/admin/products', { ...
+        const res = await fetch('/api/admin/products', {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id, featured: !currentFeatured })
         });
         const data = await res.json();
@@ -2856,9 +2891,10 @@
       if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
       
       try {
-        const res = await fetch('/api/admin/wallet/adjust', { ...
+        const res = await fetch('/api/admin/wallet/adjust', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId, action, amount: numAmount, description })
         });
         const data = await res.json();
@@ -2923,9 +2959,10 @@
       if (errorEl) errorEl.style.display = 'none';
 
       try {
-        const res = await fetch('/api/categories', { ...
+        const res = await fetch('/api/categories', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({ name: trimmedName })
         });
         const data = await res.json();
@@ -3056,9 +3093,10 @@
 
     async function sendAddProduct(payload) {
       try {
-        const res = await fetch('/api/admin/add-product', { ...
+        const res = await fetch('/api/admin/add-product', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
         const data = await res.json();
@@ -3078,9 +3116,10 @@
 
     async function sendUpdateProduct(payload) {
       try {
-        const res = await fetch('/api/admin/products', { ...
+        const res = await fetch('/api/admin/products', {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
         const data = await res.json();
@@ -3101,9 +3140,10 @@
     async function toggleProductStatus(id, currentStatus) {
       const newStatus = currentStatus === 'active' ? 'hidden' : 'active';
       try {
-        const res = await fetch('/api/admin/products', { ...
+        const res = await fetch('/api/admin/products', {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id, status: newStatus })
         });
         const data = await res.json();
@@ -3121,7 +3161,7 @@
     async function deleteProduct(id) {
       if (!confirm('Are you sure you want to delete this product? All attached plans will be removed.')) return;
       try {
-        const res = await fetch(`/api/admin/products?id=${id}`, { ...{ method: 'DELETE' }, credentials: "include" });
+        const res = await fetch(`/api/admin/products?id=${id}`, { method: 'DELETE', credentials: 'include' });
         const data = await res.json();
         if (!res.ok || !data.success) {
           showToast(data.message || 'Failed to delete product', 'error');
@@ -3195,9 +3235,10 @@
       const supplier_variant_id = document.getElementById('plan-supplier-variant').value.trim();
 
       try {
-        const res = await fetch('/api/admin/add-plan', { ...
+        const res = await fetch('/api/admin/add-plan', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             product_id,
             plan_name,
@@ -3225,7 +3266,7 @@
 
     async function deletePlan(id) {
       if (!confirm('Are you sure you want to delete this plan?')) return;
-      await fetch(`/api/admin/plans?id=${id}`, { ...{ method: 'DELETE' }, credentials: "include" });
+      await fetch(`/api/admin/plans?id=${id}`, { method: 'DELETE', credentials: 'include' });
       loadAdminPlans();
     }
 
@@ -3286,9 +3327,10 @@
       const keys_text = document.getElementById('keys-import-text').value;
 
       try {
-        const res = await fetch('/api/admin/add-keys', { ...
+        const res = await fetch('/api/admin/add-keys', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ product_id, days, keys_text })
         });
         const data = await res.json();
@@ -3308,9 +3350,10 @@
 
     async function revokeKey(id) {
       if (!confirm('Revoke this key?')) return;
-      await fetch('/api/admin/keys', { ...
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+      await fetch('/api/admin/keys', {
+          method: 'PUT',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, status: 'revoked' })
       });
       loadAdminKeys();
@@ -3396,7 +3439,7 @@
     async function deleteSupplierApi(id) {
       if (!confirm('Are you sure you want to delete this supplier API?')) return;
       try {
-        await fetch(`/api/admin/supplier-apis?id=${id}`, { ...{ method: 'DELETE' }, credentials: "include" });
+        await fetch(`/api/admin/supplier-apis?id=${id}`, { method: 'DELETE', credentials: 'include' });
         showToast('Supplier API deleted', 'info');
         loadAdminSupplierApis();
       } catch (err) {
@@ -3420,15 +3463,17 @@
         let res;
         if (id) {
           payload.id = parseInt(id, 10);
-          res = await fetch('/api/admin/supplier-apis', { ...
+          res = await fetch('/api/admin/supplier-apis', {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
           });
         } else {
-          res = await fetch('/api/admin/supplier-apis', { ...
+          res = await fetch('/api/admin/supplier-apis', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
           });
         }
@@ -3676,9 +3721,10 @@
         };
         
         console.log('[SVC] Saving mapping:', payload);
-        const res = await fetch('/api/admin/supplier-variants', { ...
+        const res = await fetch('/api/admin/supplier-variants', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
         
@@ -3744,7 +3790,7 @@
       }
       
       try {
-        const res = await fetch('/api/admin/supplier-variants', { ...
+        const res = await fetch('/api/admin/supplier-variants', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' }, credentials: 'include',
           body: JSON.stringify({
@@ -3792,7 +3838,7 @@
     async function deleteSvmMapping(id) {
       if (!confirm('Delete this mapping?')) return;
       try {
-        await fetch(`/api/admin/supplier-variants?id=${id}`, { ...{ method: 'DELETE' }, credentials: "include" });
+        await fetch(`/api/admin/supplier-variants?id=${id}`, { method: 'DELETE', credentials: 'include' });
         showToast('Mapping deleted', 'info');
         loadAdminSupplierMappings();
       } catch (err) {
@@ -3879,9 +3925,10 @@
       const actionText = status === 'blocked' ? 'block' : 'unblock';
       if (!confirm(`Are you sure you want to ${actionText} this user?`)) return;
       try {
-        const res = await fetch('/api/admin/users', { ...
+        const res = await fetch('/api/admin/users', {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id, status })
         });
         const data = await res.json();
@@ -3905,9 +3952,10 @@
         return;
       }
       try {
-        const res = await fetch('/api/admin/users', { ...
+        const res = await fetch('/api/admin/users', {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id, user_type: 'reseller', reseller_discount: numDisc })
         });
         const data = await res.json();
@@ -3929,9 +3977,10 @@
       if (newDisc === null) return;
 
       try {
-        const res = await fetch('/api/admin/users', { ...
+        const res = await fetch('/api/admin/users', {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id, user_type: newType.trim().toLowerCase(), reseller_discount: parseFloat(newDisc) || 0 })
         });
         const data = await res.json();
@@ -3996,9 +4045,10 @@
       const customPrice = prompt('Enter custom price in USD:');
       if (!customPrice) return;
 
-      await fetch('/api/admin/reseller-prices', { ...
+      await fetch('/api/admin/reseller-prices', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id: user.id, plan_id: parseInt(planId, 10), custom_price_usd: parseFloat(customPrice) })
       });
 
@@ -4008,7 +4058,7 @@
 
     async function deleteResellerPrice(id) {
       if (!confirm('Remove this custom price override?')) return;
-      await fetch(`/api/admin/reseller-prices?id=${id}`, { ...{ method: 'DELETE' }, credentials: "include" });
+      await fetch(`/api/admin/reseller-prices?id=${id}`, { method: 'DELETE', credentials: 'include' });
       loadAdminResellerPrices();
     }
 
@@ -4047,9 +4097,10 @@
       };
 
       try {
-        const res = await fetch('/api/admin/settings', { ...
+        const res = await fetch('/api/admin/settings', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
         const data = await res.json();
@@ -4066,9 +4117,10 @@
     async function testDiscordWebhook() {
       showToast('Sending test notification to Discord...', 'info');
       try {
-        const res = await fetch('/api/notify', { ...
+        const res = await fetch('/api/notify', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             title: 'Test Notification',
             description: 'White X Store Discord integration is fully functional and responsive! 🚀',
@@ -4089,9 +4141,10 @@
     async function testDiscordWalletTopup() {
       showToast('Sending test wallet top-up notification to Discord...', 'info');
       try {
-        const res = await fetch('/api/notify', { ...
+        const res = await fetch('/api/notify', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             title: '💰 New Wallet Top-up Request (Pending Approval) [TEST]',
             description: 'A new wallet top-up request has been submitted and requires admin verification. (This is a test notification)',
@@ -4321,7 +4374,7 @@
     async function deleteDownloadLink(id) {
       if (!confirm('Are you sure you want to delete this download link?')) return;
       try {
-        const res = await fetch(`/api/admin/download-links?id=${id}`, { ...{ method: 'DELETE' }, credentials: "include" });
+        const res = await fetch(`/api/admin/download-links?id=${id}`, { method: 'DELETE', credentials: 'include' });
         const data = await res.json();
         if (!res.ok || !data.success) {
           showToast(data.message || 'Failed to delete download link', 'error');
@@ -4375,9 +4428,10 @@
           payload.id = parseInt(editId, 10);
         }
 
-        const res = await fetch('/api/admin/download-links', { ...
+        const res = await fetch('/api/admin/download-links', {
           method: editId ? 'PUT' : 'POST',
-          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
 
@@ -4434,9 +4488,10 @@
       resultDiv.style.color = 'var(--primary)';
       
       try {
-        const res = await fetch('/api/admin/supplier-settings', { ...
+        const res = await fetch('/api/admin/supplier-settings', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ action: 'test_connection' })
         });
         
@@ -4482,9 +4537,10 @@
       btn.textContent = 'Refreshing...';
       
       try {
-        const res = await fetch('/api/admin/supplier-settings', { ...
+        const res = await fetch('/api/admin/supplier-settings', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ action: 'refresh_balance' })
         });
         
@@ -4517,9 +4573,10 @@
 
     async function saveSupplierSetting(key, value) {
       try {
-        const res = await fetch('/api/admin/supplier-settings', { ...
+        const res = await fetch('/api/admin/supplier-settings', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ [key]: value })
         });
         const data = await res.json();
@@ -4600,7 +4657,7 @@
       btn.textContent = 'Syncing...';
       
       try {
-        const res = await fetch('/api/admin/sync-products', { ...{ method: 'POST' }, credentials: "include" });
+        const res = await fetch('/api/admin/sync-products', { method: 'POST', credentials: 'include' });
         const data = await res.json();
         
         if (data.success) {
@@ -4621,9 +4678,10 @@
 
     async function updateMapping(id, field, value) {
       try {
-        const res = await fetch('/api/admin/product-mappings', { ...
+        const res = await fetch('/api/admin/product-mappings', {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id, [field]: value })
         });
         const data = await res.json();
@@ -4669,9 +4727,10 @@
       if (!supplierPlanDays) return;
       
       try {
-        const res = await fetch('/api/admin/product-mappings', { ...
+        const res = await fetch('/api/admin/product-mappings', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             product_id: parseInt(productId),
             plan_id: parseInt(planId),
@@ -4803,9 +4862,10 @@
 
     async function retryDelivery(id) {
       try {
-        const res = await fetch('/api/admin/deliveries', { ...
+        const res = await fetch('/api/admin/deliveries', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ action: 'retry', delivery_id: id })
         });
         const data = await res.json();
@@ -4824,9 +4884,10 @@
       if (!confirm('Refund wallet for this failed delivery? This will mark the order as rejected.')) return;
       
       try {
-        const res = await fetch('/api/admin/deliveries', { ...
+        const res = await fetch('/api/admin/deliveries', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ action: 'refund', delivery_id: id })
         });
         const data = await res.json();
@@ -4897,9 +4958,10 @@
       resultDiv.style.display = 'none';
       
       try {
-        const res = await fetch('/api/admin/hwid-reset', { ... ...
+        const res = await fetch('/api/admin/hwid-reset', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ key })
         });
         
@@ -4923,7 +4985,7 @@
         btn.disabled = false;
         btn.textContent = 'Reset HWID ⚡';
       }
-    , credentials: "include" };
+    });
 
     /* ==============================================================
        MODAL CONTROLLERS
