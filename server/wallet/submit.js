@@ -93,9 +93,9 @@ export default async function handler(req, res) {
 
     // Trigger Discord notification (with safe fallback)
     try {
-      await notifyWalletTopup({
-        username: user.name,
-        email: user.email,
+      const delivered = await notifyWalletTopup({
+        username: user.name || 'Client',
+        email: user.email || 'N/A',
         amount: numAmount,
         currency: currency,
         method: method.method_name,
@@ -106,8 +106,9 @@ export default async function handler(req, res) {
         paymentMethodId: method.id,
         userId: user.id
       });
+      console.log(`[Wallet Submit] Discord notification for tx #${tx.id}: ${delivered ? 'DELIVERED' : 'NOT DELIVERED (check settings/webhook URL)'}`);
     } catch (discordErr) {
-      console.warn('Discord webhook topup alert warning:', discordErr.message);
+      console.error('[Wallet Submit] Discord notification error:', discordErr);
     }
 
     return res.status(201).json({
