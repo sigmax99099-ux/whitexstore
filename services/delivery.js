@@ -8,6 +8,7 @@ import {
   SupplierError,
   maskKey 
 } from './supplierApi.js';
+import { callSupplierForKey } from '../lib/keylicense.js';
 import { sendDiscordEmbed, DISCORD_COLORS, getDiscordWebhookUrl } from '../lib/discord.js';
 
 /**
@@ -191,14 +192,34 @@ async function attemptDelivery(client, order, mapping, deliveryId) {
     console.log(`[Delivery] Creating licenses for Order #${order.id}: Product ${supProdId}, Days ${supDays}, Count ${supCount}`);
 
     // Call supplier API
-    const supplierResult = await createLicenses({
-      productId: supProdId,
-      days: supDays,
-      count: supCount,
-      note
-    });
-    
-    const keys = supplierResult.keys;
+    let keys = [];
+    let unitPrice = 0;
+    let totalCost = 0;
+    let balanceLeft = 0;
+    let expiresAt = null;
+
+    if (mapping.supplierApiType === 'keylicense' || (mapping.supplierApiUrl && mapping.supplierApiUrl.includes('keylicense'))) {
+      console.log(`[Delivery] Using KeyLicense API for Order #${order.id}, variant: ${mapping.variantId}`);
+      const klRes = await callSupplierForKey(mapping.variantId, order.plan_id);
+      if (!klRes || (!klRes.success && !klRes.key && !klRes.keys)) {
+        throw new SupplierError('KeyLicense delivery error: ' + (klRes?.error || klRes?.message || 'No keys returned'));
+      }
+      keys = klRes.keys || (klRes.key ? [klRes.key] : []);
+      unitPrice = parseFloat(mapping.supplierPlanPrice || 0);
+      totalCost = unitPrice * supCount;
+    } else {
+      const supplierResult = await createLicenses({
+        productId: supProdId,
+        days: supDays,
+        count: supCount,
+        note
+      });
+      keys = supplierResult.keys;
+      unitPrice = supplierResult.unitPrice;
+      totalCost = supplierResult.totalCost;
+      balanceLeft = supplierResult.balanceLeft;
+      expiresAt = supplierResult.expiresAt;
+    }
     
     // 6. Save delivery record with keys and cost data
     await client.query(
@@ -215,10 +236,10 @@ async function attemptDelivery(client, order, mapping, deliveryId) {
        WHERE id = $6`,
       [
         keys,
-        supplierResult.unitPrice,
-        supplierResult.totalCost,
-        supplierResult.balanceLeft,
-        supplierResult.expiresAt,
+        unitPrice,
+        totalCost,
+        balanceLeft,
+        expiresAt,
         deliveryId
       ]
     );

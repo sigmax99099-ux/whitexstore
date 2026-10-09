@@ -333,10 +333,12 @@ export async function getProductMapping(productId, planId) {
     let svRes = null;
     try {
       svRes = await query(
-        `SELECT sv.*, p.name as product_name, pl.plan_name, pl.days as plan_days
+        `SELECT sv.*, p.name as product_name, pl.plan_name, pl.days as plan_days,
+                sa.name as supplier_name, sa.api_type, sa.api_url, sa.api_key
          FROM supplier_variants sv
          LEFT JOIN products p ON sv.product_id = p.id
          LEFT JOIN plans pl ON sv.plan_id = pl.id
+         LEFT JOIN supplier_apis sa ON sv.supplier_api_id = sa.id
          WHERE sv.product_id = $1 AND sv.plan_id = $2
            AND sv.is_active = true
            AND sv.auto_delivery = true
@@ -418,7 +420,11 @@ export async function getProductMapping(productId, planId) {
           supplierPlanCount: 1,
           supplier_plan_count: 1,
           mappingId: pmId,
-          variantId: sv.supplier_variant_id
+          variantId: sv.supplier_variant_id,
+          supplierApiId: sv.supplier_api_id,
+          supplierApiType: sv.api_type || 'keylicense',
+          supplierApiUrl: sv.api_url,
+          supplierApiKey: sv.api_key
         };
       }
     }

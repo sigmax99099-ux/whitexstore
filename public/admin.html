@@ -653,9 +653,18 @@
         <!-- SUPPLIER CATALOG TABLE (read-only, from supplier API) -->
         <div class="admin-card" style="margin-bottom: 1.5rem;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
-            <h3 style="color: var(--primary); margin: 0;">// SUPPLIER CATALOG (from API)</h3>
+            <div>
+              <h3 style="color: var(--primary); margin: 0;">// SUPPLIER CATALOG (from API)</h3>
+              <div style="font-size: 0.78rem; color: var(--text-dim); margin-top: 0.2rem;">Choose a supplier to view and sync its live variant details</div>
+            </div>
             <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
-              <input type="text" id="sv-catalog-search" class="form-input" placeholder="Search by product name or variant ID..." style="width: 300px;">
+              <div style="display: flex; align-items: center; gap: 0.4rem;">
+                <label style="font-size: 0.8rem; color: var(--text-dim); white-space: nowrap;">Supplier:</label>
+                <select id="sv-catalog-supplier-select" class="form-select" style="min-width: 200px; padding: 0.45rem 0.75rem;" onchange="loadSupplierCatalog()">
+                  <option value="">-- Choose Supplier --</option>
+                </select>
+              </div>
+              <input type="text" id="sv-catalog-search" class="form-input" placeholder="Search by product name or variant ID..." style="width: 240px; padding: 0.45rem 0.75rem;">
               <button class="btn btn-primary btn-sm" onclick="loadSupplierCatalog()">🔄 Sync from Supplier</button>
             </div>
           </div>
@@ -665,24 +674,32 @@
                 <tr>
                   <th style="width: 50px;">#</th>
                   <th>VARIANT ID</th>
+                  <th>SUPPLIER</th>
                   <th>PRODUCT</th>
                   <th>DURATION</th>
                   <th>PRICE</th>
                   <th>STOCK</th>
+                  <th style="width: 90px; text-align: center;">ACTION</th>
                 </tr>
               </thead>
               <tbody id="sv-catalog-tbody">
-                <tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-dim);">Click "Sync from Supplier" to load catalog.</td></tr>
+                <tr><td colspan="8" style="text-align: center; padding: 2rem; color: var(--text-dim);">Select a supplier above and click "Sync from Supplier" to load variants.</td></tr>
               </tbody>
             </table>
           </div>
         </div>
 
         <!-- ADD MAPPING FORM -->
-        <div class="admin-card" style="margin-bottom: 1.5rem;">
-          <h3 style="color: var(--primary); margin-bottom: 1rem;">// MAP YOUR PRODUCT &rarr; KEY LICENSE VARIANT</h3>
+        <div class="admin-card" style="margin-bottom: 1.5rem;" id="card-add-sv-mapping">
+          <h3 style="color: var(--primary); margin-bottom: 1rem;">// MAP YOUR PRODUCT &rarr; SUPPLIER VARIANT</h3>
           <form id="form-sv-mapping" onsubmit="event.preventDefault(); handleSvmMappingSubmit(event); return false;">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;" class="admin-modal-grid">
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;" class="admin-modal-grid">
+              <div class="form-group">
+                <label class="form-label">SUPPLIER GATEWAY *</label>
+                <select id="svm-supplier" class="form-select" required>
+                  <option value="">-- Select Supplier Gateway --</option>
+                </select>
+              </div>
               <div class="form-group">
                 <label class="form-label">YOUR PRODUCT *</label>
                 <select id="svm-store-product" class="form-select" required onchange="populateSvmPlans()">
@@ -699,9 +716,9 @@
               </div>
             </div>
             <div class="form-group">
-              <label class="form-label">KEY LICENSE VARIANT ID *</label>
-              <input type="text" id="svm-variant-id" class="form-input" required placeholder="e.g. 226" style="font-family: monospace;">
-              <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 0.35rem;">Copy from the table above. Must match a Variant ID exactly.</div>
+              <label class="form-label">SUPPLIER VARIANT ID *</label>
+              <input type="text" id="svm-variant-id" class="form-input" required placeholder="e.g. 380" style="font-family: monospace;">
+              <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 0.35rem;">Copy from the catalog table above or click "[+ Map This]" in the catalog.</div>
             </div>
             <button type="button" id="btn-svm-save" onclick="handleSvmMappingSubmit(event)" class="btn btn-primary btn-block btn-lg btn-glow">Save Mapping ⚡</button>
           </form>
@@ -709,14 +726,26 @@
 
         <!-- SAVED MAPPINGS LIST -->
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-          <h2 style="color: #fff;">// SAVED MAPPINGS</h2>
-          <button class="btn btn-outline btn-sm" onclick="loadAdminSupplierMappings()">🔄 Refresh</button>
+          <div>
+            <h2 style="color: #fff; margin: 0;">// SAVED MAPPINGS</h2>
+            <div style="font-size: 0.78rem; color: var(--text-dim); margin-top: 0.2rem;">Showing configured product variant mappings</div>
+          </div>
+          <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 0.4rem;">
+              <label style="font-size: 0.8rem; color: var(--text-dim); white-space: nowrap;">Show 1 Supplier Only:</label>
+              <select id="sv-mappings-filter-supplier" class="form-select" style="min-width: 190px; padding: 0.45rem 0.75rem;" onchange="filterAdminSupplierMappings()">
+                <option value="all">All Suppliers</option>
+              </select>
+            </div>
+            <button class="btn btn-outline btn-sm" onclick="loadAdminSupplierMappings()">🔄 Refresh</button>
+          </div>
         </div>
         <div class="table-responsive">
           <table class="table-custom">
             <thead>
               <tr>
                 <th>STORE PRODUCT / PLAN</th>
+                <th>SUPPLIER</th>
                 <th>VARIANT ID</th>
                 <th>SUPPLIER PRODUCT</th>
                 <th>DURATION</th>
@@ -726,7 +755,7 @@
               </tr>
             </thead>
             <tbody id="sv-mappings-tbody">
-              <tr><td colspan="7" style="text-align: center; padding: 2rem;">Loading mappings...</td></tr>
+              <tr><td colspan="8" style="text-align: center; padding: 2rem;">Loading mappings...</td></tr>
             </tbody>
           </table>
         </div>
@@ -3494,36 +3523,40 @@
 
     /* Supplier Catalog (from supplier API) */
     let globalSupplierCatalog = [];
+    let globalSavedMappings = [];
     
     async function loadSupplierCatalog() {
       const tbody = document.getElementById('sv-catalog-tbody');
       const btn = document.querySelector('button[onclick="loadSupplierCatalog()"]');
       const searchInput = document.getElementById('sv-catalog-search');
+      const supplierSelect = document.getElementById('sv-catalog-supplier-select');
+      const supplierId = supplierSelect?.value || '';
       
       if (btn) { btn.disabled = true; btn.textContent = '⏳ Syncing...'; }
       if (searchInput) searchInput.value = '';
       
       try {
-        const res = await fetch('/api/admin/supplier-variants?catalog=1', { credentials: "include" });
+        const queryParam = supplierId ? `&supplier_id=${encodeURIComponent(supplierId)}` : '';
+        const res = await fetch(`/api/admin/supplier-variants?catalog=1${queryParam}`, { credentials: "include" });
         const data = await res.json();
         
-        if (!data.success) {
+        if (!data.success && (!data.catalog || data.catalog.length === 0)) {
           showToast(data.message || 'Failed to load supplier catalog', 'error');
-          tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 2rem; color: var(--danger);">${escapeHtml(data.message)}</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 2rem; color: var(--danger);">${escapeHtml(data.message)}</td></tr>`;
           return;
         }
         
         globalSupplierCatalog = data.catalog || [];
         
         if (globalSupplierCatalog.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 2rem; color: var(--text-dim);">No products found from supplier.</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 2rem; color: var(--text-dim);">No variants found for this supplier.</td></tr>`;
           return;
         }
         
         renderSupplierCatalog();
-        showToast(`Loaded ${globalSupplierCatalog.length} variants from supplier.`, 'success');
+        showToast(`Loaded ${globalSupplierCatalog.length} variants from ${data.supplier?.name || 'supplier'}.`, 'success');
       } catch (err) {
-        tbody.innerHTML = `<tr><td colspan="6" style="color:var(--danger); text-align:center;">Failed to load supplier catalog.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" style="color:var(--danger); text-align:center;">Failed to load supplier catalog: ${escapeHtml(err.message)}</td></tr>`;
         showToast('Error: ' + err.message, 'error');
       } finally {
         if (btn) { btn.disabled = false; btn.textContent = '🔄 Sync from Supplier'; }
@@ -3537,13 +3570,14 @@
       let catalog = globalSupplierCatalog;
       if (searchTerm) {
         catalog = catalog.filter(item => 
-          item.product_name.toLowerCase().includes(searchTerm) ||
-          item.variant_id.toLowerCase().includes(searchTerm)
+          (item.product_name && item.product_name.toLowerCase().includes(searchTerm)) ||
+          (item.variant_id && item.variant_id.toLowerCase().includes(searchTerm)) ||
+          (item.supplier_name && item.supplier_name.toLowerCase().includes(searchTerm))
         );
       }
       
       if (catalog.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 2rem; color: var(--text-dim);">No matches found.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 2rem; color: var(--text-dim);">No matching variants found.</td></tr>`;
         return;
       }
       
@@ -3557,14 +3591,31 @@
             </div>
           </td>
           <td>
+            <span class="badge" style="background: rgba(99,102,241,0.15); color: #818cf8; border: 1px solid rgba(99,102,241,0.3); font-size: 0.72rem;">${escapeHtml(item.supplier_name || 'KeyLicense')}</span>
+          </td>
+          <td>
             <strong style="color: #fff;">${escapeHtml(item.product_name)}</strong>
             <div style="font-size: 0.7rem; color: var(--text-dim);">${escapeHtml(item.source_type)} | ${escapeHtml(item.code_prefix)}</div>
           </td>
           <td>${escapeHtml(item.label)}</td>
           <td style="color: #34d399; font-weight: 600;">${item.price_formatted}</td>
           <td style="color: var(--text-dim);">${item.stock}</td>
+          <td style="text-align: center;">
+            <button class="btn btn-primary btn-sm" style="padding: 0.25rem 0.6rem; font-size: 0.75rem;" onclick="quickMapVariant('${escapeHtml(item.variant_id)}', '${escapeHtml(item.supplier_id || '')}', '${escapeHtml(item.product_name)}')">+ Map</button>
+          </td>
         </tr>
       `).join('');
+    }
+    
+    function quickMapVariant(variantId, supplierId, prodName) {
+      const varInput = document.getElementById('svm-variant-id');
+      const supSelect = document.getElementById('svm-supplier');
+      if (varInput) varInput.value = variantId;
+      if (supSelect && supplierId) supSelect.value = supplierId;
+      
+      const formEl = document.getElementById('card-add-sv-mapping');
+      if (formEl) formEl.scrollIntoView({ behavior: 'smooth' });
+      showToast(`Variant ID ${variantId} selected for ${prodName}! Now pick your Store Product & Plan.`, 'info');
     }
     
     document.getElementById('sv-catalog-search')?.addEventListener('input', renderSupplierCatalog);
@@ -3575,69 +3626,104 @@
       try {
         console.log('[SVC] Loading mappings...');
         const res = await fetch('/api/admin/supplier-variants', { credentials: "include" });
-        console.log('[SVC] Response status:', res.status);
         const data = await res.json();
-        console.log('[SVC] Response data:', data);
-        const mappings = data.mappings || [];
-        console.log('[SVC] Mappings count:', mappings.length);
-        
-        if (mappings.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 2rem; color: var(--text-dim);">No mappings configured. Use the form above to create mappings.</td></tr>`;
-          return;
-        }
-        
-        tbody.innerHTML = mappings.map(m => `
-          <tr>
-            <td>
-              <strong style="color: #fff;">${escapeHtml(m.product_name || 'Unknown Product')}</strong>
-              <div style="font-size: 0.78rem; color: var(--primary);">${escapeHtml(m.plan_name || 'Unknown Plan')} (${m.days || m.supplier_plan_days || '?'} ${m.duration_type || 'days'})</div>
-            </td>
-            <td><code>${escapeHtml(m.supplier_variant_id || '-')}</code></td>
-            <td>${escapeHtml(m.supplier_product_name || '<em style="color:var(--text-dim)">Not synced</em>')}</td>
-            <td>${escapeHtml(m.supplier_plan_label || (m.supplier_plan_days ? m.supplier_plan_days + ' Days' : '-'))}</td>
-            <td style="text-align: center;">
-              <label style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; cursor: pointer;">
-                <input type="checkbox" ${m.auto_delivery ? 'checked' : ''} onchange="toggleAutoDelivery(${m.id}, this.checked)">
-              </label>
-            </td>
-            <td style="text-align: center;">
-              <span class="badge ${m.is_active ? 'badge-undetected' : 'badge-danger'}">
-                ${m.is_active ? 'Active' : 'Inactive'}
-              </span>
-            </td>
-            <td>
-              <div style="display: flex; gap: 0.4rem;">
-                <button class="btn btn-outline btn-sm" onclick="editSvmMapping(${m.id})">Edit</button>
-                <button class="btn btn-outline btn-sm" style="color: var(--danger)" onclick="deleteSvmMapping(${m.id})">Delete</button>
-              </div>
-            </td>
-          </tr>
-        `).join('');
+        globalSavedMappings = data.mappings || [];
+        renderAdminSupplierMappings();
       } catch (err) {
         console.error('[SVC] Error loading mappings:', err);
-        tbody.innerHTML = `<tr><td colspan="7" style="color:var(--danger); text-align:center;">Failed to load mappings: ${err.message}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" style="color:var(--danger); text-align:center;">Failed to load mappings: ${err.message}</td></tr>`;
       }
+    }
+
+    function filterAdminSupplierMappings() {
+      renderAdminSupplierMappings();
+    }
+
+    function renderAdminSupplierMappings() {
+      const tbody = document.getElementById('sv-mappings-tbody');
+      if (!tbody) return;
+
+      const filterVal = document.getElementById('sv-mappings-filter-supplier')?.value || 'all';
+      let mappings = globalSavedMappings;
+
+      if (filterVal !== 'all') {
+        mappings = mappings.filter(m => String(m.supplier_api_id) === filterVal || String(m.supplier_name) === filterVal);
+      }
+
+      if (mappings.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 2rem; color: var(--text-dim);">No mappings found for selected supplier.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = mappings.map(m => `
+        <tr>
+          <td>
+            <strong style="color: #fff;">${escapeHtml(m.product_name || 'Unknown Product')}</strong>
+            <div style="font-size: 0.78rem; color: var(--primary);">${escapeHtml(m.plan_name || 'Unknown Plan')} (${m.days || m.supplier_plan_days || '?'} ${m.duration_type || 'days'})</div>
+          </td>
+          <td>
+            <span class="badge" style="background: rgba(99,102,241,0.18); color: #818cf8; border: 1px solid rgba(99,102,241,0.3); font-size: 0.72rem;">${escapeHtml(m.supplier_name || 'KeyLicense')}</span>
+          </td>
+          <td><code>${escapeHtml(m.supplier_variant_id || '-')}</code></td>
+          <td>${escapeHtml(m.supplier_product_name || '<em style="color:var(--text-dim)">Not synced</em>')}</td>
+          <td>${escapeHtml(m.supplier_plan_label || (m.supplier_plan_days ? m.supplier_plan_days + ' Days' : '-'))}</td>
+          <td style="text-align: center;">
+            <label style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; cursor: pointer;">
+              <input type="checkbox" ${m.auto_delivery ? 'checked' : ''} onchange="toggleAutoDelivery(${m.id}, this.checked)">
+            </label>
+          </td>
+          <td style="text-align: center;">
+            <span class="badge ${m.is_active ? 'badge-undetected' : 'badge-danger'}">
+              ${m.is_active ? 'Active' : 'Inactive'}
+            </span>
+          </td>
+          <td>
+            <div style="display: flex; gap: 0.4rem;">
+              <button class="btn btn-outline btn-sm" onclick="editSvmMapping(${m.id})">Edit</button>
+              <button class="btn btn-outline btn-sm" style="color: var(--danger)" onclick="deleteSvmMapping(${m.id})">Delete</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
     }
     
     async function loadSvmDropdowns() {
       console.log('[SVC] Loading dropdown data...');
       await ensureProductsLoaded(true);
       await loadAdminPlans();
-      console.log('[SVC] Products loaded:', globalProducts?.length, 'Plans loaded:', globalPlans?.length);
+      await ensureSupplierApisLoaded();
+      console.log('[SVC] Products loaded:', globalProducts?.length, 'Plans loaded:', globalPlans?.length, 'APIs:', globalSupplierApis?.length);
       
+      // Populate Supplier dropdowns
+      const catSupplierSelect = document.getElementById('sv-catalog-supplier-select');
+      const formSupplierSelect = document.getElementById('svm-supplier');
+      const filterSupplierSelect = document.getElementById('sv-mappings-filter-supplier');
+
+      if (catSupplierSelect && globalSupplierApis && globalSupplierApis.length > 0) {
+        catSupplierSelect.innerHTML = globalSupplierApis.map((a, idx) => 
+          `<option value="${a.id}" ${idx === 0 || a.name.toLowerCase().includes('keylicense') ? 'selected' : ''}>${escapeHtml(a.name)} (${escapeHtml(a.api_type)})</option>`
+        ).join('');
+      }
+
+      if (formSupplierSelect && globalSupplierApis && globalSupplierApis.length > 0) {
+        formSupplierSelect.innerHTML = '<option value="">-- Select Supplier Gateway --</option>' + 
+          globalSupplierApis.map(a => `<option value="${a.id}">${escapeHtml(a.name)} (${escapeHtml(a.api_type)})</option>`).join('');
+        if (globalSupplierApis[0]) formSupplierSelect.value = globalSupplierApis[0].id;
+      }
+
+      if (filterSupplierSelect && globalSupplierApis && globalSupplierApis.length > 0) {
+        filterSupplierSelect.innerHTML = '<option value="all">All Suppliers</option>' + 
+          globalSupplierApis.map(a => `<option value="${a.id}">${escapeHtml(a.name)}</option>`).join('');
+      }
+
       // Populate product dropdown
       const productSelect = document.getElementById('svm-store-product');
-      if (!productSelect) {
-        console.error('[SVC] Product select element not found!');
-        return;
-      }
-      
-      productSelect.innerHTML = '<option value="">-- Select Store Product --</option>' + 
-        (globalProducts || []).map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
-      
-      if (globalProducts.length === 0) {
-        console.warn('[SVC] No products loaded!');
-        productSelect.innerHTML += '<option value="" disabled style="color: var(--danger);">No products found - check Admin > Products</option>';
+      if (productSelect) {
+        productSelect.innerHTML = '<option value="">-- Select Store Product --</option>' + 
+          (globalProducts || []).map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
+        if (globalProducts.length === 0) {
+          productSelect.innerHTML += '<option value="" disabled style="color: var(--danger);">No products found - check Admin > Products</option>';
+        }
       }
       
       // Reset plan dropdown
@@ -3697,11 +3783,13 @@
       const storeProductEl = document.getElementById('svm-store-product');
       const storePlanEl = document.getElementById('svm-store-plan');
       const variantIdEl = document.getElementById('svm-variant-id');
+      const supplierSelectEl = document.getElementById('svm-supplier');
       const btn = document.getElementById('btn-svm-save') || e?.target?.querySelector('button[type="submit"]');
       
       const storeProductId = parseInt(storeProductEl?.value, 10);
       const storePlanId = parseInt(storePlanEl?.value, 10);
       const variantId = variantIdEl?.value?.trim();
+      const supplierApiId = parseInt(supplierSelectEl?.value, 10) || null;
       
       if (!storeProductId || !storePlanId || !variantId) {
         showToast('Please select a Product, a Plan, and enter a Variant ID.', 'error');
@@ -3717,7 +3805,8 @@
         const payload = {
           store_product_id: storeProductId,
           store_plan_id: storePlanId,
-          supplier_variant_id: variantId
+          supplier_variant_id: variantId,
+          supplier_api_id: supplierApiId
         };
         
         console.log('[SVC] Saving mapping:', payload);
