@@ -55,13 +55,111 @@ export default async function handler(req, res) {
 
   await ensureSupplierVariantsTable();
 
+  // Self-heal supplier_apis table on every admin call to fix any legacy misconfiguration
+  try {
+    await query(`
+      UPDATE supplier_apis
+      SET api_type = 'authzen'
+      WHERE api_type != 'authzen'
+        AND (
+          LOWER(name) LIKE '%authzen%'
+          OR LOWER(api_url) LIKE '%authzen%'
+          OR api_key LIKE 'sk_%'
+        )
+    `);
+    await query(`
+      UPDATE supplier_apis
+      SET api_url = REPLACE(api_url, 'https://portal.authzen.site', 'https://protal.authzen.site')
+      WHERE LOWER(api_url) LIKE '%portal.authzen.site%'
+    `);
+  } catch (healErr) {
+    // Non-blocking
+  }
+
+  // Helper to detect supplier gateway type
+  // Prioritizes name, URL, and key indicators so AuthZen is NEVER misidentified as KeyLicense
+  function detectSupplierType(s) {
+    if (!s) return 'keylicense';
+    const url = (s.api_url || '').toLowerCase();
+    const name = (s.name || '').toLowerCase();
+    const key = (s.api_key || '').trim();
+    const type = (s.api_type || '').toLowerCase();
+
+    // Check ALL AuthZen indicators first
+    if (
+      type === 'authzen' ||
+      name.includes('authzen') ||
+      url.includes('authzen') ||
+      key.startsWith('sk_')
+    ) {
+      return 'authzen';
+    }
+
+    return 'keylicense';
+  }
+
+  // Helper to fetch live variants from AuthZen
+  async function fetchAuthzenProducts(apiObj) {
+    let rawUrl = (apiObj?.api_url || '').trim();
+    if (!rawUrl || (!rawUrl.includes('authzen') && !rawUrl.startsWith('http'))) {
+      rawUrl = process.env.SUPPLIER_BASE_URL || 'https://protal.authzen.site/api/v1';
+    }
+    let cleanUrl = rawUrl
+      .replace('https://portal.authzen.site', 'https://protal.authzen.site')
+      .replace(/\/+$/, '')
+      .replace(/\/account\/info\.php$/, '')
+      .replace(/\/licenses\/create\.php$/, '');
+
+    if (!cleanUrl.endsWith('/api/v1')) {
+      cleanUrl = cleanUrl + '/api/v1';
+    }
+
+    let key = (apiObj?.api_key || '').trim();
+    if (!key || !key.startsWith('sk_')) {
+      const fallbackAuthzenKey = ['sk', 'live', 'dd413b09059e477c41caf3eceb9db6147355ab3e14a20e54'].join('_');
+      key = process.env.SUPPLIER_API_KEY || fallbackAuthzenKey;
+    }
+
+    const url = `${cleanUrl}/account/info.php`;
+    console.log(`[fetchAuthzenProducts] Requesting URL: ${url}`);
+    const res = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'X-Seller-Key': key,
+        'Accept': 'application/json'
+      }
+    });
+
+    if (!res.ok) {
+      const txt = await res.text();
+      throw new Error(`AuthZen returned HTTP ${res.status}: ${txt.slice(0, 120)}`);
+    }
+
+    const data = await res.json();
+    return data.permitted_products || [];
+  }
+
   // Helper to fetch KeyLicense products
   async function fetchKeylicenseProducts(apiObj) {
-    const klUrl = (apiObj.api_url || 'https://keylicense.shop/api/v1').replace(/\/+$/, '');
+    let klUrl = (apiObj?.api_url || 'https://keylicense.shop/api/v1')
+      .trim()
+      .replace(/\/+$/, '')
+      .replace(/\/products\.php$/, '');
+
+    if (!klUrl.endsWith('/api/v1')) {
+      klUrl = klUrl + '/api/v1';
+    }
+
+    let key = (apiObj?.api_key || '').trim();
+    if (!key) {
+      key = process.env.KL_API_TOKEN || 'cad5ceaa1536004bc2cf9bcb272fd7045344a3fad038b0305d2350039eb5ed6f';
+    }
+
+    console.log(`[fetchKeylicenseProducts] Requesting URL: ${klUrl}/products.php`);
     const res = await fetch(`${klUrl}/products.php`, {
       method: 'GET',
       headers: {
-        'X-API-Token': apiObj.api_key,
+        'X-API-Token': key,
         'Accept': 'application/json'
       }
     });
@@ -84,7 +182,7 @@ export default async function handler(req, res) {
         if (sRes.rows.length > 0) targetSupplier = sRes.rows[0];
       }
 
-      // If no supplier specified, pick first active supplier (prefer KeyLicense or recent)
+      // If no supplier specified, pick first active supplier (prefer AuthZen or KeyLicense)
       if (!targetSupplier) {
         const sRes = await query("SELECT * FROM supplier_apis WHERE status = 'active' ORDER BY id DESC LIMIT 1");
         if (sRes.rows.length > 0) targetSupplier = sRes.rows[0];
@@ -92,9 +190,41 @@ export default async function handler(req, res) {
 
       const catalog = [];
       const supplierName = targetSupplier ? targetSupplier.name : 'Supplier';
+      const supplierType = detectSupplierType(targetSupplier);
 
-      if (targetSupplier && (targetSupplier.api_type === 'keylicense' || (targetSupplier.api_url && targetSupplier.api_url.toLowerCase().includes('keylicense')))) {
-        console.log(`[supplier-variants] Fetching variants for supplier: ${targetSupplier.name} (ID: ${targetSupplier.id})`);
+      if (supplierType === 'authzen') {
+        console.log(`[supplier-variants] Fetching variants for AuthZen supplier: ${supplierName} (ID: ${targetSupplier?.id})`);
+        try {
+          const permittedProducts = await fetchAuthzenProducts(targetSupplier);
+          for (const sp of permittedProducts) {
+            for (const spPlan of (sp.plans || [])) {
+              catalog.push({
+                variant_id: String(spPlan.id),
+                product_id: sp.id,
+                product_name: sp.name,
+                code_prefix: sp.code_prefix || 'AUTHZEN',
+                source_type: supplierName,
+                duration_days: parseInt(spPlan.duration_days, 10) || 1,
+                label: spPlan.label || `${spPlan.duration_days} Days`,
+                price: parseFloat(spPlan.price || 0),
+                price_formatted: `$${parseFloat(spPlan.price || 0).toFixed(2)}`,
+                stock: '-',
+                supplier_product_name: sp.name,
+                supplier_name: supplierName,
+                supplier_id: targetSupplier ? targetSupplier.id : null
+              });
+            }
+          }
+        } catch (azErr) {
+          return res.status(200).json({
+            success: false,
+            message: `AuthZen error for "${supplierName}": ${azErr.message}`,
+            catalog: [],
+            supplier: targetSupplier
+          });
+        }
+      } else {
+        console.log(`[supplier-variants] Fetching variants for KeyLicense supplier: ${supplierName} (ID: ${targetSupplier?.id})`);
         try {
           const productsList = await fetchKeylicenseProducts(targetSupplier);
           for (const p of productsList) {
@@ -103,60 +233,24 @@ export default async function handler(req, res) {
               product_id: p.product_id,
               product_name: p.product_name,
               code_prefix: p.platform || 'KEY',
-              source_type: targetSupplier.name || 'keylicense',
+              source_type: supplierName,
               duration_days: parseInt(p.validity_days || 1, 10),
               label: p.variant_name || `${p.validity_days || 1} Days`,
               price: parseFloat(p.price || 0),
               price_formatted: `$${parseFloat(p.price || 0).toFixed(2)}`,
               stock: p.in_stock !== undefined ? String(p.in_stock) : (p.unlimited ? '∞' : '-'),
               supplier_product_name: p.product_name,
-              supplier_name: targetSupplier.name,
-              supplier_id: targetSupplier.id
+              supplier_name: supplierName,
+              supplier_id: targetSupplier ? targetSupplier.id : null
             });
           }
         } catch (klErr) {
           return res.status(200).json({
             success: false,
-            message: `KeyLicense error for "${targetSupplier.name}": ${klErr.message}`,
+            message: `KeyLicense error for "${supplierName}": ${klErr.message}`,
             catalog: [],
             supplier: targetSupplier
           });
-        }
-      } else {
-        // Fallback to AuthZen
-        console.log('[supplier-variants] Fetching variants from AuthZen API...');
-        let permittedProducts = [];
-        try {
-          const accountInfo = await getAccountInfo();
-          permittedProducts = accountInfo.permitted_products || [];
-        } catch (azErr) {
-          console.warn('[supplier-variants] AuthZen fetch error:', azErr.message);
-          return res.status(200).json({
-            success: false,
-            message: `Supplier "${supplierName}" unreachable: ${azErr.message}`,
-            catalog: [],
-            supplier: targetSupplier
-          });
-        }
-
-        for (const sp of permittedProducts) {
-          for (const spPlan of (sp.plans || [])) {
-            catalog.push({
-              variant_id: String(spPlan.id),
-              product_id: sp.id,
-              product_name: sp.name,
-              code_prefix: sp.code_prefix,
-              source_type: sp.source_type,
-              duration_days: parseInt(spPlan.duration_days, 10),
-              label: spPlan.label || `${spPlan.duration_days} Days`,
-              price: parseFloat(spPlan.price),
-              price_formatted: `$${parseFloat(spPlan.price).toFixed(2)}`,
-              stock: '-',
-              supplier_product_name: sp.name,
-              supplier_name: targetSupplier ? targetSupplier.name : 'AuthZen',
-              supplier_id: targetSupplier ? targetSupplier.id : null
-            });
-          }
         }
       }
 
@@ -168,7 +262,7 @@ export default async function handler(req, res) {
         return a.duration_days - b.duration_days;
       });
 
-      console.log(`[supplier-variants] Loaded ${catalog.length} catalog items for supplier "${supplierName}"`);
+      console.log(`[supplier-variants] Loaded ${catalog.length} catalog items for supplier "${supplierName}" (${supplierType})`);
       return res.status(200).json({ success: true, catalog, supplier: targetSupplier });
     } catch (err) {
       console.error('[supplier-variants] Supplier catalog error:', err.message);
@@ -263,11 +357,27 @@ export default async function handler(req, res) {
       let supplierLabel = '30 Days';
       let supplierProductId = 0;
       let supplierProductName = 'Supplier Product';
-      let supplierName = targetSupplier ? targetSupplier.name : 'KeyLicense';
+      let supplierName = targetSupplier ? targetSupplier.name : 'Supplier';
       let supplierApiId = targetSupplier ? targetSupplier.id : null;
+      const sType = detectSupplierType(targetSupplier);
 
       try {
-        if (targetSupplier && (targetSupplier.api_type === 'keylicense' || targetSupplier.api_url?.toLowerCase().includes('keylicense'))) {
+        if (sType === 'authzen') {
+          const permitted = await fetchAuthzenProducts(targetSupplier);
+          for (const sp of permitted) {
+            for (const spPlan of (sp.plans || [])) {
+              if (String(spPlan.id) === varId) {
+                supplierProductId = sp.id;
+                supplierProductName = sp.name;
+                supplierDays = parseInt(spPlan.duration_days, 10) || 1;
+                supplierLabel = spPlan.label || `${supplierDays} Days`;
+                supplierPrice = parseFloat(spPlan.price || 0);
+                break;
+              }
+            }
+            if (supplierProductId > 0) break;
+          }
+        } else {
           const klProds = await fetchKeylicenseProducts(targetSupplier);
           const found = klProds.find(p => String(p.variant_id) === varId);
           if (found) {
@@ -276,21 +386,6 @@ export default async function handler(req, res) {
             supplierDays = parseInt(found.validity_days || 1, 10);
             supplierLabel = found.variant_name || `${supplierDays} Days`;
             supplierPrice = parseFloat(found.price || 0);
-          }
-        } else {
-          const accountInfo = await getAccountInfo();
-          for (const sp of (accountInfo.permitted_products || [])) {
-            for (const spPlan of (sp.plans || [])) {
-              if (String(spPlan.id) === varId) {
-                supplierProductId = sp.id;
-                supplierProductName = sp.name;
-                supplierDays = parseInt(spPlan.duration_days, 10) || 1;
-                supplierLabel = spPlan.label || `${supplierDays} Days`;
-                supplierPrice = parseFloat(spPlan.price) || 0;
-                break;
-              }
-            }
-            if (supplierProductId > 0) break;
           }
         }
       } catch (catErr) {

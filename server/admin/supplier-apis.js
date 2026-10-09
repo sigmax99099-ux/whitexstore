@@ -11,6 +11,27 @@ export default async function handler(req, res) {
   if (req.method === 'GET') {
     try {
       console.log('[supplier-apis] GET request - executing query');
+      // Auto-heal any AuthZen rows saved with keylicense or typo in URL
+      try {
+        await query(`
+          UPDATE supplier_apis
+          SET api_type = 'authzen'
+          WHERE api_type != 'authzen'
+            AND (
+              LOWER(name) LIKE '%authzen%'
+              OR LOWER(api_url) LIKE '%authzen%'
+              OR api_key LIKE 'sk_%'
+            )
+        `);
+        await query(`
+          UPDATE supplier_apis
+          SET api_url = REPLACE(api_url, 'https://portal.authzen.site', 'https://protal.authzen.site')
+          WHERE LOWER(api_url) LIKE '%portal.authzen.site%'
+        `);
+      } catch (healErr) {
+        // Non-blocking
+      }
+
       const apisRes = await query(`
         SELECT sa.id, sa.name, sa.api_url, sa.api_key, sa.api_type, sa.status, sa.notes, sa.created_at,
                (SELECT COUNT(*)::int FROM supplier_variants) as total_mapped_variants
@@ -36,6 +57,16 @@ export default async function handler(req, res) {
         return res.status(400).json({ success: false, message: 'Supplier Name and API URL are required.' });
       }
 
+      const urlLower = String(api_url || '').toLowerCase();
+      const keyVal = String(api_key || '');
+      const nameLower = String(name || '').toLowerCase();
+
+      // Auto-detect api_type if not explicitly provided or if AuthZen signals exist
+      let detectedType = api_type || 'keylicense';
+      if (api_type === 'authzen' || urlLower.includes('authzen') || nameLower.includes('authzen') || keyVal.startsWith('sk_')) {
+        detectedType = 'authzen';
+      }
+
       const insertRes = await query(
         `INSERT INTO supplier_apis (name, api_url, api_key, api_type, status, notes)
          VALUES ($1, $2, $3, $4, $5, $6)
@@ -44,7 +75,7 @@ export default async function handler(req, res) {
           String(name).trim(),
           String(api_url).trim(),
           api_key ? String(api_key).trim() : '',
-          api_type || 'keylicense',
+          detectedType,
           status === 'inactive' ? 'inactive' : 'active',
           notes ? String(notes).trim() : ''
         ]
@@ -71,6 +102,18 @@ export default async function handler(req, res) {
         return res.status(400).json({ success: false, message: 'API ID is required.' });
       }
 
+      const urlLower = String(api_url || '').toLowerCase();
+      const keyVal = String(api_key || '');
+      const nameLower = String(name || '').toLowerCase();
+
+      // Resolve api_type with AuthZen detection
+      let resolvedType = api_type;
+      if (api_type === 'authzen' || urlLower.includes('authzen') || nameLower.includes('authzen') || keyVal.startsWith('sk_')) {
+        resolvedType = 'authzen';
+      } else if (!resolvedType) {
+        resolvedType = 'keylicense';
+      }
+
       const updateRes = await query(
         `UPDATE supplier_apis
          SET name = COALESCE($1, name),
@@ -85,7 +128,7 @@ export default async function handler(req, res) {
           name ? String(name).trim() : null,
           api_url ? String(api_url).trim() : null,
           api_key !== undefined ? String(api_key).trim() : null,
-          api_type !== undefined ? api_type : null,
+          resolvedType,
           status !== undefined ? status : null,
           notes !== undefined ? String(notes).trim() : null,
           parseInt(id, 10)

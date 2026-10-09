@@ -1417,7 +1417,8 @@
           <div class="form-group">
             <label class="form-label">API Driver Type *</label>
             <select id="sapi-type" class="form-select">
-              <option value="keylicense">KeyLicense Standard API</option>
+              <option value="authzen">AuthZen Reseller API (X-Seller-Key)</option>
+              <option value="keylicense">KeyLicense Standard API (X-API-Token)</option>
               <option value="generic_json">Custom JSON REST API</option>
               <option value="generic">Generic Webhook / Dispatcher</option>
             </select>
@@ -3456,7 +3457,14 @@
       document.getElementById('supplier-api-modal-title').textContent = `Edit Supplier: ${api.name}`;
       document.getElementById('sapi-id').value = api.id;
       document.getElementById('sapi-name').value = api.name || '';
-      document.getElementById('sapi-type').value = api.api_type || 'keylicense';
+      let apiType = api.api_type || 'keylicense';
+      const nameLower = (api.name || '').toLowerCase();
+      const urlLower = (api.api_url || '').toLowerCase();
+      const keyStr = api.api_key || '';
+      if (api.api_type === 'authzen' || nameLower.includes('authzen') || urlLower.includes('authzen') || keyStr.startsWith('sk_')) {
+        apiType = 'authzen';
+      }
+      document.getElementById('sapi-type').value = apiType;
       document.getElementById('sapi-url').value = api.api_url || '';
       document.getElementById('sapi-key').value = api.api_key || '';
       document.getElementById('sapi-notes').value = api.notes || '';
@@ -3479,11 +3487,19 @@
     async function handleSupplierApiSubmit(e) {
       e.preventDefault();
       const id = document.getElementById('sapi-id').value;
+      let resolvedApiType = document.getElementById('sapi-type').value;
+      const sUrl = document.getElementById('sapi-url').value.trim();
+      const sKey = document.getElementById('sapi-key').value.trim();
+      const sName = document.getElementById('sapi-name').value.trim();
+      if (resolvedApiType === 'authzen' || sName.toLowerCase().includes('authzen') || sUrl.toLowerCase().includes('authzen') || sKey.startsWith('sk_')) {
+        resolvedApiType = 'authzen';
+      }
+
       const payload = {
-        name: document.getElementById('sapi-name').value.trim(),
-        api_type: document.getElementById('sapi-type').value,
-        api_url: document.getElementById('sapi-url').value.trim(),
-        api_key: document.getElementById('sapi-key').value.trim(),
+        name: sName,
+        api_type: resolvedApiType,
+        api_url: sUrl,
+        api_key: sKey,
         notes: document.getElementById('sapi-notes').value.trim(),
         status: document.getElementById('sapi-status').value
       };

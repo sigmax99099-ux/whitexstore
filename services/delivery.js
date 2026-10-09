@@ -197,6 +197,7 @@ async function attemptDelivery(client, order, mapping, deliveryId) {
     let totalCost = 0;
     let balanceLeft = 0;
     let expiresAt = null;
+    let supplierResult = null;
 
     if (mapping.supplierApiType === 'keylicense' || (mapping.supplierApiUrl && mapping.supplierApiUrl.includes('keylicense'))) {
       console.log(`[Delivery] Using KeyLicense API for Order #${order.id}, variant: ${mapping.variantId}`);
@@ -208,12 +209,17 @@ async function attemptDelivery(client, order, mapping, deliveryId) {
       unitPrice = parseFloat(mapping.supplierPlanPrice || 0);
       totalCost = unitPrice * supCount;
     } else {
-      const supplierResult = await createLicenses({
+      // AuthZen or default supplier
+      const customConfig = {};
+      if (mapping.supplierApiUrl) customConfig.baseUrl = mapping.supplierApiUrl;
+      if (mapping.supplierApiKey) customConfig.apiKey = mapping.supplierApiKey;
+
+      supplierResult = await createLicenses({
         productId: supProdId,
         days: supDays,
         count: supCount,
         note
-      });
+      }, customConfig);
       keys = supplierResult.keys;
       unitPrice = supplierResult.unitPrice;
       totalCost = supplierResult.totalCost;
@@ -277,8 +283,8 @@ async function attemptDelivery(client, order, mapping, deliveryId) {
       success: true,
       keys,
       deliveryId,
-      supplierCost: supplierResult.totalCost,
-      balanceLeft: supplierResult.balanceLeft
+      supplierCost: supplierResult?.totalCost ?? totalCost,
+      balanceLeft: supplierResult?.balanceLeft ?? balanceLeft
     };
     
   } catch (err) {
