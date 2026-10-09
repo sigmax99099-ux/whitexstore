@@ -1646,7 +1646,7 @@
           if (tabId === 'tab-products') loadAdminProducts();
           if (tabId === 'tab-plans') loadAdminPlans();
           if (tabId === 'tab-keys') loadAdminKeys();
-          if (tabId === 'tab-supplier-apis') { loadAdminSupplierApis(); loadSupplierCatalog(); loadAdminSupplierMappings(); loadSvmDropdowns(); }
+          if (tabId === 'tab-supplier-apis') { loadAdminSupplierApis(); loadAdminSupplierMappings(); loadSvmDropdowns(); }
           if (tabId === 'tab-supplier-settings') loadSupplierSettings();
           if (tabId === 'tab-product-mappings') loadProductMappings();
           if (tabId === 'tab-deliveries') loadDeliveries();
@@ -3371,7 +3371,7 @@
         try {
           const res = await fetch('/api/admin/supplier-apis', { credentials: "include" });
           const data = await res.json();
-          globalSupplierApis = data.supplier_apis || [];
+          globalSupplierApis = data.apis || data.supplier_apis || [];
         } catch (e) {}
       }
     }
@@ -3589,12 +3589,12 @@
         tbody.innerHTML = mappings.map(m => `
           <tr>
             <td>
-              <strong style="color: #fff;">${escapeHtml(m.product_name)}</strong>
-              <div style="font-size: 0.78rem; color: var(--primary);">${escapeHtml(m.plan_name)} (${m.days} ${m.duration_type})</div>
+              <strong style="color: #fff;">${escapeHtml(m.product_name || 'Unknown Product')}</strong>
+              <div style="font-size: 0.78rem; color: var(--primary);">${escapeHtml(m.plan_name || 'Unknown Plan')} (${m.days || m.supplier_plan_days || '?'} ${m.duration_type || 'days'})</div>
             </td>
-            <td><code>${escapeHtml(m.supplier_variant_id)}</code></td>
-            <td>${escapeHtml(m.supplier_product_name)}</td>
-            <td>${escapeHtml(m.supplier_plan_label || (m.supplier_plan_days + ' Days'))}</td>
+            <td><code>${escapeHtml(m.supplier_variant_id || '-')}</code></td>
+            <td>${escapeHtml(m.supplier_product_name || '<em style="color:var(--text-dim)">Not synced</em>')}</td>
+            <td>${escapeHtml(m.supplier_plan_label || (m.supplier_plan_days ? m.supplier_plan_days + ' Days' : '-'))}</td>
             <td style="text-align: center;">
               <label style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; cursor: pointer;">
                 <input type="checkbox" ${m.auto_delivery ? 'checked' : ''} onchange="toggleAutoDelivery(${m.id}, this.checked)">
@@ -3790,9 +3790,10 @@
       }
       
       try {
-        const res = await fetch('/api/admin/supplier-variants', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+        const res = await fetch('/api/admin/supplier-variants', {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({
             id: editId,
             supplier_variant_id: variantId
