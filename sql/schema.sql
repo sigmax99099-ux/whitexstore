@@ -251,8 +251,8 @@ CREATE INDEX idx_login_attempts_ip ON login_attempts(ip_address, attempt_type, c
 
 -- Default Admin: username 'admin', password 'admin123456'
 INSERT INTO admins (username, password_hash)
-VALUES ('admin', '$2a$10$W7GJDzkxavf7LHt3pULcF.YJ5wejkwfZfL5.mQLxdc6og0kkB0ryG')
-ON CONFLICT (username) DO NOTHING;
+VALUES ('admin', '$2a$10$5sl8CE8dqMdftNPm5R5ZkeZFyWOps1y.PLAgVwC91N3RddWI7pWX.')
+ON CONFLICT (username) DO UPDATE SET password_hash = EXCLUDED.password_hash;
 
 -- Default Demo Users
 -- demo@whitex.store / demo1234 (customer with 5000 NPR)

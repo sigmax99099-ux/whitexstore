@@ -4308,6 +4308,9 @@
         } else {
           showToast('Failed to save settings', 'error');
         }
+      } catch (err) {
+        showToast('Error saving settings', 'error');
+      }
     }
 
     /* ==============================================================
