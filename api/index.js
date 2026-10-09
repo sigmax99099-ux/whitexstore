@@ -60,6 +60,7 @@ import adminDeliveries from '../server/admin/deliveries.js';
 import adminCronRetryDeliveries from '../server/admin/cron-retry-deliveries.js';
 import adminHwidReset from '../server/admin/hwid-reset.js';
 import adminDiscordTest from '../server/admin/discord-check.js';
+import adminChangeCredentials from '../server/admin/change-credentials.js';
 
 // Public Settings
 import publicSettings from '../server/settings.js';
@@ -133,6 +134,7 @@ const routes = {
   '/api/admin/cron/retry-deliveries': adminCronRetryDeliveries,
   '/api/admin/hwid-reset': adminHwidReset,
   '/api/admin/discord-test': adminDiscordTest,
+  '/api/admin/change-credentials': adminChangeCredentials,
 };
 
 export default async function handler(req, res) {

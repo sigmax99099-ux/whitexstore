@@ -316,6 +316,7 @@
         <span style="font-size: 0.85rem; color: var(--text-muted);">
           Logged in as: <strong id="admin-name-display" style="color: #fff;">admin</strong>
         </span>
+        <button type="button" onclick="switchAdminTab('tab-admin-account')" class="btn btn-outline btn-sm" title="Change Admin Username & Password">👤 Account</button>
         <a href="/index.html" class="btn btn-outline btn-sm" target="_blank">View Live Store ↗</a>
         <button onclick="handleAdminLogout()" class="btn btn-outline btn-sm" style="color: var(--danger);">Logout</button>
       </div>
@@ -344,6 +345,7 @@
         <li class="admin-nav-item"><button data-tab="tab-users">👥 Users & Resellers</button></li>
         <li class="admin-nav-item"><button data-tab="tab-reseller-prices">🏷️ Reseller Prices</button></li>
         <li class="admin-nav-item"><button data-tab="tab-settings">⚙️ Settings & API</button></li>
+        <li class="admin-nav-item"><button data-tab="tab-admin-account">👤 Admin Account</button></li>
         <li class="admin-nav-item"><button data-tab="tab-resets">🔄 Password Resets</button></li>
       </ul>
     </aside>
@@ -897,6 +899,18 @@
               Save All Settings 💾
             </button>
           </form>
+
+          <div style="height: 1px; background: var(--bg-card-border); margin: 2rem 0 1.5rem;"></div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; padding: 1.25rem; background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.25); border-radius: 8px;">
+            <div>
+              <h4 style="color: #818cf8; margin: 0 0 0.35rem 0; font-size: 1rem;">👤 Admin Username & Password Settings</h4>
+              <div style="font-size: 0.8rem; color: var(--text-dim);">Need to change the admin login username or update your password?</div>
+            </div>
+            <button type="button" class="btn btn-primary btn-sm" onclick="switchAdminTab('tab-admin-account')">
+              Change Admin Credentials 🔐
+            </button>
+          </div>
         </div>
       </section>
 
@@ -1082,6 +1096,83 @@
               <tr><td colspan="7" style="text-align: center; padding: 2rem;">Loading resets...</td></tr>
             </tbody>
           </table>
+        </div>
+      </section>
+
+      <!-- TAB: ADMIN ACCOUNT CREDENTIALS -->
+      <section id="tab-admin-account" class="admin-tab-content">
+        <h2 style="color: #fff; margin-bottom: 1.5rem;">// ADMIN ACCOUNT & SECURITY CREDENTIALS</h2>
+
+        <div class="admin-card" style="max-width: 680px;">
+          <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; padding-bottom: 1.25rem; border-bottom: 1px solid var(--bg-card-border);">
+            <div style="width: 52px; height: 52px; border-radius: 12px; background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.3); display: flex; align-items: center; justify-content: center; font-size: 1.75rem;">
+              👤
+            </div>
+            <div>
+              <div style="font-size: 1.15rem; font-weight: 700; color: #fff;">Change Admin Credentials</div>
+              <div style="font-size: 0.82rem; color: var(--text-dim); margin-top: 0.2rem;">
+                Currently logged in as: <code id="account-current-username" style="background: rgba(99,102,241,0.2); color: #818cf8; padding: 2px 8px; border-radius: 4px; font-weight: 600;">admin</code>
+              </div>
+            </div>
+          </div>
+
+          <form id="form-admin-change-credentials">
+            <!-- Current Password -->
+            <div class="form-group" style="margin-bottom: 1.25rem;">
+              <label class="form-label" for="acc-curr-pass" style="color: var(--warning); font-weight: 600;">
+                Current Password * <span style="font-size: 0.75rem; color: var(--text-dim); font-weight: normal;">(required to authorize changes)</span>
+              </label>
+              <div style="position: relative;">
+                <input type="password" id="acc-curr-pass" class="form-input" required placeholder="Enter current admin password" autocomplete="current-password" style="padding-right: 42px;">
+                <button type="button" onclick="togglePasswordVisibility('acc-curr-pass', this)" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 1rem; padding: 4px;" title="Toggle password visibility">👁️</button>
+              </div>
+            </div>
+
+            <div style="height: 1px; background: var(--bg-card-border); margin: 1.5rem 0;"></div>
+
+            <!-- New Username -->
+            <div class="form-group" style="margin-bottom: 1.25rem;">
+              <label class="form-label" for="acc-new-username">
+                New Admin Username <span style="font-size: 0.75rem; color: var(--text-dim); font-weight: normal;">(leave blank if not changing)</span>
+              </label>
+              <input type="text" id="acc-new-username" class="form-input" placeholder="e.g. admin or new_admin_name" autocomplete="username">
+              <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: 0.35rem;">
+                Minimum 3 characters. Letters, numbers, hyphens, and underscores only.
+              </div>
+            </div>
+
+            <!-- New Password -->
+            <div class="form-group" style="margin-bottom: 1.25rem;">
+              <label class="form-label" for="acc-new-pass">
+                New Password <span style="font-size: 0.75rem; color: var(--text-dim); font-weight: normal;">(leave blank if not changing)</span>
+              </label>
+              <div style="position: relative;">
+                <input type="password" id="acc-new-pass" class="form-input" placeholder="Enter new strong password (min 6 characters)" autocomplete="new-password" style="padding-right: 42px;">
+                <button type="button" onclick="togglePasswordVisibility('acc-new-pass', this)" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 1rem; padding: 4px;" title="Toggle password visibility">👁️</button>
+              </div>
+              <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: 0.35rem;">
+                Must be at least 6 characters long.
+              </div>
+            </div>
+
+            <!-- Confirm New Password -->
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+              <label class="form-label" for="acc-confirm-pass">Confirm New Password</label>
+              <div style="position: relative;">
+                <input type="password" id="acc-confirm-pass" class="form-input" placeholder="Re-enter new password" autocomplete="new-password" style="padding-right: 42px;">
+                <button type="button" onclick="togglePasswordVisibility('acc-confirm-pass', this)" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 1rem; padding: 4px;" title="Toggle password visibility">👁️</button>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+              <button type="submit" id="btn-save-credentials" class="btn btn-primary btn-lg btn-glow">
+                Save & Update Credentials 💾
+              </button>
+              <button type="button" class="btn btn-outline" onclick="resetAdminAccountForm()">
+                Reset Form
+              </button>
+            </div>
+          </form>
         </div>
       </section>
 
@@ -1684,6 +1775,7 @@
           if (tabId === 'tab-users') loadAdminUsers();
           if (tabId === 'tab-reseller-prices') loadAdminResellerPrices();
           if (tabId === 'tab-settings') loadAdminSettings();
+          if (tabId === 'tab-admin-account') loadAdminAccountDetails();
           if (tabId === 'tab-resets') loadAdminResets();
           if (tabId === 'tab-download-links') loadAdminDownloadLinks();
         });
@@ -1710,6 +1802,7 @@
       document.getElementById('form-approve-order').addEventListener('submit', handleApproveOrderSubmit);
       document.getElementById('form-reject-order').addEventListener('submit', handleRejectOrderSubmit);
       document.getElementById('admin-settings-form').addEventListener('submit', handleSettingsSubmit);
+      document.getElementById('form-admin-change-credentials')?.addEventListener('submit', handleAdminChangeCredentialsSubmit);
       document.getElementById('form-add-category').addEventListener('submit', handleAddCategorySubmit);
       document.getElementById('form-wallet-adjust').addEventListener('submit', handleWalletAdjustSubmit);
       document.getElementById('form-add-download-link').addEventListener('submit', handleAddDownloadLinkSubmit);
@@ -4215,8 +4308,162 @@
         } else {
           showToast('Failed to save settings', 'error');
         }
+    }
+
+    /* ==============================================================
+       ADMIN ACCOUNT CREDENTIALS (CHANGE USERNAME & PASSWORD)
+       ============================================================== */
+    function switchAdminTab(targetTabId) {
+      const btn = document.querySelector(`#admin-nav-tabs button[data-tab="${targetTabId}"]`);
+      if (btn) {
+        btn.click();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        document.querySelectorAll('#admin-nav-tabs button').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.admin-tab-content').forEach(c => c.classList.remove('active'));
+        const content = document.getElementById(targetTabId);
+        if (content) content.classList.add('active');
+        if (targetTabId === 'tab-admin-account') loadAdminAccountDetails();
+      }
+    }
+    window.switchAdminTab = switchAdminTab;
+
+    async function loadAdminAccountDetails() {
+      try {
+        const res = await fetch('/api/admin/me', { credentials: 'include' });
+        const data = await res.json();
+        if (data.authenticated && data.admin) {
+          const username = data.admin.username || 'admin';
+          const userDisplay = document.getElementById('account-current-username');
+          if (userDisplay) userDisplay.textContent = username;
+          const displayEl = document.getElementById('admin-name-display');
+          if (displayEl) displayEl.textContent = username;
+          const newUserInput = document.getElementById('acc-new-username');
+          if (newUserInput && !newUserInput.value) {
+            newUserInput.placeholder = `Current: ${username} (type new username to change)`;
+          }
+        }
       } catch (err) {
-        showToast('Error saving settings', 'error');
+        console.error('Error loading admin details:', err);
+      }
+    }
+
+    function togglePasswordVisibility(inputId, btnEl) {
+      const input = document.getElementById(inputId);
+      if (!input) return;
+      if (input.type === 'password') {
+        input.type = 'text';
+        btnEl.textContent = '🙈';
+        btnEl.title = 'Hide password';
+      } else {
+        input.type = 'password';
+        btnEl.textContent = '👁️';
+        btnEl.title = 'Show password';
+      }
+    }
+    window.togglePasswordVisibility = togglePasswordVisibility;
+
+    function resetAdminAccountForm() {
+      document.getElementById('acc-curr-pass').value = '';
+      document.getElementById('acc-new-username').value = '';
+      document.getElementById('acc-new-pass').value = '';
+      document.getElementById('acc-confirm-pass').value = '';
+      loadAdminAccountDetails();
+    }
+    window.resetAdminAccountForm = resetAdminAccountForm;
+
+    async function handleAdminChangeCredentialsSubmit(e) {
+      e.preventDefault();
+      const currPass = document.getElementById('acc-curr-pass').value;
+      const newUsername = document.getElementById('acc-new-username').value.trim();
+      const newPass = document.getElementById('acc-new-pass').value;
+      const confirmPass = document.getElementById('acc-confirm-pass').value;
+      const btn = document.getElementById('btn-save-credentials');
+
+      if (!currPass) {
+        showToast('Please enter your current password.', 'warning');
+        document.getElementById('acc-curr-pass').focus();
+        return;
+      }
+
+      if (!newUsername && !newPass) {
+        showToast('Please provide a new username or new password to update.', 'warning');
+        return;
+      }
+
+      if (newPass) {
+        if (newPass.length < 6) {
+          showToast('New password must be at least 6 characters.', 'error');
+          document.getElementById('acc-new-pass').focus();
+          return;
+        }
+        if (newPass !== confirmPass) {
+          showToast('New password and confirmation password do not match.', 'error');
+          document.getElementById('acc-confirm-pass').focus();
+          return;
+        }
+      }
+
+      if (newUsername && newUsername.length < 3) {
+        showToast('Username must be at least 3 characters.', 'error');
+        document.getElementById('acc-new-username').focus();
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Updating Credentials... ⏳';
+
+      try {
+        const payload = {
+          current_password: currPass,
+          new_username: newUsername || undefined,
+          new_password: newPass || undefined,
+          confirm_password: confirmPass || undefined
+        };
+
+        const res = await fetch('/api/admin/change-credentials', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          showToast(data.message || 'Failed to update credentials.', 'error');
+          return;
+        }
+
+        if (data.token) {
+          localStorage.setItem('admin_token', data.token);
+        }
+
+        showToast(data.message || 'Admin credentials updated successfully! ⚡', 'success');
+
+        // Update username display across navbar and form
+        if (data.admin && data.admin.username) {
+          const uname = data.admin.username;
+          const displayEl = document.getElementById('admin-name-display');
+          if (displayEl) displayEl.textContent = uname;
+          const curUserEl = document.getElementById('account-current-username');
+          if (curUserEl) curUserEl.textContent = uname;
+          const newUserInput = document.getElementById('acc-new-username');
+          if (newUserInput) {
+            newUserInput.value = '';
+            newUserInput.placeholder = `Current: ${uname} (type new username to change)`;
+          }
+        }
+
+        // Reset password fields
+        document.getElementById('acc-curr-pass').value = '';
+        document.getElementById('acc-new-pass').value = '';
+        document.getElementById('acc-confirm-pass').value = '';
+
+      } catch (err) {
+        showToast('Network error updating credentials: ' + err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Save & Update Credentials 💾';
       }
     }
 
