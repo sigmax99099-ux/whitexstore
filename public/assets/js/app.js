@@ -457,8 +457,23 @@ function initMobileNav() {
   const toggle = document.querySelector('.mobile-toggle');
   const links = document.querySelector('.nav-links');
   if (toggle && links) {
-    toggle.addEventListener('click', () => {
+    toggle.addEventListener('click', (e) => {
+      e.stopPropagation();
       links.classList.toggle('show');
+    });
+
+    // Close when tapping any link
+    links.querySelectorAll('a').forEach(a => {
+      a.addEventListener('click', () => {
+        links.classList.remove('show');
+      });
+    });
+
+    // Close when tapping outside
+    document.addEventListener('click', (e) => {
+      if (links.classList.contains('show') && !links.contains(e.target) && !toggle.contains(e.target)) {
+        links.classList.remove('show');
+      }
     });
   }
 }
@@ -746,20 +761,30 @@ function attachHeroSliderHoverEvents() {
   });
 
   let touchStartX = 0;
+  let touchStartY = 0;
   let touchEndX = 0;
+  let touchEndY = 0;
+
   container.addEventListener("touchstart", (e) => {
     if (e.changedTouches && e.changedTouches[0]) {
       touchStartX = e.changedTouches[0].screenX;
+      touchStartY = e.changedTouches[0].screenY;
     }
   }, { passive: true });
 
   container.addEventListener("touchend", (e) => {
     if (e.changedTouches && e.changedTouches[0]) {
       touchEndX = e.changedTouches[0].screenX;
-      if (touchStartX - touchEndX > 45) {
-        heroSliderNext();
-      } else if (touchEndX - touchStartX > 45) {
-        heroSliderPrev();
+      touchEndY = e.changedTouches[0].screenY;
+      const diffX = touchStartX - touchEndX;
+      const diffY = touchStartY - touchEndY;
+      // Only swipe slides if horizontal swipe is clearly intentional
+      if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 35) {
+        if (diffX > 0) {
+          heroSliderNext();
+        } else {
+          heroSliderPrev();
+        }
       }
     }
   }, { passive: true });
