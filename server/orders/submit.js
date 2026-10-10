@@ -16,7 +16,7 @@ export default async function handler(req, res) {
     return res.status(401).json({ success: false, message: 'Unauthorized. Please log in first.' });
   }
 
-  const { product_id, plan_id } = req.body || {};
+  const { product_id, plan_id, redeem_code } = req.body || {};
 
   if (!product_id || !plan_id) {
     return res.status(400).json({ success: false, message: 'Product ID and Plan ID are required.' });
@@ -70,6 +70,58 @@ export default async function handler(req, res) {
     }
 
     finalPriceUsd = parseFloat(finalPriceUsd.toFixed(2));
+
+    // 3b. Validate and Apply Admin Redeem Code if provided
+    let appliedCoupon = null;
+    let couponDiscountUsd = 0;
+
+    if (redeem_code && String(redeem_code).trim()) {
+      const cleanCoupon = String(redeem_code).trim().toUpperCase();
+      const couponRes = await client.query(
+        `SELECT id, code, discount_type, discount_value, valid_until, max_uses, used_count, status
+         FROM redeem_codes
+         WHERE UPPER(code) = $1
+         LIMIT 1`,
+        [cleanCoupon]
+      );
+
+      if (couponRes.rows.length === 0) {
+        client.release && client.release();
+        return res.status(400).json({ success: false, message: `Invalid redeem code "${cleanCoupon}".` });
+      }
+
+      const coupon = couponRes.rows[0];
+
+      if (coupon.status !== 'active') {
+        client.release && client.release();
+        return res.status(400).json({ success: false, message: `Redeem code "${cleanCoupon}" is inactive or disabled.` });
+      }
+
+      if (new Date(coupon.valid_until) <= new Date()) {
+        client.release && client.release();
+        return res.status(400).json({ success: false, message: `Redeem code "${cleanCoupon}" has expired.` });
+      }
+
+      const maxU = parseInt(coupon.max_uses, 10);
+      const usedC = parseInt(coupon.used_count, 10);
+      if (maxU > 0 && usedC >= maxU) {
+        client.release && client.release();
+        return res.status(400).json({ success: false, message: `Redeem code "${cleanCoupon}" has reached maximum usage limit.` });
+      }
+
+      const discVal = parseFloat(coupon.discount_value);
+      if (coupon.discount_type === 'percent') {
+        couponDiscountUsd = (finalPriceUsd * discVal) / 100;
+      } else {
+        couponDiscountUsd = discVal;
+      }
+
+      couponDiscountUsd = Math.min(couponDiscountUsd, finalPriceUsd);
+      couponDiscountUsd = parseFloat(couponDiscountUsd.toFixed(2));
+      finalPriceUsd = parseFloat(Math.max(0, finalPriceUsd - couponDiscountUsd).toFixed(2));
+      appliedCoupon = coupon;
+    }
+
     const finalPriceNpr = parseFloat((finalPriceUsd * nprRate).toFixed(2));
 
     // 4. BEGIN TRANSACTION
@@ -132,16 +184,25 @@ export default async function handler(req, res) {
     const order = orderRes.rows[0];
 
     // Record wallet transaction (Debit)
+    const txDescription = `Payment for Order ${orderCode} (${item.product_name} - ${item.plan_name})${appliedCoupon ? ` [Redeem: ${appliedCoupon.code} - Saved $${couponDiscountUsd}]` : ''}`;
     await client.query(
       `INSERT INTO wallet_transactions (user_id, type, amount, currency, status, description, order_id)
        VALUES ($1, 'debit', $2, 'NPR', 'approved', $3, $4)`,
       [
         user.id,
         finalPriceNpr,
-        `Payment for Order ${orderCode} (${item.product_name} - ${item.plan_name})`,
+        txDescription,
         order.id
       ]
     );
+
+    // Increment redeem code usage count
+    if (appliedCoupon) {
+      await client.query(
+        'UPDATE redeem_codes SET used_count = used_count + 1, updated_at = NOW() WHERE id = $1',
+        [appliedCoupon.id]
+      );
+    }
 
     // Commit wallet deduction and order creation
     try { await client.query('COMMIT'); } catch(e) { /* mock: no-op */ }
@@ -202,6 +263,8 @@ export default async function handler(req, res) {
         amount_usd: finalPriceUsd,
         amount_npr: finalPriceNpr,
         new_wallet_balance: newBalance,
+        discount_usd: couponDiscountUsd,
+        redeem_code: appliedCoupon ? appliedCoupon.code : null,
         message: deliveryResult.alreadyDelivered 
           ? 'Order already processed. Key delivered previously.' 
           : 'Order completed and key delivered instantly!',
@@ -253,6 +316,8 @@ export default async function handler(req, res) {
         amount_usd: finalPriceUsd,
         amount_npr: finalPriceNpr,
         new_wallet_balance: newBalance,
+        discount_usd: couponDiscountUsd,
+        redeem_code: appliedCoupon ? appliedCoupon.code : null,
         message,
         download_links: []
       });

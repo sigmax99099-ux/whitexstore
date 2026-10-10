@@ -346,6 +346,7 @@
         <li class="admin-nav-item"><button data-tab="tab-reseller-prices">🏷️ Reseller Prices</button></li>
         <li class="admin-nav-item"><button data-tab="tab-settings">⚙️ Settings & API</button></li>
         <li class="admin-nav-item"><button data-tab="tab-social-links">🌐 Social Links</button></li>
+        <li class="admin-nav-item"><button data-tab="tab-redeem-codes">🎁 Redeem Codes</button></li>
         <li class="admin-nav-item"><button data-tab="tab-admin-account">👤 Admin Account</button></li>
         <li class="admin-nav-item"><button data-tab="tab-resets">🔄 Password Resets</button></li>
       </ul>
@@ -1287,6 +1288,86 @@
         </div>
       </section>
 
+      <!-- TAB: REDEEM CODES & PROMO VOUCHERS -->
+      <section id="tab-redeem-codes" class="admin-tab-content">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <h2 style="color: #fff; margin: 0 0 0.35rem 0;">// REDEEM CODES & DISCOUNT VOUCHERS</h2>
+            <p style="color: var(--text-dim); margin: 0; font-size: 0.88rem;">
+              Generate and control promo redeem codes with customized valid time periods, expiration dates, usage quotas, and percentage or flat USD discounts.
+            </p>
+          </div>
+          <button type="button" class="btn btn-primary btn-sm btn-glow" onclick="openAddRedeemCodeModal()">
+            + Generate Redeem Code 🎁
+          </button>
+        </div>
+
+        <!-- Metric Cards -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+          <div class="admin-card" style="padding: 1.1rem; margin-bottom: 0;">
+            <div style="font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">Total Generated Codes</div>
+            <div id="rc-stat-total" style="font-size: 1.75rem; font-weight: 800; color: #fff; margin-top: 0.25rem;">0</div>
+          </div>
+          <div class="admin-card" style="padding: 1.1rem; margin-bottom: 0;">
+            <div style="font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">Active & Redeemable</div>
+            <div id="rc-stat-active" style="font-size: 1.75rem; font-weight: 800; color: #34d399; margin-top: 0.25rem;">0</div>
+          </div>
+          <div class="admin-card" style="padding: 1.1rem; margin-bottom: 0;">
+            <div style="font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">Expired / Exhausted</div>
+            <div id="rc-stat-expired" style="font-size: 1.75rem; font-weight: 800; color: #f87171; margin-top: 0.25rem;">0</div>
+          </div>
+          <div class="admin-card" style="padding: 1.1rem; margin-bottom: 0;">
+            <div style="font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">Total Client Redemptions</div>
+            <div id="rc-stat-used" style="font-size: 1.75rem; font-weight: 800; color: #38bdf8; margin-top: 0.25rem;">0</div>
+          </div>
+        </div>
+
+        <!-- Search & Filter Controls -->
+        <div class="admin-card" style="padding: 1rem; margin-bottom: 1.5rem; display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+          <input type="text" id="rc-search-input" class="form-input" placeholder="Search by code or note..." style="flex: 1; min-width: 220px;" oninput="filterAdminRedeemCodes()">
+          <select id="rc-filter-type" class="form-select" style="width: auto; min-width: 160px;" onchange="filterAdminRedeemCodes()">
+            <option value="all">All Discount Types</option>
+            <option value="percent">Percentage (%)</option>
+            <option value="fixed">Fixed Amount ($)</option>
+          </select>
+          <select id="rc-filter-status" class="form-select" style="width: auto; min-width: 160px;" onchange="filterAdminRedeemCodes()">
+            <option value="all">All Statuses</option>
+            <option value="active">Active Only</option>
+            <option value="expired">Expired Only</option>
+            <option value="exhausted">Usage Limit Reached</option>
+            <option value="inactive">Disabled / Inactive</option>
+          </select>
+          <button type="button" class="btn btn-outline btn-sm" onclick="loadAdminRedeemCodes()" title="Refresh Redeem Codes">
+            🔄 Refresh
+          </button>
+        </div>
+
+        <!-- Codes Table -->
+        <div class="table-responsive">
+          <table class="table-custom" id="table-redeem-codes">
+            <thead>
+              <tr>
+                <th style="min-width: 140px;">CODE</th>
+                <th>DISCOUNT</th>
+                <th style="min-width: 210px;">VALIDITY TIME PERIOD</th>
+                <th>USAGE / LIMIT</th>
+                <th>STATUS</th>
+                <th>MEMO / NOTES</th>
+                <th>CREATED</th>
+                <th style="min-width: 160px;">ACTIONS</th>
+              </tr>
+            </thead>
+            <tbody id="admin-redeem-codes-tbody">
+              <tr>
+                <td colspan="8" style="text-align: center; padding: 2.5rem; color: var(--text-dim);">
+                  Loading redeem codes...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
     </main>
   </div>
 
@@ -1850,6 +1931,111 @@
     </div>
   </div>
 
+  <!-- Modal: Generate / Add Redeem Code -->
+  <div id="modal-redeem-code" class="modal-backdrop">
+    <div class="modal-box" style="max-width: 620px; width: 95%;">
+      <button class="modal-close" onclick="closeModal('modal-redeem-code')">✕</button>
+      <h3 id="rc-modal-title" style="color: #fff; margin-bottom: 0.35rem; display: flex; align-items: center; gap: 0.5rem;">
+        <span>🎁</span>
+        <span>Generate New Redeem Code</span>
+      </h3>
+      <p style="color: var(--text-dim); font-size: 0.85rem; margin-bottom: 1.5rem;">
+        Create a discount promo code for clients with valid time period and usage controls.
+      </p>
+
+      <form id="form-redeem-code">
+        <!-- Code Input & Randomizer -->
+        <div class="form-group">
+          <label class="form-label" for="rc-code">Redeem Code *</label>
+          <div style="display: flex; gap: 0.6rem;">
+            <input type="text" id="rc-code" class="form-input" required placeholder="e.g. WHITEX20, FLASH50, VIPPASS" style="text-transform: uppercase; font-family: monospace; font-weight: 700; letter-spacing: 1px;" autocomplete="off">
+            <button type="button" class="btn btn-outline btn-sm" onclick="randomizeRedeemCode()" style="white-space: nowrap; font-weight: 700;">
+              🎲 Randomize
+            </button>
+          </div>
+          <div style="font-size: 0.74rem; color: var(--text-dim); margin-top: 0.25rem;">
+            Clients will type or paste this exact code at checkout to claim their discount.
+          </div>
+        </div>
+
+        <!-- Discount Type & Value -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;" class="admin-modal-grid">
+          <div class="form-group">
+            <label class="form-label" for="rc-type">Discount Type *</label>
+            <select id="rc-type" class="form-select" onchange="updateDiscountLabel()">
+              <option value="percent">Percentage Discount (% OFF)</option>
+              <option value="fixed">Fixed Amount ($ USD OFF)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" id="rc-value-label" for="rc-value">Discount Percentage (%) *</label>
+            <input type="number" id="rc-value" class="form-input" required min="0.01" step="0.01" max="100" placeholder="e.g. 20 (for 20% off)">
+          </div>
+        </div>
+
+        <!-- Valid Time Period / Expiration Date -->
+        <div class="form-group" style="background: rgba(0,0,0,0.25); border: 1px solid var(--bg-card-border); border-radius: 8px; padding: 1rem; margin-bottom: 1.25rem;">
+          <label class="form-label" for="rc-valid-until" style="color: #38bdf8; font-weight: 700; display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.4rem;">
+            <span>⏱️</span>
+            <span>Valid Until (Expiration Date & Time) *</span>
+          </label>
+          <input type="datetime-local" id="rc-valid-until" class="form-input" required style="font-weight: 600;">
+          
+          <!-- Quick Duration Presets -->
+          <div style="margin-top: 0.6rem;">
+            <div style="font-size: 0.72rem; color: var(--text-dim); margin-bottom: 0.35rem; font-weight: 600; text-transform: uppercase;">
+              Quick Validity Presets:
+            </div>
+            <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+              <button type="button" class="btn btn-outline btn-sm" onclick="setRedeemQuickExpiry(24)" style="font-size: 0.75rem; padding: 3px 8px;">+24 Hours</button>
+              <button type="button" class="btn btn-outline btn-sm" onclick="setRedeemQuickExpiry(72)" style="font-size: 0.75rem; padding: 3px 8px;">+3 Days</button>
+              <button type="button" class="btn btn-outline btn-sm" onclick="setRedeemQuickExpiry(168)" style="font-size: 0.75rem; padding: 3px 8px;">+7 Days</button>
+              <button type="button" class="btn btn-outline btn-sm" onclick="setRedeemQuickExpiry(720)" style="font-size: 0.75rem; padding: 3px 8px;">+30 Days</button>
+              <button type="button" class="btn btn-outline btn-sm" onclick="setRedeemQuickExpiry(2160)" style="font-size: 0.75rem; padding: 3px 8px;">+90 Days</button>
+              <button type="button" class="btn btn-outline btn-sm" onclick="setRedeemQuickExpiry(8760)" style="font-size: 0.75rem; padding: 3px 8px;">+1 Year</button>
+            </div>
+          </div>
+          <div style="font-size: 0.74rem; color: var(--text-dim); margin-top: 0.45rem;">
+            After this date and time, client checkout will strictly reject this redeem code as expired.
+          </div>
+        </div>
+
+        <!-- Max Uses & Status -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;" class="admin-modal-grid">
+          <div class="form-group">
+            <label class="form-label" for="rc-max-uses">Max Redemptions Allowed</label>
+            <input type="number" id="rc-max-uses" class="form-input" min="0" value="0" placeholder="0 = Unlimited">
+            <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: 0.25rem;">
+              Set 0 for unlimited uses, or a limit (e.g. 50, 100).
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="rc-status">Initial Status</label>
+            <select id="rc-status" class="form-select">
+              <option value="active">Active (Available Now)</option>
+              <option value="inactive">Inactive (Disabled)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Optional Memo / Notes -->
+        <div class="form-group">
+          <label class="form-label" for="rc-notes">Admin Note / Campaign Memo (Optional)</label>
+          <input type="text" id="rc-notes" class="form-input" placeholder="e.g. Discord VIP 2.5k member giveaway code">
+        </div>
+
+        <div style="display: flex; gap: 1rem; align-items: center; margin-top: 1.5rem;">
+          <button type="submit" id="btn-save-redeem-code" class="btn btn-primary btn-block btn-lg btn-glow" style="flex: 2;">
+            Generate Redeem Code 💾
+          </button>
+          <button type="button" class="btn btn-outline btn-lg" onclick="closeModal('modal-redeem-code')" style="flex: 1;">
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script src="/assets/js/app.js?v=20261007"></script>
   <script>
     // Bulletproof fetch wrapper: automatically passes credentials and Authorization Bearer header
@@ -1976,6 +2162,7 @@
           if (tabId === 'tab-settings') loadAdminSettings();
           if (tabId === 'tab-admin-account') loadAdminAccountDetails();
           if (tabId === 'tab-social-links') loadAdminSocialLinks();
+          if (tabId === 'tab-redeem-codes') loadAdminRedeemCodes();
           if (tabId === 'tab-resets') loadAdminResets();
           if (tabId === 'tab-download-links') loadAdminDownloadLinks();
         });
@@ -2007,6 +2194,7 @@
       document.getElementById('form-wallet-adjust').addEventListener('submit', handleWalletAdjustSubmit);
       document.getElementById('form-add-download-link').addEventListener('submit', handleAddDownloadLinkSubmit);
       document.getElementById('form-social-link')?.addEventListener('submit', handleSocialLinkSubmit);
+      document.getElementById('form-redeem-code')?.addEventListener('submit', handleRedeemCodeSubmit);
 
       // Category dropdown - handle "Add New Category" option
       document.getElementById('prod-cat').addEventListener('change', function(e) {
@@ -5187,6 +5375,362 @@
         });
       } else {
         showToast('Copied: ' + url, 'info');
+      }
+    }
+
+    /* ==============================================================
+       REDEEM CODES & DISCOUNT VOUCHERS
+       ============================================================== */
+    let globalRedeemCodes = [];
+
+    async function loadAdminRedeemCodes() {
+      const tbody = document.getElementById('admin-redeem-codes-tbody');
+      if (!tbody) return;
+
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 2rem; color: var(--text-dim);">Loading redeem codes...</td></tr>`;
+
+      try {
+        const res = await fetch('/api/admin/redeem-codes', { credentials: 'include' });
+        const data = await res.json();
+
+        if (!data.success) {
+          tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 2rem; color: var(--danger);">Failed to load redeem codes: ${escapeHtml(data.message || '')}</td></tr>`;
+          return;
+        }
+
+        globalRedeemCodes = data.redeem_codes || [];
+
+        // Update Stats Badges
+        if (data.stats) {
+          document.getElementById('rc-stat-total').textContent = data.stats.total || 0;
+          document.getElementById('rc-stat-active').textContent = data.stats.active || 0;
+          document.getElementById('rc-stat-expired').textContent = data.stats.expired || 0;
+          document.getElementById('rc-stat-used').textContent = data.stats.total_redemptions || 0;
+        }
+
+        renderAdminRedeemCodes(globalRedeemCodes);
+      } catch (err) {
+        console.error('Error loading redeem codes:', err);
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 2rem; color: var(--danger);">Network error loading redeem codes.</td></tr>`;
+      }
+    }
+
+    function renderAdminRedeemCodes(codes) {
+      const tbody = document.getElementById('admin-redeem-codes-tbody');
+      if (!tbody) return;
+
+      if (!codes || codes.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="8" style="text-align: center; padding: 3rem; color: var(--text-dim);">
+              <div style="font-size: 2rem; margin-bottom: 0.5rem;">🎁</div>
+              <div>No redeem codes created yet.</div>
+              <button class="btn btn-primary btn-sm btn-glow" style="margin-top: 1rem;" onclick="openAddRedeemCodeModal()">
+                + Generate First Code
+              </button>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      const now = new Date();
+
+      tbody.innerHTML = codes.map(rc => {
+        const expiryDate = new Date(rc.valid_until);
+        const isExpired = expiryDate < now;
+        const isExhausted = rc.max_uses > 0 && rc.used_count >= rc.max_uses;
+
+        // Badge color and label
+        let badgeHtml = '';
+        if (rc.status === 'inactive') {
+          badgeHtml = '<span class="badge" style="background: rgba(100, 116, 139, 0.2); color: #94a3b8; border: 1px solid rgba(100, 116, 139, 0.4);">Disabled</span>';
+        } else if (isExpired) {
+          badgeHtml = '<span class="badge badge-danger">Expired</span>';
+        } else if (isExhausted) {
+          badgeHtml = '<span class="badge badge-warning">Limit Reached</span>';
+        } else {
+          badgeHtml = '<span class="badge badge-undetected">Active ✓</span>';
+        }
+
+        const discountBadge = rc.discount_type === 'percent'
+          ? `<span style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); font-weight: 800; padding: 3px 8px; border-radius: 6px; font-size: 0.85rem;">${rc.discount_value}% OFF</span>`
+          : `<span style="background: rgba(52, 211, 153, 0.15); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.3); font-weight: 800; padding: 3px 8px; border-radius: 6px; font-size: 0.85rem;">$${parseFloat(rc.discount_value).toFixed(2)} OFF</span>`;
+
+        const usageText = rc.max_uses > 0 
+          ? `<strong>${rc.used_count}</strong> / ${rc.max_uses}`
+          : `<strong>${rc.used_count}</strong> / <span style="color:var(--text-dim)">∞ Unlimited</span>`;
+
+        const formattedExpiry = expiryDate.toLocaleString('en-US', {
+          year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+        });
+
+        // Time remaining or time expired
+        const diffMs = expiryDate - now;
+        let diffLabel = '';
+        if (diffMs > 0) {
+          const daysLeft = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+          const hoursLeft = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+          if (daysLeft > 0) {
+            diffLabel = `<small style="color: #34d399; display: block;">Expires in ${daysLeft}d ${hoursLeft}h</small>`;
+          } else {
+            diffLabel = `<small style="color: #fbbf24; display: block;">Expires in ${hoursLeft} hours</small>`;
+          }
+        } else {
+          diffLabel = `<small style="color: #f87171; display: block;">Expired on ${formattedExpiry}</small>`;
+        }
+
+        const isCurrentlyActive = rc.status === 'active';
+        const toggleBtnText = isCurrentlyActive ? 'Disable' : 'Enable';
+        const toggleBtnClass = isCurrentlyActive ? 'btn-outline' : 'btn-success';
+
+        return `
+          <tr>
+            <td>
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <span class="license-key-pill" style="font-family: monospace; font-size: 0.95rem; font-weight: 800; color: #fff;">${escapeHtml(rc.code)}</span>
+                <button type="button" class="btn btn-outline btn-sm" onclick="copyRedeemCode('${escapeHtml(rc.code)}')" title="Copy Code" style="padding: 2px 7px; font-size: 0.72rem;">📋</button>
+              </div>
+            </td>
+            <td>${discountBadge}</td>
+            <td>
+              <div style="font-size: 0.86rem; color: #fff;">${formattedExpiry}</div>
+              ${diffLabel}
+            </td>
+            <td style="font-size: 0.88rem;">${usageText}</td>
+            <td>${badgeHtml}</td>
+            <td style="max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.8rem; color: var(--text-dim);" title="${escapeHtml(rc.notes || '')}">
+              ${escapeHtml(rc.notes || '-')}
+            </td>
+            <td style="font-size: 0.8rem; color: var(--text-dim);">${new Date(rc.created_at).toLocaleDateString()}</td>
+            <td>
+              <div style="display: flex; gap: 0.4rem; align-items: center;">
+                <button type="button" class="btn ${toggleBtnClass} btn-sm" onclick="toggleRedeemCodeStatus(${rc.id}, '${rc.status}')" style="padding: 4px 10px; font-size: 0.78rem;">
+                  ${toggleBtnText}
+                </button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="deleteRedeemCode(${rc.id}, '${escapeHtml(rc.code)}')" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.35); padding: 4px 10px; font-size: 0.78rem;">
+                  Del
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function filterAdminRedeemCodes() {
+      const search = (document.getElementById('rc-search-input')?.value || '').toLowerCase().trim();
+      const typeFilter = document.getElementById('rc-filter-type')?.value || 'all';
+      const statusFilter = document.getElementById('rc-filter-status')?.value || 'all';
+      const now = new Date();
+
+      const filtered = globalRedeemCodes.filter(rc => {
+        // Search
+        if (search) {
+          const codeMatch = rc.code.toLowerCase().includes(search);
+          const notesMatch = (rc.notes || '').toLowerCase().includes(search);
+          if (!codeMatch && !notesMatch) return false;
+        }
+
+        // Type
+        if (typeFilter !== 'all' && rc.discount_type !== typeFilter) {
+          return false;
+        }
+
+        // Status
+        if (statusFilter !== 'all') {
+          const isExpired = new Date(rc.valid_until) < now;
+          const isExhausted = rc.max_uses > 0 && rc.used_count >= rc.max_uses;
+
+          if (statusFilter === 'active') {
+            if (rc.status !== 'active' || isExpired || isExhausted) return false;
+          } else if (statusFilter === 'expired') {
+            if (!isExpired) return false;
+          } else if (statusFilter === 'exhausted') {
+            if (!isExhausted) return false;
+          } else if (statusFilter === 'inactive') {
+            if (rc.status !== 'inactive') return false;
+          }
+        }
+
+        return true;
+      });
+
+      renderAdminRedeemCodes(filtered);
+    }
+
+    function openAddRedeemCodeModal() {
+      const form = document.getElementById('form-redeem-code');
+      if (form) form.reset();
+
+      // Default quick expiry: +7 Days
+      setRedeemQuickExpiry(168);
+      updateDiscountLabel();
+      openModal('modal-redeem-code');
+    }
+
+    function randomizeRedeemCode() {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      let rand = '';
+      for (let i = 0; i < 6; i++) {
+        rand += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      const code = 'WX-' + rand;
+      document.getElementById('rc-code').value = code;
+    }
+
+    function setRedeemQuickExpiry(hours) {
+      const target = new Date(Date.now() + hours * 60 * 60 * 1000);
+      // Format as YYYY-MM-DDTHH:mm for datetime-local
+      const year = target.getFullYear();
+      const month = String(target.getMonth() + 1).padStart(2, '0');
+      const day = String(target.getDate()).padStart(2, '0');
+      const hr = String(target.getHours()).padStart(2, '0');
+      const min = String(target.getMinutes()).padStart(2, '0');
+      const formatted = `${year}-${month}-${day}T${hr}:${min}`;
+      const input = document.getElementById('rc-valid-until');
+      if (input) input.value = formatted;
+    }
+
+    function updateDiscountLabel() {
+      const type = document.getElementById('rc-type')?.value;
+      const label = document.getElementById('rc-value-label');
+      const input = document.getElementById('rc-value');
+      if (!label || !input) return;
+
+      if (type === 'percent') {
+        label.textContent = 'Discount Percentage (%) *';
+        input.placeholder = 'e.g. 20 (for 20% off)';
+        input.max = 100;
+      } else {
+        label.textContent = 'Discount Amount ($ USD) *';
+        input.placeholder = 'e.g. 5.00 (for $5 flat off)';
+        input.removeAttribute('max');
+      }
+    }
+
+    async function handleRedeemCodeSubmit(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btn-save-redeem-code');
+      const code = document.getElementById('rc-code').value.trim().toUpperCase();
+      const type = document.getElementById('rc-type').value;
+      const val = parseFloat(document.getElementById('rc-value').value);
+      const validUntil = document.getElementById('rc-valid-until').value;
+      const maxUses = parseInt(document.getElementById('rc-max-uses').value, 10) || 0;
+      const status = document.getElementById('rc-status').value;
+      const notes = document.getElementById('rc-notes').value.trim();
+
+      if (!code) {
+        showToast('Redeem code is required', 'warning');
+        return;
+      }
+      if (isNaN(val) || val <= 0) {
+        showToast('Discount value must be greater than 0', 'warning');
+        return;
+      }
+      if (type === 'percent' && val > 100) {
+        showToast('Percentage discount cannot exceed 100%', 'warning');
+        return;
+      }
+      if (!validUntil) {
+        showToast('Valid until expiration date is required', 'warning');
+        return;
+      }
+
+      const expiryDate = new Date(validUntil);
+      if (expiryDate <= new Date()) {
+        showToast('Expiration date must be in the future', 'warning');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Generating... ⏳';
+
+      try {
+        const res = await fetch('/api/admin/redeem-codes', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            code,
+            discount_type: type,
+            discount_value: val,
+            valid_until: expiryDate.toISOString(),
+            max_uses: maxUses,
+            status,
+            notes
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          showToast(data.message || 'Failed to create redeem code', 'error');
+          return;
+        }
+
+        showToast(`Redeem code "${code}" generated successfully! 🎁`, 'success');
+        closeModal('modal-redeem-code');
+        loadAdminRedeemCodes();
+      } catch (err) {
+        showToast('Network error generating redeem code: ' + err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Generate Redeem Code 💾';
+      }
+    }
+
+    async function toggleRedeemCodeStatus(id, currentStatus) {
+      const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+      try {
+        const res = await fetch('/api/admin/redeem-codes', {
+          method: 'PATCH',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, status: newStatus })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(`Code status changed to ${newStatus}.`, 'success');
+          loadAdminRedeemCodes();
+        } else {
+          showToast(data.message || 'Failed to update status', 'error');
+        }
+      } catch (err) {
+        showToast('Error toggling code status', 'error');
+      }
+    }
+
+    async function deleteRedeemCode(id, code) {
+      if (!confirm(`Are you sure you want to permanently delete redeem code "${code}"?`)) {
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/admin/redeem-codes?id=${id}`, {
+          method: 'DELETE',
+          credentials: 'include'
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(`Redeem code "${code}" deleted.`, 'success');
+          loadAdminRedeemCodes();
+        } else {
+          showToast(data.message || 'Failed to delete redeem code', 'error');
+        }
+      } catch (err) {
+        showToast('Error deleting redeem code: ' + err.message, 'error');
+      }
+    }
+
+    function copyRedeemCode(code) {
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(code).then(() => {
+          showToast(`Code "${code}" copied to clipboard! 📋`, 'success');
+        }).catch(() => {
+          showToast('Copied: ' + code, 'info');
+        });
+      } else {
+        showToast('Copied: ' + code, 'info');
       }
     }
 

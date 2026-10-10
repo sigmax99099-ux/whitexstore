@@ -62,15 +62,18 @@ import adminHwidReset from '../server/admin/hwid-reset.js';
 import adminDiscordTest from '../server/admin/discord-check.js';
 import adminChangeCredentials from '../server/admin/change-credentials.js';
 import adminSocialLinks from '../server/admin/social-links.js';
+import adminRedeemCodes from '../server/admin/redeem-codes.js';
 
-// Public Settings & Social Links
+// Public Settings, Social Links & Redeem Codes
 import publicSettings from '../server/settings.js';
 import publicSocialLinks from '../server/social-links.js';
+import redeemValidate from '../server/redeem/validate.js';
 
 const routes = {
   // Public Settings & Social Links
   '/api/settings': publicSettings,
   '/api/social-links': publicSocialLinks,
+  '/api/redeem/validate': redeemValidate,
 
   // Auth
   '/api/auth/register': authRegister,
@@ -139,6 +142,7 @@ const routes = {
   '/api/admin/discord-test': adminDiscordTest,
   '/api/admin/change-credentials': adminChangeCredentials,
   '/api/admin/social-links': adminSocialLinks,
+  '/api/admin/redeem-codes': adminRedeemCodes,
 };
 
 export default async function handler(req, res) {

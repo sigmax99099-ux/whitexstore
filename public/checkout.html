@@ -71,15 +71,72 @@
             </div>
           </div>
 
-          <div style="border-top: 1px solid var(--bg-card-border); padding-top: 0.9rem; display: flex; justify-content: space-between; align-items: center;">
+          <div id="row-original-price" style="display: none; justify-content: space-between; align-items: center; border-top: 1px solid var(--bg-card-border); padding-top: 0.75rem; margin-top: 0.75rem;">
+            <span style="color: var(--text-dim); font-size: 0.88rem;">Plan Subtotal:</span>
+            <span id="price-original-usd" style="text-decoration: line-through; color: var(--text-dim); font-size: 0.95rem;">$0.00</span>
+          </div>
+
+          <div id="row-discount-price" style="display: none; justify-content: space-between; align-items: center; margin-top: 0.35rem;">
+            <span style="color: #34d399; font-size: 0.88rem; font-weight: 700; display: flex; align-items: center; gap: 0.35rem;">
+              <span>🎁 Coupon Discount:</span>
+              <span id="label-discount-percent" style="font-size: 0.75rem; background: rgba(52, 211, 153, 0.2); padding: 1px 6px; border-radius: 4px;">-0%</span>
+            </span>
+            <span id="price-discount-usd" style="color: #34d399; font-weight: 800;">-$0.00</span>
+          </div>
+
+          <div style="border-top: 1px solid var(--bg-card-border); padding-top: 0.9rem; display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem;">
             <span style="color: var(--text-muted); font-size: 0.95rem;">Order Total (USD):</span>
             <span id="price-usd" style="font-family: var(--font-heading); font-size: 1.4rem; color: #fff; font-weight: 800;">$0.00</span>
           </div>
 
           <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.35rem;">
             <span style="color: var(--text-muted); font-size: 0.95rem;">Deduction in NPR:</span>
-            <span id="price-npr" style="font-family: var(--font-heading); font-size: 1.4rem; color: var(--primary); font-weight: 800;">NPR 0</span>
+            <div style="text-align: right;">
+              <span id="price-original-npr" style="display: none; text-decoration: line-through; color: var(--text-dim); font-size: 0.88rem; margin-right: 0.5rem;"></span>
+              <span id="price-npr" style="font-family: var(--font-heading); font-size: 1.4rem; color: var(--primary); font-weight: 800;">NPR 0</span>
+            </div>
           </div>
+        </div>
+
+        <!-- Redeem Code Voucher Box -->
+        <div id="redeem-code-card" style="background: rgba(13, 13, 21, 0.85); border: 1px dashed rgba(56, 189, 248, 0.35); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.5rem; transition: all 0.25s ease;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <label for="input-redeem-code" style="font-size: 0.85rem; font-weight: 700; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.6px; display: flex; align-items: center; gap: 0.4rem; margin: 0;">
+              <span>🎁</span>
+              <span>Redeem Code / Promo Coupon</span>
+            </label>
+            <span style="font-size: 0.75rem; color: var(--text-dim);">Optional</span>
+          </div>
+
+          <!-- Input Row -->
+          <div id="redeem-input-area" style="display: flex; gap: 0.6rem;">
+            <input type="text" id="input-redeem-code" class="form-input" placeholder="ENTER CODE (e.g. WHITEX20)" style="text-transform: uppercase; font-family: 'JetBrains Mono', monospace; font-weight: 700; letter-spacing: 1px; flex: 1; padding: 0.7rem 1rem;" autocomplete="off" spellcheck="false">
+            <button type="button" id="btn-apply-redeem" class="btn btn-outline" style="min-width: 105px; font-weight: 700; border-color: rgba(56, 189, 248, 0.4); color: #38bdf8;">
+              Apply ⚡
+            </button>
+          </div>
+
+          <!-- Applied Voucher Notification Banner -->
+          <div id="applied-redeem-banner" style="display: none; margin-top: 0.85rem; background: rgba(52, 211, 153, 0.12); border: 1px solid rgba(52, 211, 153, 0.4); border-radius: 8px; padding: 0.85rem 1rem; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <span style="font-size: 1.4rem;">🎉</span>
+              <div>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                  <strong id="applied-code-text" style="color: #34d399; font-family: monospace; font-size: 1rem; letter-spacing: 0.5px;">WHITEX20</strong>
+                  <span id="applied-badge-text" class="badge badge-undetected" style="font-size: 0.72rem; padding: 2px 8px;">20% OFF</span>
+                </div>
+                <div id="applied-expiry-text" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">
+                  Discount applied successfully to order.
+                </div>
+              </div>
+            </div>
+            <button type="button" id="btn-remove-redeem" title="Remove promo code" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.35); color: #f87171; font-size: 0.78rem; font-weight: 700; border-radius: 6px; padding: 5px 12px; cursor: pointer; transition: all 0.15s ease;">
+              ✕ Remove
+            </button>
+          </div>
+
+          <!-- Error Alert -->
+          <div id="redeem-error-msg" style="display: none; margin-top: 0.65rem; color: #f87171; font-size: 0.8rem; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 6px; padding: 6px 12px;"></div>
         </div>
 
         <!-- Wallet Status Box -->
@@ -152,6 +209,11 @@
     let productData = null;
     let planData = null;
     let requiredNpr = 0;
+    let basePlanPriceUsd = 0;
+    let basePlanPriceNpr = 0;
+    let nprExchangeRate = 134.50;
+    let appliedCouponCode = null;
+    let appliedDiscountData = null;
     let deliveredKey = null;
 
     document.addEventListener('DOMContentLoaded', async () => {
@@ -178,6 +240,7 @@
       }
 
       await loadOrderDetails();
+      initRedeemCodeHandlers();
 
       document.getElementById('btn-submit-order').addEventListener('click', submitOrder);
       document.getElementById('btn-copy-key').addEventListener('click', () => {
@@ -208,33 +271,179 @@
         document.getElementById('item-category').textContent = productData.category;
         document.getElementById('item-name').textContent = productData.name;
         document.getElementById('item-plan').textContent = `${planData.plan_name} (${planData.days} ${planData.duration_type})`;
-        document.getElementById('price-usd').textContent = `$${planData.final_price_usd.toFixed(2)}`;
 
-        const nprRate = data.rates?.NPR || 134.50;
-        requiredNpr = parseFloat((planData.final_price_usd * nprRate).toFixed(2));
-        document.getElementById('price-npr').textContent = `NPR ${requiredNpr.toLocaleString()}`;
+        nprExchangeRate = data.rates?.NPR || 134.50;
+        basePlanPriceUsd = planData.final_price_usd;
+        basePlanPriceNpr = parseFloat((basePlanPriceUsd * nprExchangeRate).toFixed(2));
+        requiredNpr = basePlanPriceNpr;
+
+        document.getElementById('price-usd').textContent = `$${basePlanPriceUsd.toFixed(2)}`;
+        document.getElementById('price-npr').textContent = `NPR ${basePlanPriceNpr.toLocaleString()}`;
 
         // Verify user balance if logged in
-        if (Store.user) {
-          const userBalance = parseFloat(Store.user.wallet_balance || 0);
-          document.getElementById('user-balance-npr').textContent = `NPR ${userBalance.toLocaleString()}`;
-
-          const badgeEl = document.getElementById('balance-badge');
-          if (userBalance >= requiredNpr) {
-            badgeEl.innerHTML = `<span class="badge badge-undetected">✓ Balance Sufficient</span>`;
-            document.getElementById('checkout-action-area').style.display = 'block';
-            document.getElementById('insufficient-funds-area').style.display = 'none';
-          } else {
-            const missing = Math.round(requiredNpr - userBalance);
-            badgeEl.innerHTML = `<span class="badge badge-danger">Needs NPR ${missing.toLocaleString()} more</span>`;
-            document.getElementById('checkout-action-area').style.display = 'none';
-            document.getElementById('insufficient-funds-area').style.display = 'block';
-          }
-        }
+        updateBalanceCheck();
 
       } catch (err) {
         console.error('Checkout load error:', err);
       }
+    }
+
+    function updateBalanceCheck() {
+      if (!Store.user) return;
+      const userBalance = parseFloat(Store.user.wallet_balance || 0);
+      document.getElementById('user-balance-npr').textContent = `NPR ${userBalance.toLocaleString()}`;
+
+      const badgeEl = document.getElementById('balance-badge');
+      if (userBalance >= requiredNpr) {
+        badgeEl.innerHTML = `<span class="badge badge-undetected">✓ Balance Sufficient</span>`;
+        document.getElementById('checkout-action-area').style.display = 'block';
+        document.getElementById('insufficient-funds-area').style.display = 'none';
+      } else {
+        const missing = Math.round(requiredNpr - userBalance);
+        badgeEl.innerHTML = `<span class="badge badge-danger">Needs NPR ${missing.toLocaleString()} more</span>`;
+        document.getElementById('checkout-action-area').style.display = 'none';
+        document.getElementById('insufficient-funds-area').style.display = 'block';
+      }
+    }
+
+    function initRedeemCodeHandlers() {
+      const inputEl = document.getElementById('input-redeem-code');
+      const applyBtn = document.getElementById('btn-apply-redeem');
+      const removeBtn = document.getElementById('btn-remove-redeem');
+
+      if (!inputEl || !applyBtn) return;
+
+      inputEl.addEventListener('input', () => {
+        inputEl.value = inputEl.value.toUpperCase().replace(/[^A-Z0-9_-]/g, '');
+        document.getElementById('redeem-error-msg').style.display = 'none';
+      });
+
+      inputEl.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          applyRedeemCode();
+        }
+      });
+
+      applyBtn.addEventListener('click', applyRedeemCode);
+      if (removeBtn) removeBtn.addEventListener('click', removeRedeemCode);
+    }
+
+    async function applyRedeemCode() {
+      const inputEl = document.getElementById('input-redeem-code');
+      const errorEl = document.getElementById('redeem-error-msg');
+      const applyBtn = document.getElementById('btn-apply-redeem');
+      const code = inputEl.value.trim().toUpperCase();
+
+      errorEl.style.display = 'none';
+
+      if (!code) {
+        errorEl.textContent = 'Please enter a redeem code.';
+        errorEl.style.display = 'block';
+        inputEl.focus();
+        return;
+      }
+
+      applyBtn.disabled = true;
+      applyBtn.textContent = 'Verifying...';
+
+      try {
+        const res = await fetch('/api/redeem/validate', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            code,
+            product_id: parseInt(productId, 10),
+            plan_id: parseInt(planId, 10)
+          })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || !data.success || !data.valid) {
+          errorEl.textContent = data.message || 'Invalid or expired redeem code.';
+          errorEl.style.display = 'block';
+          applyBtn.disabled = false;
+          applyBtn.textContent = 'Apply ⚡';
+          return;
+        }
+
+        // Successfully verified
+        appliedCouponCode = data.code;
+        appliedDiscountData = data;
+
+        const details = data.price_details;
+        const discountUsd = details ? details.discount_usd : (data.discount_type === 'percent' ? (basePlanPriceUsd * data.discount_value / 100) : data.discount_value);
+        const finalUsd = details ? details.final_price_usd : Math.max(0, basePlanPriceUsd - discountUsd);
+        const finalNpr = details ? details.final_price_npr : Math.round(finalUsd * nprExchangeRate);
+
+        requiredNpr = finalNpr;
+
+        // UI Updates: Product Box
+        document.getElementById('row-original-price').style.display = 'flex';
+        document.getElementById('price-original-usd').textContent = `$${basePlanPriceUsd.toFixed(2)}`;
+
+        document.getElementById('row-discount-price').style.display = 'flex';
+        document.getElementById('label-discount-percent').textContent = data.discount_label;
+        document.getElementById('price-discount-usd').textContent = `-$${discountUsd.toFixed(2)}`;
+
+        document.getElementById('price-usd').textContent = `$${finalUsd.toFixed(2)}`;
+        
+        const origNprEl = document.getElementById('price-original-npr');
+        origNprEl.style.display = 'inline';
+        origNprEl.textContent = `NPR ${basePlanPriceNpr.toLocaleString()}`;
+        document.getElementById('price-npr').textContent = `NPR ${finalNpr.toLocaleString()}`;
+
+        // UI Updates: Voucher Card
+        document.getElementById('redeem-input-area').style.display = 'none';
+        const banner = document.getElementById('applied-redeem-banner');
+        banner.style.display = 'flex';
+        document.getElementById('applied-code-text').textContent = data.code;
+        document.getElementById('applied-badge-text').textContent = data.discount_label;
+
+        const expiryDate = new Date(data.valid_until);
+        const formattedExpiry = expiryDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        document.getElementById('applied-expiry-text').textContent = `Discount active! Code is valid until ${formattedExpiry}.`;
+
+        // Re-evaluate wallet balance
+        updateBalanceCheck();
+
+        showToast(`Redeem code "${data.code}" applied! You saved $${discountUsd.toFixed(2)}.`, 'success');
+
+      } catch (err) {
+        console.error('Redeem validate error:', err);
+        errorEl.textContent = 'Server error verifying redeem code.';
+        errorEl.style.display = 'block';
+      } finally {
+        applyBtn.disabled = false;
+        applyBtn.textContent = 'Apply ⚡';
+      }
+    }
+
+    function removeRedeemCode() {
+      appliedCouponCode = null;
+      appliedDiscountData = null;
+      requiredNpr = basePlanPriceNpr;
+
+      // Reset Product Box
+      document.getElementById('row-original-price').style.display = 'none';
+      document.getElementById('row-discount-price').style.display = 'none';
+      document.getElementById('price-usd').textContent = `$${basePlanPriceUsd.toFixed(2)}`;
+      document.getElementById('price-original-npr').style.display = 'none';
+      document.getElementById('price-npr').textContent = `NPR ${basePlanPriceNpr.toLocaleString()}`;
+
+      // Reset Voucher Card
+      document.getElementById('applied-redeem-banner').style.display = 'none';
+      document.getElementById('redeem-input-area').style.display = 'flex';
+      const inputEl = document.getElementById('input-redeem-code');
+      inputEl.value = '';
+      document.getElementById('redeem-error-msg').style.display = 'none';
+
+      // Re-evaluate wallet balance
+      updateBalanceCheck();
+
+      showToast('Redeem code removed.', 'info');
     }
 
     async function submitOrder() {
@@ -243,14 +452,20 @@
       btn.textContent = 'Processing Transaction...';
 
       try {
+        const payload = {
+          product_id: parseInt(productId, 10),
+          plan_id: parseInt(planId, 10)
+        };
+
+        if (appliedCouponCode) {
+          payload.redeem_code = appliedCouponCode;
+        }
+
         const res = await fetch('/api/orders/submit', {
           method: 'POST',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            product_id: parseInt(productId, 10),
-            plan_id: parseInt(planId, 10)
-          })
+          body: JSON.stringify(payload)
         });
 
         const data = await res.json();
@@ -302,7 +517,11 @@
           keyDisplay.insertAdjacentElement('afterend', downloadSection);
         }
 
-        showToast('Order successful! Your key is ready.', 'success');
+        if (data.discount_usd > 0) {
+          showToast(`Order placed with code "${data.redeem_code}"! You saved $${data.discount_usd.toFixed(2)}.`, 'success');
+        } else {
+          showToast('Order successful! Your key is ready.', 'success');
+        }
 
       } catch (err) {
         console.error('Order error:', err);

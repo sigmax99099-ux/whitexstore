@@ -249,6 +249,25 @@ CREATE TABLE IF NOT EXISTS social_links (
 
 CREATE INDEX IF NOT EXISTS idx_social_links_active_sort ON social_links(is_active, sort_order);
 
+-- 19. REDEEM CODES TABLE (Admin Generated Coupons with Expiry Period & Discounts)
+CREATE TABLE IF NOT EXISTS redeem_codes (
+  id SERIAL PRIMARY KEY,
+  code VARCHAR(50) UNIQUE NOT NULL,
+  discount_type VARCHAR(20) NOT NULL DEFAULT 'percent' CHECK (discount_type IN ('percent', 'fixed')),
+  discount_value NUMERIC(10,2) NOT NULL DEFAULT 0,
+  valid_from TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  valid_until TIMESTAMP WITH TIME ZONE NOT NULL,
+  max_uses INT NOT NULL DEFAULT 0, -- 0 = unlimited
+  used_count INT NOT NULL DEFAULT 0,
+  status VARCHAR(20) NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'inactive')),
+  notes TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_redeem_codes_code ON redeem_codes(code);
+CREATE INDEX IF NOT EXISTS idx_redeem_codes_active ON redeem_codes(status, valid_until);
+
 CREATE INDEX idx_hwid_reset_key ON hwid_reset_log(key_code);
 CREATE INDEX idx_hwid_reset_user ON hwid_reset_log(requested_by);
 CREATE INDEX idx_hwid_reset_created ON hwid_reset_log(created_at);
