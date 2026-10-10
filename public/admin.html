@@ -2036,6 +2036,53 @@
     </div>
   </div>
 
+  <!-- 2b. Edit Plan Modal -->
+  <div id="modal-edit-plan" class="modal-backdrop">
+    <div class="modal-box" style="max-width: 540px; width: 95%;">
+      <button class="modal-close" onclick="closeModal('modal-edit-plan')">✕</button>
+      <h3 style="color: #fff; margin-bottom: 1.25rem;">✏️ Edit Plan & Pricing</h3>
+      <form id="form-edit-plan">
+        <input type="hidden" id="edit-plan-id">
+        <div class="form-group">
+          <label class="form-label">Product</label>
+          <input type="text" id="edit-plan-product-name" class="form-input" disabled style="opacity: 0.75; cursor: not-allowed;">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Plan Name *</label>
+          <input type="text" id="edit-plan-name" class="form-input" required placeholder="e.g. 1 Day Access">
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label class="form-label">Duration Type</label>
+            <select id="edit-plan-duration-type" class="form-select">
+              <option value="days">Days</option>
+              <option value="hours">Hours</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Duration Count *</label>
+            <input type="number" id="edit-plan-days" class="form-input" required min="1">
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label class="form-label">Price (USD) *</label>
+            <input type="number" id="edit-plan-price" class="form-input" step="any" required placeholder="4.99">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Discount % (e.g. 10%)</label>
+            <input type="number" id="edit-plan-discount" class="form-input" min="0" max="100" value="0">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">KeyLicense / Supplier Variant ID (Optional)</label>
+          <input type="text" id="edit-plan-supplier-variant" class="form-input" placeholder="e.g. 1024 or leave blank for stock">
+        </div>
+        <button type="submit" id="btn-update-plan" class="btn btn-primary btn-block btn-lg btn-glow">Save Plan Changes ⚡</button>
+      </form>
+    </div>
+  </div>
+
   <!-- 3. Add Keys Modal -->
   <div id="modal-add-keys" class="modal-backdrop">
     <div class="modal-box" style="max-width: 560px; width: 95%;">
@@ -2991,6 +3038,7 @@
       // Forms
       document.getElementById('form-add-product').addEventListener('submit', handleAddProductSubmit);
       document.getElementById('form-add-plan').addEventListener('submit', handleAddPlanSubmit);
+      document.getElementById('form-edit-plan')?.addEventListener('submit', handleEditPlanSubmit);
       document.getElementById('form-add-keys').addEventListener('submit', handleAddKeysSubmit);
       document.getElementById('form-payment-method').addEventListener('submit', handlePaymentMethodSubmit);
       document.getElementById('form-supplier-api')?.addEventListener('submit', handleSupplierApiSubmit);
@@ -4527,7 +4575,10 @@
             <td><code>${pl.supplier_variant_id || '-'}</code></td>
             <td><span class="badge badge-undetected">${pl.available_keys || 0}</span></td>
             <td>
-              <button class="btn btn-outline btn-sm" onclick="deletePlan(${pl.id})" style="color:var(--danger)">Delete</button>
+              <div style="display: flex; gap: 0.4rem; align-items: center;">
+                <button class="btn btn-outline btn-sm" onclick="openEditPlanModal(${pl.id})" style="border-color: rgba(56, 189, 248, 0.4); color: #38bdf8; padding: 4px 10px; font-size: 0.78rem;">Edit</button>
+                <button class="btn btn-outline btn-sm" onclick="deletePlan(${pl.id})" style="color:var(--danger); padding: 4px 10px; font-size: 0.78rem;">Delete</button>
+              </div>
             </td>
           </tr>
         `).join('');
@@ -4593,6 +4644,72 @@
       if (!confirm('Are you sure you want to delete this plan?')) return;
       await fetch(`/api/admin/plans?id=${id}`, { method: 'DELETE', credentials: 'include' });
       loadAdminPlans();
+    }
+
+    function openEditPlanModal(id) {
+      const plan = globalPlans.find(p => p.id === id);
+      if (!plan) {
+        showToast('Plan not found', 'error');
+        return;
+      }
+      document.getElementById('edit-plan-id').value = plan.id;
+      document.getElementById('edit-plan-product-name').value = plan.product_name || `Product #${plan.product_id}`;
+      document.getElementById('edit-plan-name').value = plan.plan_name || '';
+      document.getElementById('edit-plan-duration-type').value = plan.duration_type || 'days';
+      document.getElementById('edit-plan-days').value = plan.days || 1;
+      document.getElementById('edit-plan-price').value = plan.price_usd || 0;
+      document.getElementById('edit-plan-discount').value = plan.discount_percent || 0;
+      document.getElementById('edit-plan-supplier-variant').value = plan.supplier_variant_id || '';
+      openModal('modal-edit-plan');
+    }
+
+    async function handleEditPlanSubmit(e) {
+      e.preventDefault();
+      const id = parseInt(document.getElementById('edit-plan-id').value, 10);
+      if (!id) return;
+
+      const plan_name = document.getElementById('edit-plan-name').value.trim();
+      const duration_type = document.getElementById('edit-plan-duration-type').value;
+      const days = parseInt(document.getElementById('edit-plan-days').value, 10);
+      const price_usd = parseFloat(document.getElementById('edit-plan-price').value);
+      const discount_percent = parseFloat(document.getElementById('edit-plan-discount').value || 0);
+      const supplier_variant_id = document.getElementById('edit-plan-supplier-variant').value.trim();
+
+      const btn = document.getElementById('btn-update-plan');
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+
+      try {
+        const res = await fetch('/api/admin/plans', {
+          method: 'PUT',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id,
+            plan_name,
+            duration_type,
+            days,
+            price_usd,
+            discount_percent,
+            supplier_variant_id
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          showToast(data.message || 'Failed to update plan', 'error');
+          return;
+        }
+
+        showToast('Plan updated successfully!', 'success');
+        closeModal('modal-edit-plan');
+        loadAdminPlans();
+      } catch (err) {
+        showToast('Error updating plan: ' + err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Save Plan Changes ⚡';
+      }
     }
 
     /* ==============================================================

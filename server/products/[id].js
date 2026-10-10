@@ -1,5 +1,6 @@
 import { query } from '../../lib/db.js';
 import { getAuthUser } from '../../lib/auth.js';
+import { ensureProductCascadeSchema } from '../../lib/schema-migration.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -7,6 +8,8 @@ export default async function handler(req, res) {
   }
 
   try {
+    ensureProductCascadeSchema().catch(() => {});
+
     const { id } = req.query;
 
     if (!id || isNaN(parseInt(id, 10))) {
@@ -100,6 +103,7 @@ export default async function handler(req, res) {
         discount_percent: discount,
         final_price_usd: parseFloat(finalPrice.toFixed(2)),
         custom_reseller_applied: customResellerApplied,
+        original_price_npr: (basePrice * rates.NPR).toFixed(2),
         price_npr: (finalPrice * rates.NPR).toFixed(2),
         price_inr: (finalPrice * rates.INR).toFixed(2)
       };

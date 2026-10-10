@@ -871,6 +871,9 @@ function render7SProductCardHtml(p) {
   const pName = p.name || 'Game Software';
   const pCat = p.category || 'PC PANEL';
   const lowestPriceUsd = p.lowest_price_usd || '0.00';
+  const origPriceUsd = p.original_lowest_price_usd || lowestPriceUsd;
+  const maxDiscount = parseFloat(p.max_discount_percent || 0);
+  const hasDiscount = maxDiscount > 0 && parseFloat(origPriceUsd) > parseFloat(lowestPriceUsd);
   const imgUrl = p.image || '/assets/images/store-hero-clean.png';
   const isOutOfStock = p.available_keys_count === 0 && (p.total_plans > 0);
   const stockText = isOutOfStock ? 'OUT OF STOCK' : 'IN STOCK';
@@ -896,6 +899,7 @@ function render7SProductCardHtml(p) {
     <article class="card product-card" id="product-${p.id}">
       <div class="card-cover-wrap" onclick="window.location.href='/product.html?id=${p.id}'" title="Click to view ${escapeHtml(pName)}">
         <img src="${imgUrl}" alt="${escapeHtml(pName)}" class="card-cover-img" loading="lazy" onerror="this.onerror=null; this.src='/assets/images/store-hero-clean.png';">
+        ${hasDiscount ? `<span style="position: absolute; top: 8px; left: 8px; background: linear-gradient(135deg, #ff0055, #ff3366); color: #fff; font-size: 0.72rem; font-weight: 800; padding: 2px 7px; border-radius: 4px; box-shadow: 0 0 10px rgba(255,0,85,0.6); z-index: 2; letter-spacing: 0.5px;">-${Math.round(maxDiscount)}% OFF</span>` : ''}
         <span class="stock-pill ${isOutOfStock ? 'out-of-stock' : ''}">${stockText}</span>
       </div>
       <div class="card-body">
@@ -910,10 +914,12 @@ function render7SProductCardHtml(p) {
 
         <div class="card-price-box">
           <span class="price-box-label">STARTING AT</span>
-          <div class="price-box-val">
-            <span class="price-amount" data-usd-price="${lowestPriceUsd}">
+          <div class="price-box-val" style="display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px;">
+            ${hasDiscount ? `<span class="price-orig-amount" data-usd-price="${origPriceUsd}" style="text-decoration: line-through; opacity: 0.55; font-size: 0.85em; color: var(--text-dim);">${formatPrice(origPriceUsd)}</span>` : ''}
+            <span class="price-amount" data-usd-price="${lowestPriceUsd}" style="color: var(--primary); font-weight: 800;">
               ${formatPrice(lowestPriceUsd)}
             </span>
+            ${hasDiscount ? `<span style="font-size: 0.68rem; font-weight: 800; background: rgba(255, 42, 133, 0.2); color: var(--primary); padding: 1px 5px; border-radius: 3px;">-${Math.round(maxDiscount)}%</span>` : ''}
           </div>
         </div>
 

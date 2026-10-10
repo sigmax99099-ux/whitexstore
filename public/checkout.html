@@ -73,29 +73,47 @@
             </div>
           </div>
 
+          <!-- Original Price Row (strikethrough) -->
           <div id="row-original-price" style="display: none; justify-content: space-between; align-items: center; border-top: 1px solid var(--bg-card-border); padding-top: 0.75rem; margin-top: 0.75rem;">
-            <span style="color: var(--text-dim); font-size: 0.88rem;">Plan Subtotal:</span>
-            <span id="price-original-usd" style="text-decoration: line-through; color: var(--text-dim); font-size: 0.95rem;">$0.00</span>
+            <span style="color: var(--text-dim); font-size: 0.88rem;">Original Price:</span>
+            <span id="price-original-usd" style="text-decoration: line-through; color: var(--text-dim); font-size: 0.95rem; font-weight: 600;">$0.00</span>
           </div>
 
-          <div id="row-discount-price" style="display: none; justify-content: space-between; align-items: center; margin-top: 0.35rem;">
-            <span style="color: #34d399; font-size: 0.88rem; font-weight: 700; display: flex; align-items: center; gap: 0.35rem;">
+          <!-- Plan Discount Row -->
+          <div id="row-plan-discount" style="display: none; justify-content: space-between; align-items: center; margin-top: 0.4rem;">
+            <span style="color: #38bdf8; font-size: 0.88rem; font-weight: 700; display: flex; align-items: center; gap: 0.4rem;">
+              <span>⚡ Plan Discount:</span>
+              <span id="label-plan-discount-percent" style="font-size: 0.75rem; background: rgba(56, 189, 248, 0.2); color: #38bdf8; padding: 2px 7px; border-radius: 4px; font-weight: 800;">-0%</span>
+            </span>
+            <span id="price-plan-discount-usd" style="color: #38bdf8; font-weight: 800;">-$0.00</span>
+          </div>
+
+          <!-- Coupon Discount Row -->
+          <div id="row-discount-price" style="display: none; justify-content: space-between; align-items: center; margin-top: 0.4rem;">
+            <span style="color: #34d399; font-size: 0.88rem; font-weight: 700; display: flex; align-items: center; gap: 0.4rem;">
               <span>🎁 Coupon Discount:</span>
-              <span id="label-discount-percent" style="font-size: 0.75rem; background: rgba(52, 211, 153, 0.2); padding: 1px 6px; border-radius: 4px;">-0%</span>
+              <span id="label-discount-percent" style="font-size: 0.75rem; background: rgba(52, 211, 153, 0.2); color: #34d399; padding: 2px 7px; border-radius: 4px; font-weight: 800;">-0%</span>
             </span>
             <span id="price-discount-usd" style="color: #34d399; font-weight: 800;">-$0.00</span>
           </div>
 
-          <div style="border-top: 1px solid var(--bg-card-border); padding-top: 0.9rem; display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem;">
+          <!-- Total Savings Badge -->
+          <div id="row-total-savings" style="display: none; justify-content: flex-end; margin-top: 0.4rem;">
+            <span id="label-total-savings" style="font-size: 0.78rem; color: #34d399; background: rgba(52, 211, 153, 0.12); border: 1px solid rgba(52, 211, 153, 0.35); padding: 2px 9px; border-radius: 999px; font-weight: 700;">
+              Total Savings: $0.00
+            </span>
+          </div>
+
+          <div style="border-top: 1px solid var(--bg-card-border); padding-top: 0.9rem; display: flex; justify-content: space-between; align-items: center; margin-top: 0.6rem;">
             <span style="color: var(--text-muted); font-size: 0.95rem;">Order Total (USD):</span>
-            <span id="price-usd" style="font-family: var(--font-heading); font-size: 1.4rem; color: #fff; font-weight: 800;">$0.00</span>
+            <span id="price-usd" style="font-family: var(--font-heading); font-size: 1.45rem; color: #fff; font-weight: 800;">$0.00</span>
           </div>
 
           <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.35rem;">
             <span style="color: var(--text-muted); font-size: 0.95rem;">Deduction in NPR:</span>
             <div style="text-align: right;">
-              <span id="price-original-npr" style="display: none; text-decoration: line-through; color: var(--text-dim); font-size: 0.88rem; margin-right: 0.5rem;"></span>
-              <span id="price-npr" style="font-family: var(--font-heading); font-size: 1.4rem; color: var(--primary); font-weight: 800;">NPR 0</span>
+              <span id="price-original-npr" style="display: none; text-decoration: line-through; color: var(--text-dim); font-size: 0.88rem; margin-right: 0.5rem; font-weight: 600;"></span>
+              <span id="price-npr" style="font-family: var(--font-heading); font-size: 1.45rem; color: var(--primary); font-weight: 800;">NPR 0</span>
             </div>
           </div>
         </div>
@@ -214,8 +232,11 @@
     let productData = null;
     let planData = null;
     let requiredNpr = 0;
+    let originalPlanPriceUsd = 0;
     let basePlanPriceUsd = 0;
+    let originalPlanPriceNpr = 0;
     let basePlanPriceNpr = 0;
+    let planDiscountPercent = 0;
     let nprExchangeRate = 134.50;
     let appliedCouponCode = null;
     let appliedDiscountData = null;
@@ -278,15 +299,15 @@
         document.getElementById('item-plan').textContent = `${planData.plan_name} (${planData.days} ${planData.duration_type})`;
 
         nprExchangeRate = data.rates?.NPR || 134.50;
-        basePlanPriceUsd = planData.final_price_usd;
+        originalPlanPriceUsd = parseFloat(planData.original_price_usd || planData.price_usd || planData.final_price_usd);
+        basePlanPriceUsd = parseFloat(planData.final_price_usd);
+        planDiscountPercent = parseFloat(planData.discount_percent || 0);
+
+        originalPlanPriceNpr = parseFloat((originalPlanPriceUsd * nprExchangeRate).toFixed(2));
         basePlanPriceNpr = parseFloat((basePlanPriceUsd * nprExchangeRate).toFixed(2));
         requiredNpr = basePlanPriceNpr;
 
-        document.getElementById('price-usd').textContent = `$${basePlanPriceUsd.toFixed(2)}`;
-        document.getElementById('price-npr').textContent = `NPR ${basePlanPriceNpr.toLocaleString()}`;
-
-        // Verify user balance if logged in
-        updateBalanceCheck();
+        updateOrderPricingDisplay();
 
       } catch (err) {
         console.error('Checkout load error:', err);
@@ -378,27 +399,7 @@
         appliedCouponCode = data.code;
         appliedDiscountData = data;
 
-        const details = data.price_details;
-        const discountUsd = details ? details.discount_usd : (data.discount_type === 'percent' ? (basePlanPriceUsd * data.discount_value / 100) : data.discount_value);
-        const finalUsd = details ? details.final_price_usd : Math.max(0, basePlanPriceUsd - discountUsd);
-        const finalNpr = details ? details.final_price_npr : Math.round(finalUsd * nprExchangeRate);
-
-        requiredNpr = finalNpr;
-
-        // UI Updates: Product Box
-        document.getElementById('row-original-price').style.display = 'flex';
-        document.getElementById('price-original-usd').textContent = `$${basePlanPriceUsd.toFixed(2)}`;
-
-        document.getElementById('row-discount-price').style.display = 'flex';
-        document.getElementById('label-discount-percent').textContent = data.discount_label;
-        document.getElementById('price-discount-usd').textContent = `-$${discountUsd.toFixed(2)}`;
-
-        document.getElementById('price-usd').textContent = `$${finalUsd.toFixed(2)}`;
-        
-        const origNprEl = document.getElementById('price-original-npr');
-        origNprEl.style.display = 'inline';
-        origNprEl.textContent = `NPR ${basePlanPriceNpr.toLocaleString()}`;
-        document.getElementById('price-npr').textContent = `NPR ${finalNpr.toLocaleString()}`;
+        updateOrderPricingDisplay();
 
         // UI Updates: Voucher Card
         document.getElementById('redeem-input-area').style.display = 'none';
@@ -411,10 +412,9 @@
         const formattedExpiry = expiryDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
         document.getElementById('applied-expiry-text').textContent = `Discount active! Code is valid until ${formattedExpiry}.`;
 
-        // Re-evaluate wallet balance
-        updateBalanceCheck();
-
-        showToast(`Redeem code "${data.code}" applied! You saved $${discountUsd.toFixed(2)}.`, 'success');
+        const details = data.price_details;
+        const discountUsd = details ? details.discount_usd : (data.discount_type === 'percent' ? (basePlanPriceUsd * data.discount_value / 100) : data.discount_value);
+        showToast(`Redeem code "${data.code}" applied! You saved an extra $${discountUsd.toFixed(2)}.`, 'success');
 
       } catch (err) {
         console.error('Redeem validate error:', err);
@@ -426,17 +426,92 @@
       }
     }
 
+    function updateOrderPricingDisplay() {
+      const rowOrigPrice = document.getElementById('row-original-price');
+      const origPriceUsdEl = document.getElementById('price-original-usd');
+      const rowPlanDiscount = document.getElementById('row-plan-discount');
+      const planDiscountPercentEl = document.getElementById('label-plan-discount-percent');
+      const planDiscountUsdEl = document.getElementById('price-plan-discount-usd');
+      const rowCouponDiscount = document.getElementById('row-discount-price');
+      const couponPercentEl = document.getElementById('label-discount-percent');
+      const couponDiscountUsdEl = document.getElementById('price-discount-usd');
+      const rowTotalSavings = document.getElementById('row-total-savings');
+      const labelTotalSavings = document.getElementById('label-total-savings');
+      const priceUsdEl = document.getElementById('price-usd');
+      const priceOrigNprEl = document.getElementById('price-original-npr');
+      const priceNprEl = document.getElementById('price-npr');
+
+      const hasPlanDiscount = planDiscountPercent > 0 && originalPlanPriceUsd > basePlanPriceUsd;
+      const planSavingsUsd = hasPlanDiscount ? (originalPlanPriceUsd - basePlanPriceUsd) : 0;
+
+      let couponSavingsUsd = 0;
+      let finalUsd = basePlanPriceUsd;
+      let finalNpr = basePlanPriceNpr;
+
+      if (appliedDiscountData) {
+        const details = appliedDiscountData.price_details;
+        couponSavingsUsd = details ? details.discount_usd : (appliedDiscountData.discount_type === 'percent' ? (basePlanPriceUsd * appliedDiscountData.discount_value / 100) : appliedDiscountData.discount_value);
+        finalUsd = details ? details.final_price_usd : Math.max(0, basePlanPriceUsd - couponSavingsUsd);
+        finalNpr = details ? details.final_price_npr : Math.round(finalUsd * nprExchangeRate);
+      }
+
+      requiredNpr = finalNpr;
+
+      // 1. Original Price Row (strikethrough)
+      if (hasPlanDiscount || appliedDiscountData) {
+        rowOrigPrice.style.display = 'flex';
+        origPriceUsdEl.textContent = `$${originalPlanPriceUsd.toFixed(2)}`;
+      } else {
+        rowOrigPrice.style.display = 'none';
+      }
+
+      // 2. Plan Discount Row
+      if (hasPlanDiscount) {
+        rowPlanDiscount.style.display = 'flex';
+        planDiscountPercentEl.textContent = `-${Math.round(planDiscountPercent)}% OFF`;
+        planDiscountUsdEl.textContent = `-$${planSavingsUsd.toFixed(2)}`;
+      } else {
+        rowPlanDiscount.style.display = 'none';
+      }
+
+      // 3. Coupon Discount Row
+      if (appliedDiscountData) {
+        rowCouponDiscount.style.display = 'flex';
+        couponPercentEl.textContent = appliedDiscountData.discount_label;
+        couponDiscountUsdEl.textContent = `-$${couponSavingsUsd.toFixed(2)}`;
+      } else {
+        rowCouponDiscount.style.display = 'none';
+      }
+
+      // 4. Total Savings Badge
+      const totalSavingsUsd = planSavingsUsd + couponSavingsUsd;
+      if (totalSavingsUsd > 0.009) {
+        rowTotalSavings.style.display = 'flex';
+        labelTotalSavings.textContent = `🎉 Total Saved: $${totalSavingsUsd.toFixed(2)}`;
+      } else {
+        rowTotalSavings.style.display = 'none';
+      }
+
+      // 5. Final USD & NPR Totals
+      priceUsdEl.textContent = `$${finalUsd.toFixed(2)}`;
+      priceNprEl.textContent = `NPR ${finalNpr.toLocaleString()}`;
+
+      if (totalSavingsUsd > 0.009) {
+        priceOrigNprEl.style.display = 'inline';
+        priceOrigNprEl.textContent = `NPR ${originalPlanPriceNpr.toLocaleString()}`;
+      } else {
+        priceOrigNprEl.style.display = 'none';
+      }
+
+      // 6. Update user wallet balance sufficiency
+      updateBalanceCheck();
+    }
+
     function removeRedeemCode() {
       appliedCouponCode = null;
       appliedDiscountData = null;
-      requiredNpr = basePlanPriceNpr;
 
-      // Reset Product Box
-      document.getElementById('row-original-price').style.display = 'none';
-      document.getElementById('row-discount-price').style.display = 'none';
-      document.getElementById('price-usd').textContent = `$${basePlanPriceUsd.toFixed(2)}`;
-      document.getElementById('price-original-npr').style.display = 'none';
-      document.getElementById('price-npr').textContent = `NPR ${basePlanPriceNpr.toLocaleString()}`;
+      updateOrderPricingDisplay();
 
       // Reset Voucher Card
       document.getElementById('applied-redeem-banner').style.display = 'none';
@@ -444,9 +519,6 @@
       const inputEl = document.getElementById('input-redeem-code');
       inputEl.value = '';
       document.getElementById('redeem-error-msg').style.display = 'none';
-
-      // Re-evaluate wallet balance
-      updateBalanceCheck();
 
       showToast('Redeem code removed.', 'info');
     }

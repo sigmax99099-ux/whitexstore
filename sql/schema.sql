@@ -375,27 +375,27 @@ ALTER SEQUENCE products_id_seq RESTART WITH 6;
 -- Default Plans for Products
 INSERT INTO plans (id, product_id, plan_name, duration_type, days, price_usd, discount_percent) VALUES
 -- Apex Legends (Product 1)
-(1, 1, '1 Day Access', 'days', 1, 4.99, 0),
+(1, 1, '1 Day Access', 'days', 1, 4.99, 10),
 (2, 1, '7 Days Access', 'days', 7, 18.99, 10),
 (3, 1, '30 Days Access', 'days', 30, 44.99, 20),
 
 -- Valorant (Product 2)
-(4, 2, '1 Day Key', 'days', 1, 6.99, 0),
+(4, 2, '1 Day Key', 'days', 1, 6.99, 10),
 (5, 2, '7 Days Key', 'days', 7, 24.99, 10),
 (6, 2, '30 Days Key', 'days', 30, 59.99, 15),
 
 -- PUBG Mobile (Product 3)
-(7, 3, '1 Day Pass', 'days', 1, 2.99, 0),
+(7, 3, '1 Day Pass', 'days', 1, 2.99, 10),
 (8, 3, '7 Days Pass', 'days', 7, 9.99, 15),
 (9, 3, '30 Days Pass', 'days', 30, 24.99, 25),
 
 -- Warzone (Product 4)
-(10, 4, '1 Day VIP', 'days', 1, 5.49, 0),
+(10, 4, '1 Day VIP', 'days', 1, 5.49, 10),
 (11, 4, '7 Days VIP', 'days', 7, 21.99, 10),
 (12, 4, '30 Days VIP', 'days', 30, 49.99, 20),
 
 -- Fortnite (Product 5)
-(13, 5, '1 Day Key', 'days', 1, 5.99, 0),
+(13, 5, '1 Day Key', 'days', 1, 5.99, 10),
 (14, 5, '7 Days Key', 'days', 7, 22.99, 10),
 (15, 5, '30 Days Key', 'days', 30, 52.99, 15);
 

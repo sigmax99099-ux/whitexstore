@@ -1,4 +1,5 @@
 import { query } from '../../lib/db.js';
+import { ensureProductCascadeSchema } from '../../lib/schema-migration.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -6,6 +7,9 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Proactively ensure schema & starter plan discounts in background
+    ensureProductCascadeSchema().catch(() => {});
+
     const { cat, featured } = req.query || {};
 
     let sql = `
@@ -23,6 +27,14 @@ export default async function handler(req, res) {
           MIN(pl.price_usd * (1 - pl.discount_percent / 100.0)),
           0
         ) as lowest_price_usd,
+        COALESCE(
+          MIN(pl.price_usd),
+          0
+        ) as original_lowest_price_usd,
+        COALESCE(
+          MAX(pl.discount_percent),
+          0
+        ) as max_discount_percent,
         COUNT(pl.id)::int as total_plans,
         (
           SELECT COUNT(*)::int 
@@ -73,6 +85,8 @@ export default async function handler(req, res) {
       products: productsRes.rows.map(prod => ({
         ...prod,
         lowest_price_usd: parseFloat(prod.lowest_price_usd).toFixed(2),
+        original_lowest_price_usd: parseFloat(prod.original_lowest_price_usd || prod.lowest_price_usd).toFixed(2),
+        max_discount_percent: parseFloat(prod.max_discount_percent || 0),
         features_list: prod.features ? prod.features.split('\n').map(f => f.trim()).filter(Boolean) : []
       }))
     });

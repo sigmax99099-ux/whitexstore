@@ -264,13 +264,19 @@
       container.innerHTML = currentProduct.plans.map(p => {
         const isSelected = selectedPlan && selectedPlan.id === p.id;
         const formatted = formatPrice(p.final_price_usd);
+        const origUsd = parseFloat(p.original_price_usd || p.price_usd || p.final_price_usd);
+        const finalUsd = parseFloat(p.final_price_usd);
+        const hasDiscount = p.discount_percent > 0 && origUsd > finalUsd;
 
         return `
           <div class="plan-item ${isSelected ? 'selected' : ''}" onclick="selectPlanById(${p.id})">
-            ${p.discount_percent > 0 ? `<div class="plan-discount-tag">-${p.discount_percent}%</div>` : ''}
+            ${p.discount_percent > 0 ? `<div class="plan-discount-tag">-${Math.round(p.discount_percent)}%</div>` : ''}
             ${p.custom_reseller_applied ? `<div class="plan-discount-tag" style="background:#f59e0b;">RESELLER</div>` : ''}
             <div class="plan-duration">${escapeHtml(p.plan_name)}</div>
-            <div class="plan-price">${formatted}</div>
+            <div class="plan-price" style="display: flex; align-items: baseline; justify-content: center; gap: 6px;">
+              ${hasDiscount ? `<span style="text-decoration: line-through; opacity: 0.55; font-size: 0.85em; color: var(--text-dim);">${formatPrice(origUsd)}</span>` : ''}
+              <span>${formatted}</span>
+            </div>
             <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: 0.25rem;">
               Instant Key Delivery
             </div>
@@ -289,7 +295,21 @@
     function updateSummary() {
       if (!selectedPlan) return;
       document.getElementById('summary-plan-name').textContent = selectedPlan.plan_name;
-      document.getElementById('summary-plan-price').textContent = formatPrice(selectedPlan.final_price_usd);
+
+      const origUsd = parseFloat(selectedPlan.original_price_usd || selectedPlan.price_usd || selectedPlan.final_price_usd);
+      const finalUsd = parseFloat(selectedPlan.final_price_usd);
+      const hasDiscount = selectedPlan.discount_percent > 0 && origUsd > finalUsd;
+
+      const priceEl = document.getElementById('summary-plan-price');
+      if (hasDiscount) {
+        priceEl.innerHTML = `
+          <span style="text-decoration: line-through; opacity: 0.55; font-size: 0.95rem; color: var(--text-dim); margin-right: 6px;">${formatPrice(origUsd)}</span>
+          <span style="color: var(--primary); font-weight: 800;">${formatPrice(finalUsd)}</span>
+          <span style="font-size: 0.7rem; font-weight: 700; background: rgba(52, 211, 153, 0.2); color: #34d399; padding: 2px 6px; border-radius: 4px; vertical-align: middle; margin-left: 6px;">-${Math.round(selectedPlan.discount_percent)}% OFF</span>
+        `;
+      } else {
+        priceEl.textContent = formatPrice(finalUsd);
+      }
     }
   </script>
 </body>
