@@ -75,15 +75,15 @@ function toggleTheme() {
 function updateThemeToggleUI(btn) {
   if (Store.theme === 'light') {
     btn.innerHTML = `
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <svg class="theme-icon-svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
       </svg>
-      <span class="theme-lbl-text" style="font-size:0.8rem; font-weight:600; margin-left:4px;">Night</span>
     `;
-    btn.title = 'Switch to Dark Mode';
+    btn.title = 'Switch to Night Mode';
+    btn.setAttribute('aria-label', 'Switch to Night Mode');
   } else {
     btn.innerHTML = `
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <svg class="theme-icon-svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="5"></circle>
         <line x1="12" y1="1" x2="12" y2="3"></line>
         <line x1="12" y1="21" x2="12" y2="23"></line>
@@ -94,9 +94,9 @@ function updateThemeToggleUI(btn) {
         <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
         <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
       </svg>
-      <span class="theme-lbl-text" style="font-size:0.8rem; font-weight:600; margin-left:4px;">Day</span>
     `;
-    btn.title = 'Switch to Light Mode';
+    btn.title = 'Switch to Day Mode';
+    btn.setAttribute('aria-label', 'Switch to Day Mode');
   }
 }
 
@@ -255,7 +255,7 @@ function renderLoggedInNav(user) {
 
   container.innerHTML = `
     <div style="display: flex; align-items: center; gap: 0.75rem;">
-      <a href="/wallet.html" class="btn btn-outline btn-sm" title="Topup / Manage Wallet" style="border-color: rgba(0, 229, 255, 0.45); background: rgba(0, 229, 255, 0.08); color: #00e5ff;">
+      <a href="/wallet.html" class="btn btn-outline btn-sm" title="Topup / Manage Wallet" style="border-color: rgba(255, 42, 133, 0.45); background: rgba(255, 42, 133, 0.08); color: #ff2a85;">
         <span style="color: var(--primary);">⚡</span> NPR ${balanceNpr}
       </a>
       <a href="/dashboard.html" class="btn btn-outline btn-sm">
@@ -651,7 +651,7 @@ function renderHeroSlider() {
         
         ${slide.badge && !isCleanGraphic ? `
           <div class="hero-slide-top-badge-bar">
-            <span class="hero-slide-badge"><span style="color:#00e5ff;font-size:9px">●</span> ${escapeHtml(slide.badge)}</span>
+            <span class="hero-slide-badge"><span style="color:#ff2a85;font-size:9px">●</span> ${escapeHtml(slide.badge)}</span>
           </div>
         ` : ""}
 

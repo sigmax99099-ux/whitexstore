@@ -1,137 +1,215 @@
 /**
- * White X Store — Interactive 3D Cyber Particle Mesh
- * 60fps Canvas particle field with depth, connecting lines, and mouse reactivity.
+ * White X Store — 3D Cyber Globe & Perspective Mesh Background Engine
+ * Powered by Three.js & Vanta.js Globe
+ * Matches exact Vanta Globe aesthetic: Hot Pink wireframe terrain, rotating 3D sphere,
+ * radiating white light rays, dynamic mouse tracking, and day/night mode adaptation.
  */
 
-(function init3DHeroCanvas() {
-  const canvas = document.getElementById('hero3dCanvas');
-  if (!canvas) return;
+(function init3DBackground() {
+  let vantaEffect = null;
 
-  const ctx = canvas.getContext('2d');
-  let width, height;
-  let particles = [];
-  let mouse = { x: null, y: null, radius: 140 };
-
-  const PARTICLE_COUNT = 65;
-  const CONNECT_DISTANCE = 110;
-
-  function resize() {
-    const parent = canvas.parentElement;
-    width = canvas.width = parent.offsetWidth || window.innerWidth;
-    height = canvas.height = parent.offsetHeight || 600;
+  function ensureVantaContainer() {
+    let container = document.getElementById('vanta-3d-bg');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'vanta-3d-bg';
+      container.setAttribute('aria-hidden', 'true');
+      document.body.prepend(container);
+    }
+    return container;
   }
 
-  class Particle {
-    constructor() {
-      this.x = Math.random() * width;
-      this.y = Math.random() * height;
-      this.z = Math.random() * 2 + 0.5; // depth
-      this.radius = (Math.random() * 2 + 1) * this.z;
-      this.vx = (Math.random() - 0.5) * 0.7 * this.z;
-      this.vy = (Math.random() - 0.5) * 0.7 * this.z;
-      this.alpha = Math.random() * 0.6 + 0.3;
-      this.color = Math.random() > 0.4 ? '#00e5ff' : '#008ba3';
+  function getThemeColors() {
+    const isLight = document.documentElement.getAttribute('data-theme') === 'light' || 
+                    document.body.getAttribute('data-theme') === 'light';
+    if (isLight) {
+      return {
+        color: 0xe11d48,          // Ruby / Hot Pink
+        color2: 0x9333ea,         // Violet rays
+        backgroundColor: 0xfff0f5 // Frosted blush rose
+      };
     }
+    return {
+      color: 0xff2a85,            // Electric Hot Pink (exact Vanta screenshot)
+      color2: 0xffffff,           // Radiant white light needles
+      backgroundColor: 0x0c0414   // Cosmic deep violet-black (exact Vanta screenshot)
+    };
+  }
 
-    update() {
-      this.x += this.vx;
-      this.y += this.vy;
+  function startVantaGlobe() {
+    const container = ensureVantaContainer();
+    if (!container) return false;
 
-      if (this.x < 0) this.x = width;
-      if (this.x > width) this.x = 0;
-      if (this.y < 0) this.y = height;
-      if (this.y > height) this.y = 0;
+    // Check if Three.js and Vanta.GLOBE are loaded
+    if (typeof window.VANTA !== 'undefined' && typeof window.VANTA.GLOBE === 'function') {
+      try {
+        const colors = getThemeColors();
+        vantaEffect = window.VANTA.GLOBE({
+          el: container,
+          mouseControls: true,
+          touchControls: true,
+          gyroControls: false,
+          minHeight: 200.0,
+          minWidth: 200.0,
+          scale: 1.0,
+          scaleMobile: 0.85,
+          color: colors.color,
+          color2: colors.color2,
+          backgroundColor: colors.backgroundColor,
+          size: 1.05,
+          points: 12.0,
+          maxDistance: 22.0,
+          spacing: 16.0,
+          showDots: true
+        });
 
-      // Mouse interaction
-      if (mouse.x !== null && mouse.y !== null) {
-        const dx = mouse.x - this.x;
-        const dy = mouse.y - this.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-
-        if (dist < mouse.radius) {
-          const force = (mouse.radius - dist) / mouse.radius;
-          const angle = Math.atan2(dy, dx);
-          this.x -= Math.cos(angle) * force * 3;
-          this.y -= Math.sin(angle) * force * 3;
+        const canvas = container.querySelector('canvas');
+        if (canvas) {
+          canvas.style.position = 'fixed';
+          canvas.style.top = '0';
+          canvas.style.left = '0';
+          canvas.style.width = '100vw';
+          canvas.style.height = '100vh';
+          canvas.style.zIndex = '-1';
+          canvas.style.pointerEvents = 'none';
         }
+
+        return true;
+      } catch (err) {
+        console.warn('Vanta Globe init error, falling back to 3D Canvas:', err);
       }
     }
+    return false;
+  }
 
-    draw() {
-      ctx.beginPath();
-      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-      ctx.fillStyle = this.color;
-      ctx.globalAlpha = this.alpha;
-      ctx.shadowBlur = 10;
-      ctx.shadowColor = '#00e5ff';
-      ctx.fill();
-      ctx.shadowBlur = 0;
-      ctx.globalAlpha = 1;
+  // Graceful Fallback if WebGL/Vanta isn't available
+  function startFallback3D(container) {
+    if (!container) container = ensureVantaContainer();
+    if (container.querySelector('canvas')) return;
+
+    const canvas = document.createElement('canvas');
+    canvas.id = 'hero3dCanvas';
+    canvas.style.cssText = 'position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:-1; pointer-events:none;';
+    container.appendChild(canvas);
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let width, height;
+    function resize() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
     }
-  }
-
-  function initParticles() {
-    particles = [];
-    for (let i = 0; i < PARTICLE_COUNT; i++) {
-      particles.push(new Particle());
-    }
-  }
-
-  function drawConnections() {
-    for (let i = 0; i < particles.length; i++) {
-      for (let j = i + 1; j < particles.length; j++) {
-        const p1 = particles[i];
-        const p2 = particles[j];
-        const dx = p1.x - p2.x;
-        const dy = p1.y - p2.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-
-        if (dist < CONNECT_DISTANCE) {
-          const alpha = (1 - dist / CONNECT_DISTANCE) * 0.25;
-          ctx.beginPath();
-          ctx.moveTo(p1.x, p1.y);
-          ctx.lineTo(p2.x, p2.y);
-          ctx.strokeStyle = `rgba(0, 229, 255, ${alpha})`;
-          ctx.lineWidth = 1;
-          ctx.stroke();
-        }
-      }
-    }
-  }
-
-  let animationFrame;
-  function animate() {
-    ctx.clearRect(0, 0, width, height);
-
-    drawConnections();
-    particles.forEach(p => {
-      p.update();
-      p.draw();
-    });
-
-    animationFrame = requestAnimationFrame(animate);
-  }
-
-  window.addEventListener('resize', () => {
     resize();
-    initParticles();
+    window.addEventListener('resize', resize, { passive: true });
+
+    // 3D Particles & Cyber Grid with Hot Pink glow
+    const particles = [];
+    const count = Math.min(60, Math.floor(window.innerWidth / 25));
+    for (let i = 0; i < count; i++) {
+      particles.push({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        z: Math.random() * 2 + 0.5,
+        vx: (Math.random() - 0.5) * 0.8,
+        vy: (Math.random() - 0.5) * 0.8,
+        radius: Math.random() * 2.5 + 1.2,
+        alpha: Math.random() * 0.7 + 0.3,
+        color: Math.random() > 0.4 ? '#ff2a85' : '#ff0055'
+      });
+    }
+
+    let mouse = { x: null, y: null };
+    window.addEventListener('mousemove', (e) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+    }, { passive: true });
+
+    function animate() {
+      ctx.clearRect(0, 0, width, height);
+
+      // Perspective Grid Lines at bottom
+      ctx.strokeStyle = 'rgba(255, 42, 133, 0.14)';
+      ctx.lineWidth = 1;
+      const horizonY = height * 0.65;
+      const numLines = 14;
+      for (let i = 0; i <= numLines; i++) {
+        const x = (width / numLines) * i;
+        ctx.beginPath();
+        ctx.moveTo(width / 2, horizonY - 40);
+        ctx.lineTo(x, height);
+        ctx.stroke();
+      }
+
+      // Draw and connect particles
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < 0) p.x = width;
+        if (p.x > width) p.x = 0;
+        if (p.y < 0) p.y = height;
+        if (p.y > height) p.y = 0;
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = p.alpha;
+        ctx.shadowBlur = 12;
+        ctx.shadowColor = '#ff2a85';
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.globalAlpha = 1;
+
+        for (let j = i + 1; j < particles.length; j++) {
+          const p2 = particles[j];
+          const dx = p.x - p2.x;
+          const dy = p.y - p2.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 120) {
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.strokeStyle = `rgba(255, 42, 133, ${(1 - dist / 120) * 0.25})`;
+            ctx.stroke();
+          }
+        }
+      }
+
+      requestAnimationFrame(animate);
+    }
+    requestAnimationFrame(animate);
+  }
+
+  // Handle Day/Night Theme Switch Dynamically
+  window.addEventListener('themeChanged', (e) => {
+    const theme = e.detail && e.detail.theme ? e.detail.theme : 
+                  (document.documentElement.getAttribute('data-theme') || 'dark');
+    if (vantaEffect && typeof vantaEffect.setOptions === 'function') {
+      const colors = getThemeColors();
+      vantaEffect.setOptions({
+        color: colors.color,
+        color2: colors.color2,
+        backgroundColor: colors.backgroundColor
+      });
+    }
   });
 
-  const hero = document.getElementById('hero-section') || canvas.parentElement;
-  if (hero) {
-    hero.addEventListener('mousemove', (e) => {
-      const rect = canvas.getBoundingClientRect();
-      mouse.x = e.clientX - rect.left;
-      mouse.y = e.clientY - rect.top;
-    });
-
-    hero.addEventListener('mouseleave', () => {
-      mouse.x = null;
-      mouse.y = null;
-    });
+  // Initialization when DOM is ready
+  function init() {
+    const initialized = startVantaGlobe();
+    if (!initialized) {
+      setTimeout(() => {
+        if (!startVantaGlobe()) {
+          startFallback3D();
+        }
+      }, 150);
+    }
   }
 
-  resize();
-  initParticles();
-  animate();
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
 })();

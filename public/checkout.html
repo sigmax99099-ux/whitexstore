@@ -12,6 +12,7 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22 font-family=%22Rajdhani%22 font-weight=%22900%22 fill=%22%2300e5ff%22>X</text></svg>">
 </head>
 <body>
+  <div id="vanta-3d-bg" aria-hidden="true"></div>
 
   <!-- Navigation Bar -->
   <nav class="navbar">
@@ -51,7 +52,7 @@
         </p>
 
         <!-- Login Prompt If Guest -->
-        <div id="auth-warning" style="display: none; padding: 1.25rem; background: rgba(0, 229, 255, 0.08); border: 1.5px solid rgba(0, 229, 255, 0.4); border-radius: var(--radius-md); margin-bottom: 1.5rem; text-align: center;">
+        <div id="auth-warning" style="display: none; padding: 1.25rem; background: rgba(255, 42, 133, 0.08); border: 1.5px solid rgba(255, 42, 133, 0.4); border-radius: var(--radius-md); margin-bottom: 1.5rem; text-align: center;">
           <h4 style="color: #fff; margin-bottom: 0.4rem;">Authentication Required</h4>
           <p style="font-size: 0.9rem; margin-bottom: 1rem;">You must be logged in to complete orders and view purchased license keys.</p>
           <div style="display: flex; justify-content: center; gap: 0.75rem;">
@@ -203,6 +204,9 @@
   </main>
 
   <script src="/assets/js/app.js"></script>
+  <script src="/assets/js/three.r134.min.js"></script>
+  <script src="/assets/js/vanta.globe.min.js"></script>
+  <script src="/assets/js/3d-scene.js"></script>
   <script>
     let productId = null;
     let planId = null;
