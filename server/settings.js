@@ -28,12 +28,26 @@ export default async function handler(req, res) {
       INR: parseFloat(settings.inr_usd_rate || '84.00')
     };
 
+    let socialLinks = [];
+    try {
+      const socialRes = await query(
+        `SELECT id, platform, title, url, icon, badge, sort_order
+         FROM social_links
+         WHERE is_active = true
+         ORDER BY sort_order ASC, id ASC`
+      );
+      socialLinks = socialRes.rows || [];
+    } catch (e) {
+      // Graceful fallback if social_links table is being initialized
+    }
+
     return res.status(200).json({
       success: true,
       settings,
       rates,
       whatsapp_number: settings.whatsapp_number,
-      site_notice: settings.site_notice
+      site_notice: settings.site_notice,
+      social_links: socialLinks
     });
   } catch (err) {
     console.error('Settings public fetch error:', err);

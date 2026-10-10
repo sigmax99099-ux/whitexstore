@@ -202,6 +202,19 @@ async function loadRatesAndSettings() {
           noticeEl.style.display = 'block';
         }
       }
+      if (data.social_links && Array.isArray(data.social_links)) {
+        Store.socialLinks = data.social_links;
+        const footerUl = document.getElementById('footer-social-links');
+        if (footerUl && data.social_links.length > 0) {
+          footerUl.innerHTML = data.social_links.map(l => `
+            <li>
+              <a href="${escapeHtml(l.url)}" target="_blank" rel="noopener noreferrer">
+                ${escapeHtml(l.title)}
+              </a>
+            </li>
+          `).join('') + `<li><a href="/dashboard.html">My License Keys</a></li>`;
+        }
+      }
     }
   } catch (err) {
     console.warn('Could not fetch settings:', err);

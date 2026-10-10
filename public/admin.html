@@ -345,6 +345,7 @@
         <li class="admin-nav-item"><button data-tab="tab-users">👥 Users & Resellers</button></li>
         <li class="admin-nav-item"><button data-tab="tab-reseller-prices">🏷️ Reseller Prices</button></li>
         <li class="admin-nav-item"><button data-tab="tab-settings">⚙️ Settings & API</button></li>
+        <li class="admin-nav-item"><button data-tab="tab-social-links">🌐 Social Links</button></li>
         <li class="admin-nav-item"><button data-tab="tab-admin-account">👤 Admin Account</button></li>
         <li class="admin-nav-item"><button data-tab="tab-resets">🔄 Password Resets</button></li>
       </ul>
@@ -911,6 +912,16 @@
               Change Admin Credentials 🔐
             </button>
           </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; padding: 1.25rem; background: rgba(34, 197, 94, 0.08); border: 1px solid rgba(34, 197, 94, 0.25); border-radius: 8px; margin-top: 1rem;">
+            <div>
+              <h4 style="color: #4ade80; margin: 0 0 0.35rem 0; font-size: 1rem;">🌐 Storefront Social Media & Community Links</h4>
+              <div style="font-size: 0.8rem; color: var(--text-dim);">Manage Discord server, Telegram channel, WhatsApp, and YouTube links displayed on the store homepage and footer.</div>
+            </div>
+            <button type="button" class="btn btn-outline btn-sm" onclick="switchAdminTab('tab-social-links')">
+              Manage Social Accounts 🚀
+            </button>
+          </div>
         </div>
       </section>
 
@@ -1173,6 +1184,106 @@
               </button>
             </div>
           </form>
+        </div>
+      </section>
+
+      <!-- TAB: SOCIAL MEDIA & COMMUNITY LINKS -->
+      <section id="tab-social-links" class="admin-tab-content">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <h2 style="color: #fff; margin: 0 0 0.35rem 0;">// SOCIAL MEDIA & COMMUNITY CHANNELS</h2>
+            <p style="color: var(--text-dim); margin: 0; font-size: 0.88rem;">
+              Control Discord, Telegram, WhatsApp, YouTube, and other community links displayed on the store homepage, hero section, and footer.
+            </p>
+          </div>
+          <button type="button" class="btn btn-primary btn-sm btn-glow" onclick="openAddSocialLinkModal()">
+            + Add Social Account ⚡
+          </button>
+        </div>
+
+        <!-- Metric Badges Row -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+          <div class="admin-card" style="padding: 1.1rem; margin-bottom: 0;">
+            <div style="font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">Total Channels</div>
+            <div id="soc-stat-total" style="font-size: 1.75rem; font-weight: 800; color: #fff; margin-top: 0.25rem;">0</div>
+          </div>
+          <div class="admin-card" style="padding: 1.1rem; margin-bottom: 0;">
+            <div style="font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">Active on Storefront</div>
+            <div id="soc-stat-active" style="font-size: 1.75rem; font-weight: 800; color: #34d399; margin-top: 0.25rem;">0</div>
+          </div>
+          <div class="admin-card" style="padding: 1.1rem; margin-bottom: 0;">
+            <div style="font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">Hidden / Inactive</div>
+            <div id="soc-stat-inactive" style="font-size: 1.75rem; font-weight: 800; color: var(--text-dim); margin-top: 0.25rem;">0</div>
+          </div>
+        </div>
+
+        <!-- Filter & Search Toolbar -->
+        <div class="admin-card" style="padding: 1rem; margin-bottom: 1.5rem; display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+          <input type="text" id="soc-search-input" class="form-input" placeholder="Search title, URL, or platform..." style="flex: 1; min-width: 220px;" oninput="filterSocialLinks()">
+          <select id="soc-filter-platform" class="form-select" style="width: auto; min-width: 160px;" onchange="filterSocialLinks()">
+            <option value="all">All Platforms</option>
+            <option value="discord">Discord</option>
+            <option value="telegram">Telegram</option>
+            <option value="whatsapp">WhatsApp</option>
+            <option value="youtube">YouTube</option>
+            <option value="instagram">Instagram</option>
+            <option value="twitter">X / Twitter</option>
+            <option value="tiktok">TikTok</option>
+            <option value="facebook">Facebook</option>
+            <option value="twitch">Twitch</option>
+            <option value="custom">Custom / Other</option>
+          </select>
+          <select id="soc-filter-status" class="form-select" style="width: auto; min-width: 140px;" onchange="filterSocialLinks()">
+            <option value="all">All Statuses</option>
+            <option value="active">Active Only</option>
+            <option value="inactive">Inactive Only</option>
+          </select>
+          <button type="button" class="btn btn-outline btn-sm" onclick="loadAdminSocialLinks()" title="Refresh List">
+            🔄 Refresh
+          </button>
+        </div>
+
+        <!-- Social Media Table -->
+        <div class="table-responsive">
+          <table class="table-custom" id="table-social-links">
+            <thead>
+              <tr>
+                <th style="width: 70px;">Order</th>
+                <th>Platform</th>
+                <th>Title & Subtitle Badge</th>
+                <th>Destination URL</th>
+                <th style="width: 130px; text-align: center;">Storefront Status</th>
+                <th style="width: 180px; text-align: right;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="admin-social-links-tbody">
+              <tr>
+                <td colspan="6" style="text-align: center; padding: 2.5rem; color: var(--text-dim);">
+                  Loading social accounts...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Live Storefront Preview Box -->
+        <div class="admin-card" style="margin-top: 2rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+            <div>
+              <h3 style="color: #fff; margin: 0 0 0.25rem 0; font-size: 1.05rem;">👁️ Live Homepage Preview</h3>
+              <div style="font-size: 0.8rem; color: var(--text-dim);">
+                This is how active community hubs render on your homepage and footer:
+              </div>
+            </div>
+            <a href="/index.html#community-social-section" target="_blank" class="btn btn-outline btn-sm">
+              Open Live Storefront ↗
+            </a>
+          </div>
+          <div id="soc-admin-live-preview" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem;">
+            <div style="color: var(--text-dim); font-size: 0.85rem; padding: 1.5rem; text-align: center; grid-column: 1/-1;">
+              Preview will appear here once loaded.
+            </div>
+          </div>
         </div>
       </section>
 
@@ -1651,6 +1762,94 @@
     </div>
   </div>
 
+  <!-- 8. Add/Edit Social Media Link Modal -->
+  <div id="modal-social-link" class="modal-backdrop">
+    <div class="modal-box" style="max-width: 620px; width: 95%;">
+      <button class="modal-close" onclick="closeModal('modal-social-link')">✕</button>
+      <h3 id="social-modal-title" style="color: #fff; margin-bottom: 1.25rem;">+ Add Social Media Channel</h3>
+      <form id="form-social-link">
+        <input type="hidden" id="soc-id" value="">
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;" class="admin-modal-grid">
+          <div class="form-group">
+            <label class="form-label" for="soc-platform">Platform *</label>
+            <select id="soc-platform" class="form-select" required onchange="onSocialPlatformSelect()">
+              <option value="discord">Discord</option>
+              <option value="telegram">Telegram</option>
+              <option value="whatsapp">WhatsApp</option>
+              <option value="youtube">YouTube</option>
+              <option value="instagram">Instagram</option>
+              <option value="twitter">X / Twitter</option>
+              <option value="tiktok">TikTok</option>
+              <option value="facebook">Facebook</option>
+              <option value="twitch">Twitch</option>
+              <option value="custom">Custom / Other</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="soc-order">Sort Order</label>
+            <input type="number" id="soc-order" class="form-input" value="0" placeholder="e.g. 1, 2, 3" oninput="updateSocialModalPreview()">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="soc-title">Display Title / Name *</label>
+          <input type="text" id="soc-title" class="form-input" required placeholder="e.g. Official Discord Community" oninput="updateSocialModalPreview()">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="soc-url">Destination URL *</label>
+          <input type="url" id="soc-url" class="form-input" required placeholder="https://discord.gg/yourserver" oninput="updateSocialModalPreview()">
+          <div style="font-size: 0.74rem; color: var(--text-dim); margin-top: 0.25rem;">
+            Full target link (e.g. https://discord.gg/..., https://t.me/..., https://wa.me/97798...)
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 1rem;" class="admin-modal-grid">
+          <div class="form-group">
+            <label class="form-label" for="soc-badge">Subtitle / Member Badge</label>
+            <input type="text" id="soc-badge" class="form-input" placeholder="e.g. Join 2,500+ Members, 24/7 VIP Chat" oninput="updateSocialModalPreview()">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="soc-icon">Icon Key / Emoji</label>
+            <input type="text" id="soc-icon" class="form-input" placeholder="e.g. discord or emoji 🎮" oninput="updateSocialModalPreview()">
+          </div>
+        </div>
+
+        <div class="form-group" style="margin: 0.75rem 0 1.25rem;">
+          <label style="display: flex; align-items: center; gap: 0.65rem; font-size: 0.9rem; cursor: pointer; color: #fff;">
+            <input type="checkbox" id="soc-is-active" checked style="width: 18px; height: 18px;" onchange="updateSocialModalPreview()">
+            Show on Homepage & Footer (Active)
+          </label>
+          <div style="font-size: 0.74rem; color: var(--text-dim); margin-left: 1.85rem; margin-top: 0.2rem;">
+            When checked, this link is immediately visible to visitors on your live store.
+          </div>
+        </div>
+
+        <!-- Live Preview inside Modal -->
+        <div style="margin-bottom: 1.5rem; background: rgba(0,0,0,0.35); border: 1px dashed rgba(255,255,255,0.15); border-radius: 10px; padding: 1rem;">
+          <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-dim); font-weight: 700; margin-bottom: 0.75rem; letter-spacing: 0.5px;">
+            Card Preview on Storefront:
+          </div>
+          <div id="soc-modal-card-preview">
+            <!-- Rendered by updateSocialModalPreview() -->
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 1rem; align-items: center;">
+          <button type="submit" id="btn-save-social-link" class="btn btn-primary btn-block btn-lg btn-glow" style="flex: 2;">
+            Save Social Channel 💾
+          </button>
+          <button type="button" class="btn btn-outline btn-lg" onclick="closeModal('modal-social-link')" style="flex: 1;">
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script src="/assets/js/app.js?v=20261007"></script>
   <script>
     // Bulletproof fetch wrapper: automatically passes credentials and Authorization Bearer header
@@ -1776,6 +1975,7 @@
           if (tabId === 'tab-reseller-prices') loadAdminResellerPrices();
           if (tabId === 'tab-settings') loadAdminSettings();
           if (tabId === 'tab-admin-account') loadAdminAccountDetails();
+          if (tabId === 'tab-social-links') loadAdminSocialLinks();
           if (tabId === 'tab-resets') loadAdminResets();
           if (tabId === 'tab-download-links') loadAdminDownloadLinks();
         });
@@ -1806,6 +2006,7 @@
       document.getElementById('form-add-category').addEventListener('submit', handleAddCategorySubmit);
       document.getElementById('form-wallet-adjust').addEventListener('submit', handleWalletAdjustSubmit);
       document.getElementById('form-add-download-link').addEventListener('submit', handleAddDownloadLinkSubmit);
+      document.getElementById('form-social-link')?.addEventListener('submit', handleSocialLinkSubmit);
 
       // Category dropdown - handle "Add New Category" option
       document.getElementById('prod-cat').addEventListener('change', function(e) {
@@ -4327,6 +4528,7 @@
         const content = document.getElementById(targetTabId);
         if (content) content.classList.add('active');
         if (targetTabId === 'tab-admin-account') loadAdminAccountDetails();
+        if (targetTabId === 'tab-social-links') loadAdminSocialLinks();
       }
     }
     window.switchAdminTab = switchAdminTab;
@@ -4467,6 +4669,524 @@
       } finally {
         btn.disabled = false;
         btn.textContent = 'Save & Update Credentials 💾';
+      }
+    }
+
+    /* ==============================================================
+       SOCIAL MEDIA & COMMUNITY CHANNELS MANAGEMENT
+       ============================================================== */
+    let globalSocialLinks = [];
+
+    const SOCIAL_PLATFORMS = {
+      discord: {
+        name: 'Discord',
+        color: '#5865F2',
+        badgeBg: 'rgba(88, 101, 242, 0.16)',
+        badgeBorder: 'rgba(88, 101, 242, 0.45)',
+        badgeColor: '#818cf8',
+        defaultTitle: 'Official Discord Server',
+        defaultBadge: 'Join 2,500+ Members',
+        placeholder: 'https://discord.gg/whitexstore',
+        ctaText: 'Join Discord Server ⚡',
+        iconSvg: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.893.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>'
+      },
+      telegram: {
+        name: 'Telegram',
+        color: '#229ED9',
+        badgeBg: 'rgba(34, 158, 217, 0.16)',
+        badgeBorder: 'rgba(34, 158, 217, 0.45)',
+        badgeColor: '#38bdf8',
+        defaultTitle: 'Telegram VIP Channel',
+        defaultBadge: 'Instant Patch Updates',
+        placeholder: 'https://t.me/whitexstore',
+        ctaText: 'Join Telegram Channel ↗',
+        iconSvg: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>'
+      },
+      whatsapp: {
+        name: 'WhatsApp',
+        color: '#25D366',
+        badgeBg: 'rgba(37, 211, 102, 0.16)',
+        badgeBorder: 'rgba(37, 211, 102, 0.45)',
+        badgeColor: '#4ade80',
+        defaultTitle: 'WhatsApp Direct Support',
+        defaultBadge: '24/7 Priority Chat',
+        placeholder: 'https://wa.me/9779800000000',
+        ctaText: 'Chat on WhatsApp 💬',
+        iconSvg: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M17.472 14.382c-.301-.15-1.78-.878-2.056-.978-.275-.1-.476-.15-.676.15-.2.301-.776.978-.952 1.179-.175.2-.351.226-.652.075-.301-.15-1.27-.468-2.42-1.493-.894-.798-1.498-1.784-1.674-2.085-.175-.301-.019-.464.132-.614.136-.135.301-.351.451-.526.151-.176.201-.301.302-.502.1-.2.05-.376-.025-.526-.075-.15-.677-1.631-.927-2.233-.244-.587-.492-.507-.677-.517l-.577-.01c-.2 0-.527.075-.802.376-.276.301-1.053 1.029-1.053 2.509 0 1.48 1.079 2.909 1.229 3.11.151.2 2.124 3.243 5.145 4.548.719.311 1.28.497 1.718.636.722.23 1.378.197 1.898.12.579-.087 1.78-.727 2.03-1.43.251-.702.251-1.304.176-1.43-.076-.126-.276-.201-.577-.351zm-5.466 7.618a9.92 9.92 0 0 1-5.06-1.387l-.363-.215-3.761.986 1.004-3.667-.236-.375a9.927 9.927 0 0 1-1.52-5.342c0-5.485 4.464-9.948 9.949-9.948 2.658 0 5.158 1.036 7.037 2.915 1.879 1.878 2.914 4.378 2.913 7.036 0 5.487-4.463 9.952-9.963 9.952zm8.455-18.407A11.89 11.89 0 0 0 12.006 0C5.385 0 .002 5.383 0 12.004c0 2.112.551 4.174 1.597 5.99L0 24l6.177-1.62a11.97 11.97 0 0 0 5.829 1.503h.005c6.621 0 12.004-5.383 12.006-12.005 0-3.207-1.249-6.223-3.551-8.528z"/></svg>'
+      },
+      youtube: {
+        name: 'YouTube',
+        color: '#FF0000',
+        badgeBg: 'rgba(239, 68, 68, 0.16)',
+        badgeBorder: 'rgba(239, 68, 68, 0.45)',
+        badgeColor: '#f87171',
+        defaultTitle: 'YouTube Official',
+        defaultBadge: 'Gameplay & Proofs',
+        placeholder: 'https://youtube.com/@whitexstore',
+        ctaText: 'Watch Showcase ▶',
+        iconSvg: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>'
+      },
+      instagram: {
+        name: 'Instagram',
+        color: '#E1306C',
+        badgeBg: 'rgba(225, 48, 108, 0.16)',
+        badgeBorder: 'rgba(225, 48, 108, 0.45)',
+        badgeColor: '#f472b6',
+        defaultTitle: 'Instagram Official',
+        defaultBadge: 'Clips & Highlights',
+        placeholder: 'https://instagram.com/whitexstore',
+        ctaText: 'Follow on Instagram 📸',
+        iconSvg: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>'
+      },
+      twitter: {
+        name: 'X / Twitter',
+        color: '#1DA1F2',
+        badgeBg: 'rgba(29, 161, 242, 0.16)',
+        badgeBorder: 'rgba(29, 161, 242, 0.45)',
+        badgeColor: '#38bdf8',
+        defaultTitle: 'Official X Profile',
+        defaultBadge: 'News & Announcements',
+        placeholder: 'https://x.com/whitexstore',
+        ctaText: 'Follow on X 𝕏',
+        iconSvg: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>'
+      },
+      tiktok: {
+        name: 'TikTok',
+        color: '#00f2fe',
+        badgeBg: 'rgba(0, 242, 254, 0.16)',
+        badgeBorder: 'rgba(0, 242, 254, 0.45)',
+        badgeColor: '#67e8f9',
+        defaultTitle: 'TikTok Gaming',
+        defaultBadge: 'Gameplay Clips & Viral Shorts',
+        placeholder: 'https://tiktok.com/@whitexstore',
+        ctaText: 'Watch on TikTok 🎵',
+        iconSvg: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.99v9.19c.02 1.94-.7 3.91-2.07 5.27-1.37 1.37-3.33 2.11-5.27 2.05-1.95-.03-3.89-.83-5.21-2.26-1.34-1.43-1.99-3.47-1.78-5.43.2-1.93 1.25-3.75 2.87-4.83 1.63-1.08 3.73-1.35 5.59-.72v4.06c-.84-.33-1.81-.33-2.63.02-.82.35-1.46 1.07-1.69 1.94-.23.87-.04 1.83.5 2.51.54.69 1.4 1.09 2.28 1.06.87-.02 1.7-.44 2.22-1.15.52-.71.74-1.62.69-2.51V.02z"/></svg>'
+      },
+      facebook: {
+        name: 'Facebook',
+        color: '#1877F2',
+        badgeBg: 'rgba(24, 119, 242, 0.16)',
+        badgeBorder: 'rgba(24, 119, 242, 0.45)',
+        badgeColor: '#60a5fa',
+        defaultTitle: 'Facebook Official',
+        defaultBadge: 'Community & Customer Support',
+        placeholder: 'https://facebook.com/whitexstore',
+        ctaText: 'Visit Facebook 👥',
+        iconSvg: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>'
+      },
+      twitch: {
+        name: 'Twitch',
+        color: '#9146FF',
+        badgeBg: 'rgba(145, 70, 255, 0.16)',
+        badgeBorder: 'rgba(145, 70, 255, 0.45)',
+        badgeColor: '#c084fc',
+        defaultTitle: 'Twitch Official',
+        defaultBadge: 'Live Streaming Gameplay',
+        placeholder: 'https://twitch.tv/whitexstore',
+        ctaText: 'Watch on Twitch 🟣',
+        iconSvg: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M2.149 0l-1.61 4.148v16.554h5.277v3.298h3.315l3.3-3.298h4.526L23.46 14.2V0H2.15zm19.14 13.064l-3.3 3.298H12.44l-3.3 3.298v-3.298H4.628V2.149h16.66v10.915zm-4.148-6.191h-2.15v6.192h2.15V6.873zm-6.192 0h-2.15v6.192h2.15V6.873z"/></svg>'
+      },
+      custom: {
+        name: 'Custom Channel',
+        color: '#f59e0b',
+        badgeBg: 'rgba(245, 158, 11, 0.16)',
+        badgeBorder: 'rgba(245, 158, 11, 0.45)',
+        badgeColor: '#fbbf24',
+        defaultTitle: 'Community Link',
+        defaultBadge: 'Official Link',
+        placeholder: 'https://...',
+        ctaText: 'Open Link ↗',
+        iconSvg: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v-.07zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V5h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>'
+      }
+    };
+
+    function getSocialPlatformMeta(platform, icon) {
+      const key = (platform || 'custom').toLowerCase();
+      const meta = SOCIAL_PLATFORMS[key] || SOCIAL_PLATFORMS.custom;
+      return meta;
+    }
+
+    async function loadAdminSocialLinks() {
+      const tbody = document.getElementById('admin-social-links-tbody');
+      if (tbody) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:2rem; color:var(--text-dim);">Loading social accounts...</td></tr>`;
+      }
+
+      try {
+        const res = await fetch('/api/admin/social-links', { credentials: 'include' });
+        const data = await res.json();
+
+        if (data.success && Array.isArray(data.social_links)) {
+          globalSocialLinks = data.social_links;
+          updateSocialStats();
+          filterSocialLinks();
+          renderAdminSocialLivePreview(globalSocialLinks);
+        } else {
+          showToast(data.message || 'Failed to load social accounts', 'error');
+        }
+      } catch (err) {
+        console.error('[Admin Social Links] Load error:', err);
+        showToast('Error loading social accounts', 'error');
+      }
+    }
+
+    function updateSocialStats() {
+      const total = globalSocialLinks.length;
+      const active = globalSocialLinks.filter(l => l.is_active).length;
+      const inactive = total - active;
+
+      const totalEl = document.getElementById('soc-stat-total');
+      const activeEl = document.getElementById('soc-stat-active');
+      const inactiveEl = document.getElementById('soc-stat-inactive');
+
+      if (totalEl) totalEl.textContent = total;
+      if (activeEl) activeEl.textContent = active;
+      if (inactiveEl) inactiveEl.textContent = inactive;
+    }
+
+    function filterSocialLinks() {
+      const search = (document.getElementById('soc-search-input')?.value || '').toLowerCase().trim();
+      const platformFilter = document.getElementById('soc-filter-platform')?.value || 'all';
+      const statusFilter = document.getElementById('soc-filter-status')?.value || 'all';
+
+      let filtered = [...globalSocialLinks];
+
+      if (platformFilter !== 'all') {
+        filtered = filtered.filter(l => (l.platform || '').toLowerCase() === platformFilter);
+      }
+
+      if (statusFilter === 'active') {
+        filtered = filtered.filter(l => l.is_active);
+      } else if (statusFilter === 'inactive') {
+        filtered = filtered.filter(l => !l.is_active);
+      }
+
+      if (search) {
+        filtered = filtered.filter(l =>
+          (l.title || '').toLowerCase().includes(search) ||
+          (l.url || '').toLowerCase().includes(search) ||
+          (l.platform || '').toLowerCase().includes(search) ||
+          (l.badge || '').toLowerCase().includes(search)
+        );
+      }
+
+      renderSocialLinksTable(filtered);
+    }
+
+    function renderSocialLinksTable(links) {
+      const tbody = document.getElementById('admin-social-links-tbody');
+      if (!tbody) return;
+
+      if (!links || links.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" style="text-align: center; padding: 2.5rem; color: var(--text-dim);">
+              No social media accounts found. Click <strong>+ Add Social Account</strong> above to add your Discord, Telegram, or WhatsApp!
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = links.map(link => {
+        const meta = getSocialPlatformMeta(link.platform, link.icon);
+        const isActive = link.is_active !== false && link.is_active !== 'false';
+
+        return `
+          <tr id="soc-row-${link.id}">
+            <td style="font-weight: 700; color: #fff; font-size: 0.95rem; text-align: center;">
+              #${link.sort_order || 0}
+            </td>
+            <td>
+              <div style="display: flex; align-items: center; gap: 0.65rem;">
+                <div style="width: 34px; height: 34px; border-radius: 8px; background: ${meta.badgeBg}; border: 1px solid ${meta.badgeBorder}; color: ${meta.color}; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                  ${meta.iconSvg}
+                </div>
+                <div>
+                  <strong style="color: #fff; font-size: 0.92rem; text-transform: capitalize;">${escapeHtml(meta.name)}</strong>
+                  <div style="font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase;">Key: ${escapeHtml(link.platform)}</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <div style="font-weight: 600; color: #fff; font-size: 0.92rem;">${escapeHtml(link.title)}</div>
+              ${link.badge ? `
+                <div style="display: inline-block; margin-top: 3px; font-size: 0.72rem; padding: 2px 8px; border-radius: 12px; background: ${meta.badgeBg}; color: ${meta.badgeColor}; border: 1px solid ${meta.badgeBorder}; font-weight: 600;">
+                  ${escapeHtml(link.badge)}
+                </div>
+              ` : ''}
+            </td>
+            <td>
+              <div style="display: flex; align-items: center; gap: 0.5rem; max-width: 320px;">
+                <a href="${escapeHtml(link.url)}" target="_blank" rel="noopener noreferrer" style="color: var(--primary); text-decoration: none; font-size: 0.85rem; word-break: break-all;" title="Open URL in new tab">
+                  ${escapeHtml(link.url)} ↗
+                </a>
+                <button type="button" class="btn btn-outline btn-sm" onclick="copySocialUrl('${escapeHtml(link.url)}')" style="padding: 2px 6px; font-size: 0.72rem;" title="Copy URL">
+                  📋
+                </button>
+              </div>
+            </td>
+            <td style="text-align: center;">
+              <button type="button" 
+                      class="btn-action-toggle" 
+                      onclick="toggleSocialLinkActive(${link.id}, ${!isActive})"
+                      style="${isActive ? 'background: rgba(16, 185, 129, 0.15); border-color: #10b981; color: #34d399;' : 'background: rgba(100, 116, 139, 0.15); border-color: #64748b; color: #94a3b8;'}"
+                      title="Click to ${isActive ? 'hide from' : 'show on'} live store">
+                ${isActive ? '🟢 Active (Live)' : '⚪ Hidden (Off)'}
+              </button>
+            </td>
+            <td style="text-align: right; white-space: nowrap;">
+              <div style="display: inline-flex; gap: 0.4rem;">
+                <button type="button" class="btn-action-edit" onclick="editSocialLink(${link.id})" title="Edit Channel">
+                  ✏️ Edit
+                </button>
+                <a href="${escapeHtml(link.url)}" target="_blank" rel="noopener noreferrer" class="btn-action-edit" style="text-decoration: none;" title="Open link">
+                  ↗ Test
+                </a>
+                <button type="button" class="btn-action-del" onclick="deleteSocialLink(${link.id})" title="Delete Channel">
+                  🗑️
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderAdminSocialLivePreview(links) {
+      const container = document.getElementById('soc-admin-live-preview');
+      if (!container) return;
+
+      const activeLinks = (links || []).filter(l => l.is_active);
+
+      if (activeLinks.length === 0) {
+        container.innerHTML = `
+          <div style="grid-column: 1/-1; text-align: center; padding: 2rem; color: var(--text-dim); background: rgba(0,0,0,0.25); border-radius: 8px; border: 1px dashed rgba(255,255,255,0.1);">
+            No active social accounts currently visible on the homepage. Activate or add accounts above to display them.
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = activeLinks.map(l => {
+        const meta = getSocialPlatformMeta(l.platform, l.icon);
+        return `
+          <div style="background: var(--bg-card); border: 1px solid ${meta.badgeBorder}; border-radius: 12px; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; box-shadow: 0 4px 18px rgba(0,0,0,0.35);">
+            <div style="position: absolute; top: -20px; right: -20px; width: 80px; height: 80px; background: ${meta.badgeBg}; border-radius: 50%; filter: blur(25px); pointer-events: none;"></div>
+            
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                <div style="width: 40px; height: 40px; border-radius: 10px; background: ${meta.badgeBg}; border: 1px solid ${meta.badgeBorder}; color: ${meta.color}; display: flex; align-items: center; justify-content: center;">
+                  ${meta.iconSvg}
+                </div>
+                <span style="font-size: 0.72rem; padding: 3px 8px; border-radius: 20px; background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+                  <span style="width: 6px; height: 6px; border-radius: 50%; background: #34d399; box-shadow: 0 0 6px #34d399;"></span> LIVE
+                </span>
+              </div>
+              <h4 style="color: #fff; margin: 0 0 0.3rem 0; font-size: 1.05rem;">${escapeHtml(l.title)}</h4>
+              <p style="color: var(--text-dim); font-size: 0.82rem; margin: 0 0 1rem 0;">${escapeHtml(l.badge || meta.defaultBadge)}</p>
+            </div>
+
+            <a href="${escapeHtml(l.url)}" target="_blank" rel="noopener noreferrer" style="background: ${meta.badgeBg}; border: 1px solid ${meta.badgeBorder}; color: ${meta.color}; font-weight: 700; font-size: 0.85rem; border-radius: 8px; padding: 8px 14px; text-align: center; text-decoration: none; display: block; transition: all 0.2s ease;">
+              ${escapeHtml(meta.ctaText)}
+            </a>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function openAddSocialLinkModal() {
+      document.getElementById('social-modal-title').textContent = '+ Add Social Media Channel';
+      document.getElementById('form-social-link').reset();
+      document.getElementById('soc-id').value = '';
+      document.getElementById('soc-platform').value = 'discord';
+      document.getElementById('soc-order').value = String(globalSocialLinks.length + 1);
+      document.getElementById('soc-is-active').checked = true;
+
+      onSocialPlatformSelect();
+      openModal('modal-social-link');
+    }
+
+    function editSocialLink(id) {
+      const link = globalSocialLinks.find(l => l.id === id);
+      if (!link) return;
+
+      document.getElementById('social-modal-title').textContent = `Edit Channel: ${link.title}`;
+      document.getElementById('soc-id').value = link.id;
+      document.getElementById('soc-platform').value = link.platform || 'discord';
+      document.getElementById('soc-title').value = link.title || '';
+      document.getElementById('soc-url').value = link.url || '';
+      document.getElementById('soc-badge').value = link.badge || '';
+      document.getElementById('soc-icon').value = link.icon || '';
+      document.getElementById('soc-order').value = link.sort_order || 0;
+      document.getElementById('soc-is-active').checked = link.is_active !== false && link.is_active !== 'false';
+
+      updateSocialModalPreview();
+      openModal('modal-social-link');
+    }
+
+    function onSocialPlatformSelect() {
+      const platform = document.getElementById('soc-platform').value;
+      const meta = SOCIAL_PLATFORMS[platform] || SOCIAL_PLATFORMS.custom;
+
+      const titleInput = document.getElementById('soc-title');
+      const urlInput = document.getElementById('soc-url');
+      const badgeInput = document.getElementById('soc-badge');
+      const iconInput = document.getElementById('soc-icon');
+
+      urlInput.placeholder = meta.placeholder;
+      if (!iconInput.value || iconInput.value in SOCIAL_PLATFORMS) {
+        iconInput.value = platform;
+      }
+
+      // If user hasn't typed custom title yet, provide suggestion
+      if (!titleInput.value || Object.values(SOCIAL_PLATFORMS).some(p => p.defaultTitle === titleInput.value)) {
+        titleInput.value = meta.defaultTitle;
+      }
+      if (!badgeInput.value || Object.values(SOCIAL_PLATFORMS).some(p => p.defaultBadge === badgeInput.value)) {
+        badgeInput.value = meta.defaultBadge;
+      }
+
+      updateSocialModalPreview();
+    }
+
+    function updateSocialModalPreview() {
+      const container = document.getElementById('soc-modal-card-preview');
+      if (!container) return;
+
+      const platform = document.getElementById('soc-platform')?.value || 'discord';
+      const title = document.getElementById('soc-title')?.value || 'Official Community Server';
+      const url = document.getElementById('soc-url')?.value || '#';
+      const badge = document.getElementById('soc-badge')?.value || 'Join 2,500+ Members';
+      const meta = getSocialPlatformMeta(platform);
+
+      container.innerHTML = `
+        <div style="background: #0f1220; border: 1px solid ${meta.badgeBorder}; border-radius: 10px; padding: 1rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <div style="width: 38px; height: 38px; border-radius: 8px; background: ${meta.badgeBg}; border: 1px solid ${meta.badgeBorder}; color: ${meta.color}; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+              ${meta.iconSvg}
+            </div>
+            <div>
+              <div style="font-weight: 700; color: #fff; font-size: 0.95rem;">${escapeHtml(title)}</div>
+              <div style="font-size: 0.78rem; color: ${meta.badgeColor}; font-weight: 600;">${escapeHtml(badge)}</div>
+            </div>
+          </div>
+          <span style="background: ${meta.badgeBg}; color: ${meta.color}; border: 1px solid ${meta.badgeBorder}; font-size: 0.8rem; font-weight: 700; padding: 6px 12px; border-radius: 6px;">
+            ${escapeHtml(meta.ctaText)}
+          </span>
+        </div>
+      `;
+    }
+
+    async function toggleSocialLinkActive(id, newStatus) {
+      try {
+        const res = await fetch('/api/admin/social-links', {
+          method: 'PATCH',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, is_active: newStatus })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(`Channel ${newStatus ? 'activated on live store' : 'hidden from live store'}!`, 'success');
+          loadAdminSocialLinks();
+        } else {
+          showToast(data.message || 'Failed to toggle status', 'error');
+        }
+      } catch (err) {
+        showToast('Network error toggling channel status', 'error');
+      }
+    }
+
+    async function deleteSocialLink(id) {
+      const link = globalSocialLinks.find(l => l.id === id);
+      const name = link ? link.title : 'this channel';
+
+      if (!confirm(`Are you sure you want to delete "${name}" from your social media channels?`)) {
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/admin/social-links?id=${id}`, {
+          method: 'DELETE',
+          credentials: 'include'
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('Social media channel deleted successfully!', 'success');
+          loadAdminSocialLinks();
+        } else {
+          showToast(data.message || 'Failed to delete channel', 'error');
+        }
+      } catch (err) {
+        showToast('Network error deleting channel: ' + err.message, 'error');
+      }
+    }
+
+    async function handleSocialLinkSubmit(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btn-save-social-link');
+      const id = document.getElementById('soc-id').value.trim();
+
+      const payload = {
+        platform: document.getElementById('soc-platform').value.trim(),
+        title: document.getElementById('soc-title').value.trim(),
+        url: document.getElementById('soc-url').value.trim(),
+        badge: document.getElementById('soc-badge').value.trim(),
+        icon: document.getElementById('soc-icon').value.trim(),
+        sort_order: parseInt(document.getElementById('soc-order').value, 10) || 0,
+        is_active: document.getElementById('soc-is-active').checked
+      };
+
+      if (!payload.title) {
+        showToast('Please enter a display title', 'error');
+        return;
+      }
+      if (!payload.url) {
+        showToast('Please enter a target URL', 'error');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Saving Channel... ⏳';
+
+      try {
+        const isEdit = Boolean(id);
+        if (isEdit) payload.id = parseInt(id, 10);
+
+        const res = await fetch('/api/admin/social-links', {
+          method: isEdit ? 'PUT' : 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          showToast(data.message || 'Failed to save social channel', 'error');
+          return;
+        }
+
+        showToast(data.message || 'Social channel saved successfully! ⚡', 'success');
+        closeModal('modal-social-link');
+        loadAdminSocialLinks();
+      } catch (err) {
+        showToast('Error saving social channel: ' + err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Save Social Channel 💾';
+      }
+    }
+
+    function copySocialUrl(url) {
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(url).then(() => {
+          showToast('URL copied to clipboard! 📋', 'success');
+        }).catch(() => {
+          showToast('Could not copy URL', 'info');
+        });
+      } else {
+        showToast('Copied: ' + url, 'info');
       }
     }
 

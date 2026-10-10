@@ -1601,3 +1601,123 @@ a:hover {
     grid-template-columns: 1fr;
   }
 }
+
+/* ==============================================================
+   COMMUNITY & SOCIAL MEDIA HUB COMPONENTS
+   ============================================================== */
+.social-hub-card {
+  background: var(--bg-card);
+  border: 1px solid var(--bg-card-border);
+  border-radius: var(--radius-lg);
+  padding: 1.6rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.social-hub-card:hover {
+  transform: translateY(-5px);
+  border-color: var(--card-brand-border, rgba(239, 68, 68, 0.45));
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6), 0 0 24px var(--card-brand-glow, rgba(239, 68, 68, 0.2));
+}
+
+.social-hub-card .card-glow-orb {
+  position: absolute;
+  top: -30px;
+  right: -30px;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  filter: blur(35px);
+  opacity: 0.25;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.social-hub-card:hover .card-glow-orb {
+  opacity: 0.45;
+}
+
+.social-hub-icon-wrap {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  margin-bottom: 1.1rem;
+  transition: transform 0.25s ease;
+}
+
+.social-hub-card:hover .social-hub-icon-wrap {
+  transform: scale(1.08) rotate(2deg);
+}
+
+.social-hub-title {
+  font-size: 1.25rem;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 0.4rem;
+  letter-spacing: 0.5px;
+}
+
+.social-hub-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 12px;
+  margin-bottom: 1.2rem;
+  border: 1px solid transparent;
+}
+
+.social-hub-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 0.65rem 1.2rem;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.social-hub-btn:hover {
+  filter: brightness(1.15);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+/* Hero Social Strip Pills */
+.hero-social-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(20, 20, 31, 0.7);
+  backdrop-filter: blur(8px);
+  color: var(--text-main);
+  transition: all 0.2s ease;
+}
+
+.hero-social-pill:hover {
+  transform: translateY(-2px);
+  border-color: var(--pill-color, var(--primary));
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}

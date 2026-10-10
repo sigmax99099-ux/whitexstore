@@ -90,6 +90,16 @@
           </a>
         </div>
 
+        <!-- Live Quick Community Strip -->
+        <div id="hero-social-strip" style="display: flex; align-items: center; gap: 0.65rem; margin: 1.5rem 0 0.5rem; flex-wrap: wrap;">
+          <span style="font-size: 0.78rem; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.8px;">
+            VIP Community:
+          </span>
+          <div id="hero-social-pills" style="display: inline-flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+            <!-- Dynamically populated from active social links -->
+          </div>
+        </div>
+
         <!-- Live Metrics / Stats -->
         <div class="hero-stats">
           <div class="hero-stat-item">
@@ -129,6 +139,30 @@
           <!-- Dynamically populated or rendered -->
           <div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--text-dim);">
             Loading latest featured products...
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIP Community & Social Channels Section -->
+    <section class="section" id="community-social-section" style="position: relative; overflow: hidden; background: radial-gradient(circle at 50% 0%, rgba(220, 38, 38, 0.08) 0%, transparent 70%);">
+      <div class="container">
+        <div class="section-head" style="text-align: center; justify-content: center;">
+          <div>
+            <div class="badge badge-undetected" style="margin-bottom: 0.6rem; display: inline-flex;">
+              <span class="pulse-dot"></span> 24/7 VIP Community Hubs
+            </div>
+            <h2 class="section-title">JOIN THE WHITE X COMMUNITY</h2>
+            <p class="section-subtitle" style="max-width: 680px; margin: 0 auto;">
+              Connect directly with developers and competitive players. Get real-time bypass alerts, loader updates, customer proofs, and priority 24/7 assistance.
+            </p>
+          </div>
+        </div>
+
+        <div class="cards-grid" id="community-cards-grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));">
+          <!-- Dynamically populated from admin controlled social_links -->
+          <div style="grid-column: 1/-1; text-align: center; padding: 2.5rem; color: var(--text-dim);">
+            Loading community channels...
           </div>
         </div>
       </div>
@@ -242,9 +276,10 @@
 
         <div class="footer-col">
           <h4>Support & Community</h4>
-          <ul class="footer-links">
-            <li><a href="https://wa.me/9779800000000" target="_blank">WhatsApp Direct</a></li>
-            <li><a href="https://discord.gg" target="_blank">Official Discord</a></li>
+          <ul class="footer-links" id="footer-social-links">
+            <li><a href="https://discord.gg" target="_blank" rel="noopener noreferrer">Official Discord</a></li>
+            <li><a href="https://t.me" target="_blank" rel="noopener noreferrer">Telegram Channel</a></li>
+            <li><a href="https://wa.me/9779800000000" target="_blank" rel="noopener noreferrer">WhatsApp Direct</a></li>
             <li><a href="/dashboard.html">My License Keys</a></li>
           </ul>
         </div>
@@ -263,9 +298,112 @@
   <script src="/assets/js/app.js"></script>
   <script src="/assets/js/3d-scene.js"></script>
   <script>
+    const STORE_SOCIAL_META = {
+      discord: { name: 'Discord', color: '#5865F2', bg: 'rgba(88, 101, 242, 0.16)', border: 'rgba(88, 101, 242, 0.45)', badgeColor: '#818cf8', cta: 'Join Discord Server ⚡', svg: '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.893.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>' },
+      telegram: { name: 'Telegram', color: '#229ED9', bg: 'rgba(34, 158, 217, 0.16)', border: 'rgba(34, 158, 217, 0.45)', badgeColor: '#38bdf8', cta: 'Join Telegram Channel ↗', svg: '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>' },
+      whatsapp: { name: 'WhatsApp', color: '#25D366', bg: 'rgba(37, 211, 102, 0.16)', border: 'rgba(37, 211, 102, 0.45)', badgeColor: '#4ade80', cta: 'Chat on WhatsApp 💬', svg: '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M17.472 14.382c-.301-.15-1.78-.878-2.056-.978-.275-.1-.476-.15-.676.15-.2.301-.776.978-.952 1.179-.175.2-.351.226-.652.075-.301-.15-1.27-.468-2.42-1.493-.894-.798-1.498-1.784-1.674-2.085-.175-.301-.019-.464.132-.614.136-.135.301-.351.451-.526.151-.176.201-.301.302-.502.1-.2.05-.376-.025-.526-.075-.15-.677-1.631-.927-2.233-.244-.587-.492-.507-.677-.517l-.577-.01c-.2 0-.527.075-.802.376-.276.301-1.053 1.029-1.053 2.509 0 1.48 1.079 2.909 1.229 3.11.151.2 2.124 3.243 5.145 4.548.719.311 1.28.497 1.718.636.722.23 1.378.197 1.898.12.579-.087 1.78-.727 2.03-1.43.251-.702.251-1.304.176-1.43-.076-.126-.276-.201-.577-.351zm-5.466 7.618a9.92 9.92 0 0 1-5.06-1.387l-.363-.215-3.761.986 1.004-3.667-.236-.375a9.927 9.927 0 0 1-1.52-5.342c0-5.485 4.464-9.948 9.949-9.948 2.658 0 5.158 1.036 7.037 2.915 1.879 1.878 2.914 4.378 2.913 7.036 0 5.487-4.463 9.952-9.963 9.952zm8.455-18.407A11.89 11.89 0 0 0 12.006 0C5.385 0 .002 5.383 0 12.004c0 2.112.551 4.174 1.597 5.99L0 24l6.177-1.62a11.97 11.97 0 0 0 5.829 1.503h.005c6.621 0 12.004-5.383 12.006-12.005 0-3.207-1.249-6.223-3.551-8.528z"/></svg>' },
+      youtube: { name: 'YouTube', color: '#FF0000', bg: 'rgba(239, 68, 68, 0.16)', border: 'rgba(239, 68, 68, 0.45)', badgeColor: '#f87171', cta: 'Watch Showcase ▶', svg: '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>' },
+      instagram: { name: 'Instagram', color: '#E1306C', bg: 'rgba(225, 48, 108, 0.16)', border: 'rgba(225, 48, 108, 0.45)', badgeColor: '#f472b6', cta: 'Follow on Instagram 📸', svg: '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>' },
+      twitter: { name: 'X / Twitter', color: '#1DA1F2', bg: 'rgba(29, 161, 242, 0.16)', border: 'rgba(29, 161, 242, 0.45)', badgeColor: '#38bdf8', cta: 'Follow on X 𝕏', svg: '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>' },
+      tiktok: { name: 'TikTok', color: '#00f2fe', bg: 'rgba(0, 242, 254, 0.16)', border: 'rgba(0, 242, 254, 0.45)', badgeColor: '#67e8f9', cta: 'Watch on TikTok 🎵', svg: '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.99v9.19c.02 1.94-.7 3.91-2.07 5.27-1.37 1.37-3.33 2.11-5.27 2.05-1.95-.03-3.89-.83-5.21-2.26-1.34-1.43-1.99-3.47-1.78-5.43.2-1.93 1.25-3.75 2.87-4.83 1.63-1.08 3.73-1.35 5.59-.72v4.06c-.84-.33-1.81-.33-2.63.02-.82.35-1.46 1.07-1.69 1.94-.23.87-.04 1.83.5 2.51.54.69 1.4 1.09 2.28 1.06.87-.02 1.7-.44 2.22-1.15.52-.71.74-1.62.69-2.51V.02z"/></svg>' },
+      facebook: { name: 'Facebook', color: '#1877F2', bg: 'rgba(24, 119, 242, 0.16)', border: 'rgba(24, 119, 242, 0.45)', badgeColor: '#60a5fa', cta: 'Visit Facebook 👥', svg: '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>' },
+      twitch: { name: 'Twitch', color: '#9146FF', bg: 'rgba(145, 70, 255, 0.16)', border: 'rgba(145, 70, 255, 0.45)', badgeColor: '#c084fc', cta: 'Watch on Twitch 🟣', svg: '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M2.149 0l-1.61 4.148v16.554h5.277v3.298h3.315l3.3-3.298h4.526L23.46 14.2V0H2.15zm19.14 13.064l-3.3 3.298H12.44l-3.3 3.298v-3.298H4.628V2.149h16.66v10.915zm-4.148-6.191h-2.15v6.192h2.15V6.873zm-6.192 0h-2.15v6.192h2.15V6.873z"/></svg>' },
+      custom: { name: 'Community', color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.16)', border: 'rgba(245, 158, 11, 0.45)', badgeColor: '#fbbf24', cta: 'Open Channel ↗', svg: '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v-.07zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V5h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>' }
+    };
+
+    function getStoreSocialMeta(platform) {
+      return STORE_SOCIAL_META[(platform || 'custom').toLowerCase()] || STORE_SOCIAL_META.custom;
+    }
+
     document.addEventListener('DOMContentLoaded', async () => {
       loadFeaturedProducts();
+      loadStorefrontSocialChannels();
     });
+
+    async function loadStorefrontSocialChannels() {
+      try {
+        const res = await fetch('/api/social-links');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && Array.isArray(data.social_links)) {
+            renderStorefrontSocial(data.social_links);
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn('Error loading social links:', err);
+      }
+    }
+
+    function renderStorefrontSocial(links) {
+      // 1. Render Hero Social Strip Pills
+      const heroContainer = document.getElementById('hero-social-pills');
+      if (heroContainer) {
+        if (!links || links.length === 0) {
+          document.getElementById('hero-social-strip').style.display = 'none';
+        } else {
+          document.getElementById('hero-social-strip').style.display = 'flex';
+          heroContainer.innerHTML = links.slice(0, 5).map(l => {
+            const meta = getStoreSocialMeta(l.platform);
+            return `
+              <a href="${escapeHtml(l.url)}" target="_blank" rel="noopener noreferrer" class="hero-social-pill" style="--pill-color: ${meta.color};">
+                <span style="color: ${meta.color}; display: inline-flex; align-items: center;">${meta.svg}</span>
+                <span>${escapeHtml(l.title.replace('Official ', ''))}</span>
+              </a>
+            `;
+          }).join('');
+        }
+      }
+
+      // 2. Render Main VIP Community Grid
+      const grid = document.getElementById('community-cards-grid');
+      if (grid) {
+        if (!links || links.length === 0) {
+          document.getElementById('community-social-section').style.display = 'none';
+        } else {
+          document.getElementById('community-social-section').style.display = 'block';
+          grid.innerHTML = links.map(l => {
+            const meta = getStoreSocialMeta(l.platform);
+            return `
+              <div class="social-hub-card" style="--card-brand-border: ${meta.border}; --card-brand-glow: ${meta.bg};">
+                <div class="card-glow-orb" style="background: ${meta.color};"></div>
+                <div>
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <div class="social-hub-icon-wrap" style="background: ${meta.bg}; border: 1px solid ${meta.border}; color: ${meta.color};">
+                      ${meta.svg}
+                    </div>
+                    <span style="font-size: 0.72rem; padding: 3px 9px; border-radius: 20px; background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); font-weight: 700; display: inline-flex; align-items: center; gap: 5px;">
+                      <span class="pulse-dot" style="width: 6px; height: 6px;"></span> 24/7 ONLINE
+                    </span>
+                  </div>
+
+                  <h3 class="social-hub-title">${escapeHtml(l.title)}</h3>
+                  <div class="social-hub-badge" style="background: ${meta.bg}; border-color: ${meta.border}; color: ${meta.badgeColor};">
+                    ${escapeHtml(l.badge || 'Official Community Channel')}
+                  </div>
+                </div>
+
+                <a href="${escapeHtml(l.url)}" target="_blank" rel="noopener noreferrer" class="social-hub-btn" style="background: ${meta.color}; color: #ffffff;">
+                  ${escapeHtml(meta.cta)}
+                </a>
+              </div>
+            `;
+          }).join('');
+        }
+      }
+
+      // 3. Render Footer Links
+      const footerUl = document.getElementById('footer-social-links');
+      if (footerUl && links && links.length > 0) {
+        footerUl.innerHTML = links.map(l => `
+          <li>
+            <a href="${escapeHtml(l.url)}" target="_blank" rel="noopener noreferrer">
+              ${escapeHtml(l.title)}
+            </a>
+          </li>
+        `).join('') + `<li><a href="/dashboard.html">My License Keys</a></li>`;
+      }
+    }
 
     async function loadFeaturedProducts() {
       const container = document.getElementById('featured-cards-grid');

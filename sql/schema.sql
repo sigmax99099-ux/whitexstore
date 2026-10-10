@@ -233,6 +233,22 @@ CREATE TABLE hwid_reset_log (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- 18. SOCIAL LINKS TABLE (Community & Social Media Channels)
+CREATE TABLE IF NOT EXISTS social_links (
+  id SERIAL PRIMARY KEY,
+  platform TEXT NOT NULL,           -- 'discord', 'telegram', 'whatsapp', 'youtube', 'instagram', 'twitter', 'facebook', 'tiktok', 'twitch', 'custom'
+  title TEXT NOT NULL,              -- e.g. 'Official Discord Server'
+  url TEXT NOT NULL,                -- e.g. 'https://discord.gg/whitexstore'
+  icon TEXT DEFAULT 'discord',      -- icon key or emoji
+  badge TEXT,                       -- e.g. 'Join 2,500+ Members'
+  sort_order INT NOT NULL DEFAULT 0,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_social_links_active_sort ON social_links(is_active, sort_order);
+
 CREATE INDEX idx_hwid_reset_key ON hwid_reset_log(key_code);
 CREATE INDEX idx_hwid_reset_user ON hwid_reset_log(requested_by);
 CREATE INDEX idx_hwid_reset_created ON hwid_reset_log(created_at);
@@ -278,6 +294,15 @@ ON CONFLICT (setting_key) DO NOTHING;
 INSERT INTO supplier_settings (id, auto_delivery_enabled, low_balance_threshold) VALUES
 (1, true, 10.00)
 ON CONFLICT (id) DO NOTHING;
+
+-- Default Social Media & Community Links
+INSERT INTO social_links (id, platform, title, url, icon, badge, sort_order, is_active) VALUES
+(1, 'discord', 'Official Discord Server', 'https://discord.gg/whitexstore', 'discord', 'Join 2,500+ Members', 1, true),
+(2, 'telegram', 'Telegram VIP Channel', 'https://t.me/whitexstore', 'telegram', 'Instant Bypass Updates', 2, true),
+(3, 'whatsapp', 'WhatsApp Direct Support', 'https://wa.me/9779800000000', 'whatsapp', '24/7 Priority Chat', 3, true),
+(4, 'youtube', 'YouTube Official', 'https://youtube.com/@whitexstore', 'youtube', 'Gameplay & Proofs', 4, true)
+ON CONFLICT (id) DO NOTHING;
+ALTER SEQUENCE IF EXISTS social_links_id_seq RESTART WITH 5;
 
 -- Default Payment Methods
 INSERT INTO payment_methods (method_name, currency, account_id, account_holder, instructions, qr_image, status) VALUES

@@ -61,13 +61,16 @@ import adminCronRetryDeliveries from '../server/admin/cron-retry-deliveries.js';
 import adminHwidReset from '../server/admin/hwid-reset.js';
 import adminDiscordTest from '../server/admin/discord-check.js';
 import adminChangeCredentials from '../server/admin/change-credentials.js';
+import adminSocialLinks from '../server/admin/social-links.js';
 
-// Public Settings
+// Public Settings & Social Links
 import publicSettings from '../server/settings.js';
+import publicSocialLinks from '../server/social-links.js';
 
 const routes = {
-  // Public Settings
+  // Public Settings & Social Links
   '/api/settings': publicSettings,
+  '/api/social-links': publicSocialLinks,
 
   // Auth
   '/api/auth/register': authRegister,
@@ -135,6 +138,7 @@ const routes = {
   '/api/admin/hwid-reset': adminHwidReset,
   '/api/admin/discord-test': adminDiscordTest,
   '/api/admin/change-credentials': adminChangeCredentials,
+  '/api/admin/social-links': adminSocialLinks,
 };
 
 export default async function handler(req, res) {
