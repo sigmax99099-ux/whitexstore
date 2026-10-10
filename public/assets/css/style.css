@@ -219,26 +219,36 @@ a:hover {
   margin-bottom: 2rem;
 }
 
-.intro-x {
-  font-family: var(--font-heading);
-  font-size: 6rem;
-  font-weight: 900;
-  color: #ff2a85;
-  text-shadow: 
-    0 0 20px rgba(255, 42, 133, 0.9),
-    0 0 45px rgba(255, 0, 85, 0.8),
-    0 0 80px rgba(0, 86, 204, 0.6);
-  animation: logoGlow 2s infinite alternate;
-  line-height: 1;
+.intro-logo-img {
+  width: 140px;
+  height: 140px;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 0 25px rgba(255, 0, 85, 0.95)) drop-shadow(0 0 55px rgba(255, 42, 133, 0.75));
+  animation: introLogoPulse 2s infinite alternate cubic-bezier(0.45, 0.05, 0.55, 0.95);
+  margin-bottom: 0.85rem;
+}
+
+@keyframes introLogoPulse {
+  0% {
+    transform: scale(0.95) translateY(0);
+    filter: drop-shadow(0 0 20px rgba(255, 0, 85, 0.8)) drop-shadow(0 0 45px rgba(255, 42, 133, 0.5));
+  }
+  100% {
+    transform: scale(1.06) translateY(-4px);
+    filter: drop-shadow(0 0 35px rgba(255, 0, 85, 1)) drop-shadow(0 0 75px rgba(255, 42, 133, 0.85)) drop-shadow(0 0 110px rgba(147, 51, 234, 0.65));
+  }
 }
 
 .intro-brand {
   font-family: var(--font-heading);
-  font-size: 1.5rem;
-  letter-spacing: 4px;
-  color: #f1f7fb;
-  margin-top: -0.5rem;
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: 5px;
+  color: #fdf2f8;
+  margin-top: 0;
   text-transform: uppercase;
+  text-shadow: 0 0 16px rgba(255, 42, 133, 0.6);
 }
 
 .intro-bar-wrap {
