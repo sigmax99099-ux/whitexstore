@@ -63,15 +63,18 @@ import adminDiscordTest from '../server/admin/discord-check.js';
 import adminChangeCredentials from '../server/admin/change-credentials.js';
 import adminSocialLinks from '../server/admin/social-links.js';
 import adminRedeemCodes from '../server/admin/redeem-codes.js';
+import adminBanners from '../server/admin/banners.js';
 
-// Public Settings, Social Links & Redeem Codes
+// Public Settings, Social Links, Redeem Codes & Banners
 import publicSettings from '../server/settings.js';
 import publicSocialLinks from '../server/social-links.js';
 import redeemValidate from '../server/redeem/validate.js';
+import publicBanners from '../server/banners.js';
 
 const routes = {
-  // Public Settings & Social Links
+  // Public Settings, Social Links & Banners
   '/api/settings': publicSettings,
+  '/api/banners': publicBanners,
   '/api/social-links': publicSocialLinks,
   '/api/redeem/validate': redeemValidate,
 
@@ -143,6 +146,7 @@ const routes = {
   '/api/admin/change-credentials': adminChangeCredentials,
   '/api/admin/social-links': adminSocialLinks,
   '/api/admin/redeem-codes': adminRedeemCodes,
+  '/api/admin/banners': adminBanners,
 };
 
 export default async function handler(req, res) {

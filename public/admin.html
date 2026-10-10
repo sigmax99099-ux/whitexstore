@@ -347,6 +347,7 @@
         <li class="admin-nav-item"><button data-tab="tab-users">👥 Users & Resellers</button></li>
         <li class="admin-nav-item"><button data-tab="tab-reseller-prices">🏷️ Reseller Prices</button></li>
         <li class="admin-nav-item"><button data-tab="tab-settings">⚙️ Settings & API</button></li>
+        <li class="admin-nav-item"><button data-tab="tab-hero-banners">🖼️ Banner Board & Slider</button></li>
         <li class="admin-nav-item"><button data-tab="tab-social-links">🌐 Social Links</button></li>
         <li class="admin-nav-item"><button data-tab="tab-redeem-codes">🎁 Redeem Codes</button></li>
         <li class="admin-nav-item"><button data-tab="tab-admin-account">👤 Admin Account</button></li>
@@ -1370,10 +1371,271 @@
         </div>
       </section>
 
+
+      <!-- TAB: HERO BANNER BOARD & ADVERTISED SLIDER -->
+      <section id="tab-hero-banners" class="admin-tab-content">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <h2 style="color: #fff; margin: 0 0 0.35rem 0;">// HERO BANNER BOARD & ADVERTISED SLIDER</h2>
+            <p style="color: var(--text-dim); margin: 0; font-size: 0.88rem;">
+              Customize the storefront 7S World advertised board slider, desktop/mobile heights, slide artwork, glowing titles, badges, and CTA buttons in real time.
+            </p>
+          </div>
+          <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+            <button class="btn btn-outline btn-sm" onclick="load7SPresets()" title="Reset to high-converting default 7S gaming slides">
+              ⚡ Load Default 7S Presets
+            </button>
+            <button class="btn btn-primary btn-sm btn-glow" onclick="openSlideModal('')">
+              + Add New Banner Slide
+            </button>
+            <a href="/index.html" target="_blank" class="btn btn-outline btn-sm">
+              Live Preview ↗
+            </a>
+          </div>
+        </div>
+
+        <!-- Global Banner Board Settings Card -->
+        <div class="admin-card" style="margin-bottom: 2rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; border-bottom: 1px solid var(--bg-card-border); padding-bottom: 0.85rem;">
+            <h3 style="color: #fff; margin: 0; font-size: 1.15rem; display: flex; align-items: center; gap: 0.5rem;">
+              <span>⚙️</span> Global Banner Display & Animation Settings
+            </h3>
+            <span class="badge badge-undetected">REAL-TIME SYNC</span>
+          </div>
+
+          <form id="form-hero-banners-global" onsubmit="handleSaveGlobalBanners(event)">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; margin-bottom: 1.25rem;">
+              
+              <!-- Master Toggle -->
+              <div class="form-group" style="background: rgba(255, 42, 133, 0.06); padding: 1rem; border-radius: 8px; border: 1px solid rgba(255, 42, 133, 0.2);">
+                <label style="display: flex; align-items: center; gap: 0.65rem; cursor: pointer; font-weight: 700; color: #fff; margin-bottom: 0.35rem;">
+                  <input type="checkbox" id="banner-cfg-enabled" checked style="width: 20px; height: 20px; accent-color: var(--primary);">
+                  <span>Enable Banner Board</span>
+                </label>
+                <div style="font-size: 0.74rem; color: var(--text-dim);">
+                  Toggle the entire advertised board on or off on client home and product pages.
+                </div>
+              </div>
+
+              <!-- Desktop Height -->
+              <div class="form-group">
+                <label class="form-label" for="banner-cfg-height">Desktop Slider Height (px)</label>
+                <input type="number" id="banner-cfg-height" class="form-input" min="120" max="480" step="10" value="240" required>
+                <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: 0.3rem;">Standard 7S height is 240px</div>
+              </div>
+
+              <!-- Mobile Height -->
+              <div class="form-group">
+                <label class="form-label" for="banner-cfg-mobile-height">Mobile Slider Height (px)</label>
+                <input type="number" id="banner-cfg-mobile-height" class="form-input" min="90" max="320" step="10" value="150" required>
+                <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: 0.3rem;">Optimized mobile touch view (150px)</div>
+              </div>
+
+              <!-- Image Fit Mode -->
+              <div class="form-group">
+                <label class="form-label" for="banner-cfg-fit">Artwork Display Fit</label>
+                <select id="banner-cfg-fit" class="form-select">
+                  <option value="cover" selected>Cover (Fill & Crop - Ultra Clean)</option>
+                  <option value="contain">Contain (Fit Full Image inside frame)</option>
+                  <option value="stretch">100% 100% (Fit Width & Height Exact)</option>
+                </select>
+                <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: 0.3rem;">Default cover fills perspective frame</div>
+              </div>
+
+              <!-- Autoplay Controls -->
+              <div class="form-group">
+                <label style="display: flex; align-items: center; gap: 0.65rem; cursor: pointer; font-weight: 600; color: #fff; margin-bottom: 0.5rem;">
+                  <input type="checkbox" id="banner-cfg-autoplay" checked style="width: 18px; height: 18px; accent-color: var(--primary);">
+                  <span>Autoplay Transitions</span>
+                </label>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                  <input type="number" id="banner-cfg-interval" class="form-input" min="2000" max="30000" step="500" value="6000" style="flex: 1;">
+                  <span style="font-size: 0.8rem; color: var(--text-dim);">ms</span>
+                </div>
+                <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: 0.3rem;">Interval speed between slides (6000ms = 6s)</div>
+              </div>
+
+              <!-- Top Announcement Banner -->
+              <div class="form-group" style="grid-column: 1 / -1;">
+                <label class="form-label" for="banner-cfg-site-notice">Top Notice Announcement Bar (Site-Wide Top Bar)</label>
+                <input type="text" id="banner-cfg-site-notice" class="form-input" placeholder="⚡ Instant 24/7 Automated Dispatch Active — Instant License Delivery! (Leave blank to hide)">
+                <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: 0.3rem;">Displays in glowing neon red-pink banner across all pages. Empty hides it.</div>
+              </div>
+
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 1rem;">
+              <button type="submit" class="btn btn-primary btn-glow">
+                Save Global Board Settings 💾
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Live Preview Box -->
+        <div class="admin-card" style="margin-bottom: 2rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3 style="color: #fff; margin: 0; font-size: 1.15rem; display: flex; align-items: center; gap: 0.5rem;">
+              <span>👁️</span> Live Storefront Slider Preview
+            </h3>
+            <span style="font-size: 0.78rem; color: var(--text-dim);">Shows exact client-side rendering</span>
+          </div>
+          
+          <div style="background: #06090e; border: 1.5px solid var(--bg-card-border); border-radius: 12px; padding: 1rem; overflow: hidden;">
+            <div id="admin-banner-preview-wrap" class="hero-slider-wrap" style="position: relative; margin: 0 auto; width: 100%;">
+              <div id="admin-banner-preview-viewport" class="hero-slider-viewport" style="min-height: 220px;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Slides List Table -->
+        <div class="admin-card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+              <h3 style="color: #fff; margin: 0; font-size: 1.15rem;">Current Banner Slides (<span id="admin-slides-count">0</span>)</h3>
+              <p style="color: var(--text-dim); font-size: 0.78rem; margin: 0.2rem 0 0;">Drag or use Up/Down arrows to change display order</p>
+            </div>
+            <button class="btn btn-primary btn-sm btn-glow" onclick="openSlideModal('')">
+              + Add New Slide
+            </button>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table-custom">
+              <thead>
+                <tr>
+                  <th style="width: 70px;">ORDER</th>
+                  <th style="width: 140px;">IMAGE</th>
+                  <th>BADGE & TITLE</th>
+                  <th>DESCRIPTION</th>
+                  <th>CTA BUTTON</th>
+                  <th>STATUS</th>
+                  <th style="min-width: 170px;">ACTIONS</th>
+                </tr>
+              </thead>
+              <tbody id="admin-banners-tbody">
+                <tr><td colspan="7" style="text-align: center; padding: 2.5rem; color: var(--text-dim);">Loading banner slides...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
     </main>
   </div>
 
   <!-- MODALS -->
+
+  <!-- BANNER SLIDE EDITOR MODAL -->
+  <div id="modal-banner-slide" class="modal-backdrop">
+    <div class="modal-box" style="max-width: 720px; width: 95%;">
+      <button class="modal-close" onclick="closeModal('modal-banner-slide')">✕</button>
+      <h3 id="modal-slide-title-head" style="color: #fff; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
+        <span>🖼️</span> <span id="modal-slide-heading-text">Add Banner Slide</span>
+      </h3>
+      
+      <form id="form-banner-slide" onsubmit="handleSaveSlideModal(event)">
+        <input type="hidden" id="slide-edit-id" value="">
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;" class="admin-modal-grid">
+          <!-- Slide Title -->
+          <div class="form-group">
+            <label class="form-label" for="slide-title">Slide Title (Header)</label>
+            <input type="text" id="slide-title" class="form-input" placeholder="e.g. BR MODS VIP BYPASS">
+            <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: 0.25rem;">Leave empty for pure image banner</div>
+          </div>
+
+          <!-- Highlight Word -->
+          <div class="form-group">
+            <label class="form-label" for="slide-highlight">Highlight Word (Glows Hot Pink)</label>
+            <input type="text" id="slide-highlight" class="form-input" placeholder="e.g. VIP BYPASS">
+            <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: 0.25rem;">Word in title that gets vibrant neon glow</div>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;" class="admin-modal-grid">
+          <!-- Top Badge Bar -->
+          <div class="form-group">
+            <label class="form-label" for="slide-badge">Badge Label (Top-Left Pill)</label>
+            <input type="text" id="slide-badge" class="form-input" placeholder="e.g. ⚡ ZERO BAN MEMORY INJECTION">
+          </div>
+
+          <!-- Slide Image Fit -->
+          <div class="form-group">
+            <label class="form-label" for="slide-image-fit">Image Fit</label>
+            <select id="slide-image-fit" class="form-select">
+              <option value="cover" selected>Cover (Fill & Crop)</option>
+              <option value="contain">Contain (Full Image Visible)</option>
+              <option value="stretch">100% 100% (Stretch)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div class="form-group">
+          <label class="form-label" for="slide-desc">Description Subtitle</label>
+          <textarea id="slide-desc" class="form-textarea" style="min-height: 60px;" placeholder="Dominate with precision aimbot, ESP radar, and high FPS optimization..."></textarea>
+        </div>
+
+        <!-- Background Image URL & File Pick -->
+        <div class="form-group">
+          <label class="form-label" for="slide-bg-image">Banner Image URL *</label>
+          <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
+            <input type="text" id="slide-bg-image" class="form-input" required placeholder="/assets/images/store-hero-clean.png or https://..." oninput="updateSlideModalPreview()">
+            <input type="file" id="slide-file-input" class="form-input" accept="image/*" style="width: auto; max-width: 160px; padding: 0.45rem;" onchange="handleSlideFilePick(event)">
+          </div>
+
+          <!-- Quick Presets -->
+          <div style="display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
+            <button type="button" class="btn btn-outline btn-sm" style="font-size: 0.72rem; padding: 2px 8px;" onclick="setSlidePresetImage('/assets/images/store-hero-clean.png')">Clean VIP Graphic</button>
+            <button type="button" class="btn btn-outline btn-sm" style="font-size: 0.72rem; padding: 2px 8px;" onclick="setSlidePresetImage('/assets/images/store-hero-exact.png')">7S Exact Hero</button>
+            <button type="button" class="btn btn-outline btn-sm" style="font-size: 0.72rem; padding: 2px 8px;" onclick="setSlidePresetImage('/assets/images/store-hero-reference.png')">7S Store Reference</button>
+            <button type="button" class="btn btn-outline btn-sm" style="font-size: 0.72rem; padding: 2px 8px;" onclick="setSlidePresetImage('/assets/images/white-x-logo.png')">White X Emblem</button>
+          </div>
+
+          <!-- Image Preview -->
+          <div id="slide-modal-preview-box" style="height: 100px; background: #080d14; border: 1px solid var(--bg-card-border); border-radius: 8px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+            <img id="slide-modal-preview-img" src="/assets/images/store-hero-clean.png" alt="Preview" style="max-height: 100%; max-width: 100%; object-fit: contain;">
+          </div>
+        </div>
+
+        <!-- CTA Button Options -->
+        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--bg-card-border); border-radius: 8px; padding: 1rem; margin-bottom: 1.25rem;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 700; color: #fff;">
+              <input type="checkbox" id="slide-show-buy" checked onchange="toggleSlideBuyFields()" style="width: 18px; height: 18px; accent-color: var(--primary);">
+              <span>Show CTA / Buy Button</span>
+            </label>
+          </div>
+
+          <div id="slide-buy-fields-wrap" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;" class="admin-modal-grid">
+            <div class="form-group" style="margin: 0;">
+              <label class="form-label" for="slide-buy-text">Button Text</label>
+              <input type="text" id="slide-buy-text" class="form-input" placeholder="e.g. ORDER VIP ACCESS">
+            </div>
+            <div class="form-group" style="margin: 0;">
+              <label class="form-label" for="slide-buy-url">Button URL / Link</label>
+              <input type="text" id="slide-buy-url" class="form-input" placeholder="/products.html or /product.html?id=1">
+            </div>
+          </div>
+        </div>
+
+        <!-- Active Switch -->
+        <div style="margin-bottom: 1.5rem;">
+          <label style="display: flex; align-items: center; gap: 0.65rem; cursor: pointer; font-weight: 600; color: #fff;">
+            <input type="checkbox" id="slide-active" checked style="width: 18px; height: 18px; accent-color: var(--primary);">
+            <span>Slide is Active (Visible in Storefront)</span>
+          </label>
+        </div>
+
+        <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+          <button type="button" class="btn btn-outline" onclick="closeModal('modal-banner-slide')">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-glow">Save Slide 💾</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
 
   <!-- 1. Add Product Modal (Desktop Responsive) -->
   <div id="modal-add-product" class="modal-backdrop">
@@ -2167,6 +2429,7 @@
           if (tabId === 'tab-redeem-codes') loadAdminRedeemCodes();
           if (tabId === 'tab-resets') loadAdminResets();
           if (tabId === 'tab-download-links') loadAdminDownloadLinks();
+          if (tabId === 'tab-hero-banners') loadHeroBannersAdmin();
         });
       });
 
@@ -5735,6 +5998,572 @@
         showToast('Copied: ' + code, 'info');
       }
     }
+
+    /* ==============================================================
+       HERO BANNER BOARD & ADVERTISED SLIDER MANAGEMENT
+       ============================================================== */
+    let adminHeroConfig = {
+      enabled: true,
+      height: 240,
+      mobile_height: 150,
+      fit: 'cover',
+      autoplay: true,
+      interval: 6000,
+      slides: []
+    };
+    let adminSiteNotice = '';
+    let adminBannerPreviewTimer = null;
+    let adminBannerPreviewIndex = 0;
+
+    async function loadHeroBannersAdmin() {
+      const tbody = document.getElementById('admin-banners-tbody');
+      if (tbody) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2.5rem; color: var(--text-dim);">Loading banner board & slides...</td></tr>';
+      }
+
+      try {
+        const res = await fetch('/api/admin/banners', { credentials: 'include' });
+        const data = await res.json();
+
+        if (!data.success) {
+          if (tbody) tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 2.5rem; color: var(--danger);">Failed to load banners: ${escapeHtml(data.message || '')}</td></tr>`;
+          return;
+        }
+
+        adminHeroConfig = data.banners || {
+          enabled: true,
+          height: 240,
+          mobile_height: 150,
+          fit: 'cover',
+          autoplay: true,
+          interval: 6000,
+          slides: []
+        };
+        adminSiteNotice = data.site_notice || '';
+
+        // Hydrate global settings form
+        const chkEnabled = document.getElementById('banner-cfg-enabled');
+        if (chkEnabled) chkEnabled.checked = adminHeroConfig.enabled !== false;
+
+        const numHeight = document.getElementById('banner-cfg-height');
+        if (numHeight) numHeight.value = adminHeroConfig.height || 240;
+
+        const numMobileHeight = document.getElementById('banner-cfg-mobile-height');
+        if (numMobileHeight) numMobileHeight.value = adminHeroConfig.mobile_height || 150;
+
+        const selFit = document.getElementById('banner-cfg-fit');
+        if (selFit) selFit.value = adminHeroConfig.fit || 'cover';
+
+        const chkAutoplay = document.getElementById('banner-cfg-autoplay');
+        if (chkAutoplay) chkAutoplay.checked = adminHeroConfig.autoplay !== false;
+
+        const numInterval = document.getElementById('banner-cfg-interval');
+        if (numInterval) numInterval.value = adminHeroConfig.interval || 6000;
+
+        const txtNotice = document.getElementById('banner-cfg-site-notice');
+        if (txtNotice) txtNotice.value = adminSiteNotice || '';
+
+        renderAdminSlidesTable();
+        renderAdminLivePreview();
+      } catch (err) {
+        console.error('Error loading banners admin:', err);
+        if (tbody) tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2.5rem; color: var(--danger);">Network error loading banners.</td></tr>';
+      }
+    }
+
+    function renderAdminSlidesTable() {
+      const tbody = document.getElementById('admin-banners-tbody');
+      const countEl = document.getElementById('admin-slides-count');
+      if (!tbody) return;
+
+      const slides = adminHeroConfig.slides || [];
+      if (countEl) countEl.textContent = slides.length;
+
+      if (slides.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7" style="text-align: center; padding: 3rem; color: var(--text-dim);">
+              <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">🖼️</div>
+              <div style="font-size: 1.05rem; font-weight: 700; color: #fff; margin-bottom: 0.35rem;">No Banner Slides Configured</div>
+              <div style="margin-bottom: 1.25rem;">Add custom advertised slides or load the pre-configured high-converting 7S presets.</div>
+              <div style="display: flex; gap: 0.75rem; justify-content: center;">
+                <button type="button" class="btn btn-outline btn-sm" onclick="load7SPresets()">⚡ Load 7S Default Presets</button>
+                <button type="button" class="btn btn-primary btn-sm btn-glow" onclick="openSlideModal('')">+ Add New Slide</button>
+              </div>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = slides.map((slide, idx) => {
+        const isFirst = idx === 0;
+        const isLast = idx === slides.length - 1;
+        const isActive = slide.active !== false;
+        const fitMode = slide.image_fit || adminHeroConfig.fit || 'cover';
+
+        return `
+          <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); ${isActive ? '' : 'opacity: 0.6;'}">
+            <!-- ORDER / REORDER -->
+            <td style="text-align: center;">
+              <div style="display: flex; flex-direction: column; align-items: center; gap: 3px;">
+                <button type="button" class="btn btn-outline btn-sm" style="padding: 2px 7px; font-size: 0.72rem;" onclick="moveSlide(${idx}, -1)" ${isFirst ? 'disabled style="opacity:0.3; cursor:not-allowed;"' : ''} title="Move Up">▲</button>
+                <span style="font-weight: 800; color: var(--primary); font-size: 0.95rem;">${idx + 1}</span>
+                <button type="button" class="btn btn-outline btn-sm" style="padding: 2px 7px; font-size: 0.72rem;" onclick="moveSlide(${idx}, 1)" ${isLast ? 'disabled style="opacity:0.3; cursor:not-allowed;"' : ''} title="Move Down">▼</button>
+              </div>
+            </td>
+
+            <!-- THUMBNAIL -->
+            <td>
+              <div style="width: 125px; height: 56px; border-radius: 8px; overflow: hidden; background: #070b12; border: 1.5px solid var(--bg-card-border); display: flex; align-items: center; justify-content: center;">
+                <img src="${escapeHtml(slide.bg_image || '/assets/images/store-hero-clean.png')}" alt="Slide ${idx+1}" style="width: 100%; height: 100%; object-fit: ${fitMode};">
+              </div>
+            </td>
+
+            <!-- BADGE & TITLE -->
+            <td>
+              ${slide.badge ? `<div style="margin-bottom: 0.35rem;"><span class="badge" style="background: rgba(255, 42, 133, 0.15); color: #ff2a85; border: 1px solid rgba(255, 42, 133, 0.35); font-size: 0.68rem; letter-spacing: 0.5px;">${escapeHtml(slide.badge)}</span></div>` : ''}
+              <div style="font-weight: 800; font-size: 0.98rem; color: #ffffff;">
+                ${escapeHtml(slide.title || 'Untitled Graphic Banner')}
+              </div>
+              ${slide.highlight ? `<div style="font-size: 0.75rem; color: var(--primary); font-weight: 700; margin-top: 2px;">Glow: ${escapeHtml(slide.highlight)}</div>` : ''}
+            </td>
+
+            <!-- DESCRIPTION -->
+            <td style="max-width: 240px; font-size: 0.82rem; color: var(--text-dim); line-height: 1.4;">
+              ${slide.desc ? escapeHtml(slide.desc) : '<span style="opacity: 0.4;">—</span>'}
+            </td>
+
+            <!-- CTA BUTTON -->
+            <td>
+              ${slide.show_buy !== false ? `
+                <div style="display: flex; flex-direction: column; gap: 3px;">
+                  <span class="badge badge-primary" style="font-size: 0.72rem; width: fit-content;">${escapeHtml(slide.buy_text || 'ORDER')}</span>
+                  <span style="font-size: 0.72rem; color: var(--text-dim); word-break: break-all;">${escapeHtml(slide.buy_url || '/products.html')}</span>
+                </div>
+              ` : `
+                <span class="badge" style="background: rgba(100, 116, 139, 0.15); color: #94a3b8; border: 1px solid rgba(100, 116, 139, 0.3);">No Button</span>
+              `}
+            </td>
+
+            <!-- STATUS -->
+            <td>
+              <button type="button" class="btn btn-sm ${isActive ? 'btn-action-unblock' : 'btn-action-del'}" style="font-size: 0.78rem; padding: 4px 10px;" onclick="toggleSlideActive(${idx})">
+                ${isActive ? 'Active ✓' : 'Hidden ✕'}
+              </button>
+            </td>
+
+            <!-- ACTIONS -->
+            <td>
+              <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+                <button type="button" class="btn-action-edit" onclick="openSlideModal('${slide.id || ('slide_' + idx)}')">
+                  Edit ✏️
+                </button>
+                <button type="button" class="btn-action-del" onclick="deleteSlide('${slide.id || ('slide_' + idx)}')">
+                  Delete 🗑️
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderAdminLivePreview() {
+      const viewport = document.getElementById('admin-banner-preview-viewport');
+      if (!viewport) return;
+
+      if (adminBannerPreviewTimer) {
+        clearInterval(adminBannerPreviewTimer);
+        adminBannerPreviewTimer = null;
+      }
+
+      const isEnabled = adminHeroConfig.enabled !== false;
+      const height = adminHeroConfig.height || 240;
+      viewport.style.height = height + 'px';
+
+      const activeSlides = (adminHeroConfig.slides || []).filter(s => s.active !== false);
+
+      if (!isEnabled) {
+        viewport.innerHTML = `
+          <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.6); color: var(--warning); font-size: 0.95rem; font-weight: 700; border: 1px dashed var(--warning); border-radius: 8px;">
+            ⚠️ Banner Board is currently DISABLED. (It will not render on the client storefront).
+          </div>
+        `;
+        return;
+      }
+
+      if (activeSlides.length === 0) {
+        viewport.innerHTML = `
+          <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.6); color: var(--text-dim); font-size: 0.9rem;">
+            No active slides to display in preview.
+          </div>
+        `;
+        return;
+      }
+
+      function buildSlideHtml(slide, isVisible) {
+        const bgImg = slide.bg_image || '/assets/images/store-hero-clean.png';
+        const fitMode = slide.image_fit || adminHeroConfig.fit || 'cover';
+        let titleHtml = escapeHtml(slide.title || '');
+        if (slide.highlight && titleHtml.includes(escapeHtml(slide.highlight))) {
+          const escHighlight = escapeHtml(slide.highlight);
+          titleHtml = titleHtml.replace(
+            escHighlight,
+            `<span class="hero-hl-redpink" style="color: #ff2a85; text-shadow: 0 0 16px rgba(255,42,133,0.85);">${escHighlight}</span>`
+          );
+        }
+
+        return `
+          <div class="hero-slide-item" style="position: absolute; inset: 0; opacity: ${isVisible ? '1' : '0'}; visibility: ${isVisible ? 'visible' : 'hidden'}; transition: opacity 0.5s ease; background-image: url('${escapeHtml(bgImg)}'); background-size: ${fitMode}; background-position: center; background-repeat: no-repeat; border-radius: 8px; overflow: hidden; display: flex; align-items: flex-end;">
+            <div style="position: absolute; inset: 0; background: linear-gradient(90deg, rgba(8,12,22,0.92) 0%, rgba(8,12,22,0.65) 45%, rgba(8,12,22,0.15) 100%);"></div>
+            <div style="position: relative; z-index: 2; padding: 1.25rem 1.5rem; max-width: 580px;">
+              ${slide.badge ? `<div style="margin-bottom: 0.4rem;"><span class="badge" style="background: rgba(255, 42, 133, 0.2); color: #ff2a85; border: 1px solid rgba(255, 42, 133, 0.4); font-size: 0.72rem; letter-spacing: 0.8px;">${escapeHtml(slide.badge)}</span></div>` : ''}
+              ${titleHtml ? `<h2 style="color: #fff; font-size: 1.4rem; font-weight: 800; line-height: 1.2; margin: 0 0 0.4rem 0;">${titleHtml}</h2>` : ''}
+              ${slide.desc ? `<p style="color: rgba(255,255,255,0.75); font-size: 0.82rem; margin: 0 0 0.75rem 0; line-height: 1.35;">${escapeHtml(slide.desc)}</p>` : ''}
+              ${slide.show_buy !== false ? `<button type="button" class="btn btn-primary btn-sm btn-glow" style="pointer-events: none; font-size: 0.78rem;">${escapeHtml(slide.buy_text || 'ORDER VIP ACCESS')}</button>` : ''}
+            </div>
+          </div>
+        `;
+      }
+
+      adminBannerPreviewIndex = 0;
+      viewport.innerHTML = activeSlides.map((s, i) => buildSlideHtml(s, i === 0)).join('');
+
+      // Add navigation dots
+      if (activeSlides.length > 1) {
+        const dotsWrap = document.createElement('div');
+        dotsWrap.style.cssText = 'position: absolute; bottom: 8px; right: 14px; z-index: 5; display: flex; gap: 6px;';
+        dotsWrap.innerHTML = activeSlides.map((_, i) => `
+          <span class="preview-dot" data-idx="${i}" style="width: 8px; height: 8px; border-radius: 50%; background: ${i === 0 ? 'var(--primary)' : 'rgba(255,255,255,0.35)'}; display: inline-block; cursor: pointer;"></span>
+        `).join('');
+        viewport.appendChild(dotsWrap);
+
+        if (adminHeroConfig.autoplay !== false) {
+          const speed = Math.max(adminHeroConfig.interval || 6000, 2000);
+          adminBannerPreviewTimer = setInterval(() => {
+            const slideItems = viewport.querySelectorAll('.hero-slide-item');
+            const dots = viewport.querySelectorAll('.preview-dot');
+            if (!slideItems.length) return;
+
+            slideItems[adminBannerPreviewIndex].style.opacity = '0';
+            slideItems[adminBannerPreviewIndex].style.visibility = 'hidden';
+            if (dots[adminBannerPreviewIndex]) dots[adminBannerPreviewIndex].style.background = 'rgba(255,255,255,0.35)';
+
+            adminBannerPreviewIndex = (adminBannerPreviewIndex + 1) % activeSlides.length;
+
+            slideItems[adminBannerPreviewIndex].style.opacity = '1';
+            slideItems[adminBannerPreviewIndex].style.visibility = 'visible';
+            if (dots[adminBannerPreviewIndex]) dots[adminBannerPreviewIndex].style.background = 'var(--primary)';
+          }, speed);
+        }
+      }
+    }
+
+    function openSlideModal(slideId) {
+      const editIdInput = document.getElementById('slide-edit-id');
+      const headingText = document.getElementById('modal-slide-heading-text');
+      const titleInput = document.getElementById('slide-title');
+      const hlInput = document.getElementById('slide-highlight');
+      const badgeInput = document.getElementById('slide-badge');
+      const fitSelect = document.getElementById('slide-image-fit');
+      const descInput = document.getElementById('slide-desc');
+      const bgInput = document.getElementById('slide-bg-image');
+      const showBuyCheck = document.getElementById('slide-show-buy');
+      const buyTextInput = document.getElementById('slide-buy-text');
+      const buyUrlInput = document.getElementById('slide-buy-url');
+      const activeCheck = document.getElementById('slide-active');
+
+      if (!editIdInput) return;
+
+      if (slideId) {
+        // Edit existing slide
+        const slide = (adminHeroConfig.slides || []).find(s => s.id === slideId || String(s.id) === String(slideId));
+        if (!slide) {
+          showToast('Slide not found for editing', 'error');
+          return;
+        }
+
+        editIdInput.value = slide.id;
+        headingText.textContent = 'Edit Banner Slide';
+        titleInput.value = slide.title || '';
+        hlInput.value = slide.highlight || '';
+        badgeInput.value = slide.badge || '';
+        fitSelect.value = slide.image_fit || adminHeroConfig.fit || 'cover';
+        descInput.value = slide.desc || '';
+        bgInput.value = slide.bg_image || '/assets/images/store-hero-clean.png';
+        showBuyCheck.checked = slide.show_buy !== false;
+        buyTextInput.value = slide.buy_text || 'ORDER VIP ACCESS';
+        buyUrlInput.value = slide.buy_url || '/products.html';
+        activeCheck.checked = slide.active !== false;
+      } else {
+        // Add new slide
+        editIdInput.value = '';
+        headingText.textContent = 'Add Banner Slide';
+        titleInput.value = 'PREMIUM VIP CHEATS & BYPASS';
+        hlInput.value = 'VIP CHEATS';
+        badgeInput.value = '⚡ 100% UNDETECTED & SAFE';
+        fitSelect.value = adminHeroConfig.fit || 'cover';
+        descInput.value = 'Dominate with precision aimbot, ESP radar, and high FPS optimization. 24/7 automated instant key dispatch.';
+        bgInput.value = '/assets/images/store-hero-clean.png';
+        showBuyCheck.checked = true;
+        buyTextInput.value = 'ORDER VIP ACCESS';
+        buyUrlInput.value = '/products.html';
+        activeCheck.checked = true;
+      }
+
+      toggleSlideBuyFields();
+      updateSlideModalPreview();
+      openModal('modal-banner-slide');
+    }
+
+    function toggleSlideBuyFields() {
+      const show = document.getElementById('slide-show-buy')?.checked;
+      const wrap = document.getElementById('slide-buy-fields-wrap');
+      if (wrap) wrap.style.display = show ? 'grid' : 'none';
+    }
+
+    function setSlidePresetImage(url) {
+      const bgInput = document.getElementById('slide-bg-image');
+      if (bgInput) {
+        bgInput.value = url;
+        updateSlideModalPreview();
+      }
+    }
+
+    function updateSlideModalPreview() {
+      const bgInput = document.getElementById('slide-bg-image');
+      const previewImg = document.getElementById('slide-modal-preview-img');
+      const fitSelect = document.getElementById('slide-image-fit');
+      if (previewImg && bgInput) {
+        previewImg.src = bgInput.value || '/assets/images/store-hero-clean.png';
+        if (fitSelect) previewImg.style.objectFit = fitSelect.value || 'contain';
+      }
+    }
+
+    function handleSlideFilePick(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const bgInput = document.getElementById('slide-bg-image');
+        if (bgInput) {
+          bgInput.value = e.target.result;
+          updateSlideModalPreview();
+          showToast('Image loaded into banner slide preview!', 'success');
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+
+    async function handleSaveSlideModal(e) {
+      if (e) e.preventDefault();
+      const editId = document.getElementById('slide-edit-id')?.value;
+      const title = document.getElementById('slide-title')?.value.trim() || '';
+      const highlight = document.getElementById('slide-highlight')?.value.trim() || '';
+      const badge = document.getElementById('slide-badge')?.value.trim() || '';
+      const image_fit = document.getElementById('slide-image-fit')?.value || 'cover';
+      const desc = document.getElementById('slide-desc')?.value.trim() || '';
+      const bg_image = document.getElementById('slide-bg-image')?.value.trim() || '/assets/images/store-hero-clean.png';
+      const show_buy = document.getElementById('slide-show-buy')?.checked !== false;
+      const buy_text = document.getElementById('slide-buy-text')?.value.trim() || 'ORDER VIP ACCESS';
+      const buy_url = document.getElementById('slide-buy-url')?.value.trim() || '/products.html';
+      const active = document.getElementById('slide-active')?.checked !== false;
+
+      const slideObj = {
+        id: editId || ('slide_' + Date.now()),
+        title,
+        highlight,
+        badge,
+        image_fit,
+        desc,
+        bg_image,
+        show_buy,
+        buy_text,
+        buy_url,
+        active
+      };
+
+      if (!adminHeroConfig.slides) adminHeroConfig.slides = [];
+
+      if (editId) {
+        const idx = adminHeroConfig.slides.findIndex(s => s.id === editId || String(s.id) === String(editId));
+        if (idx !== -1) {
+          adminHeroConfig.slides[idx] = slideObj;
+        } else {
+          adminHeroConfig.slides.push(slideObj);
+        }
+      } else {
+        adminHeroConfig.slides.push(slideObj);
+      }
+
+      closeModal('modal-banner-slide');
+      await saveHeroBannersToServer(`Slide "${title || 'Graphic Slide'}" saved successfully! 💾`);
+    }
+
+    async function handleSaveGlobalBanners(e) {
+      if (e) e.preventDefault();
+
+      const enabled = document.getElementById('banner-cfg-enabled')?.checked !== false;
+      const height = parseInt(document.getElementById('banner-cfg-height')?.value, 10) || 240;
+      const mobile_height = parseInt(document.getElementById('banner-cfg-mobile-height')?.value, 10) || 150;
+      const fit = document.getElementById('banner-cfg-fit')?.value || 'cover';
+      const autoplay = document.getElementById('banner-cfg-autoplay')?.checked !== false;
+      const interval = parseInt(document.getElementById('banner-cfg-interval')?.value, 10) || 6000;
+      const site_notice = document.getElementById('banner-cfg-site-notice')?.value.trim() || '';
+
+      adminHeroConfig.enabled = enabled;
+      adminHeroConfig.height = height;
+      adminHeroConfig.mobile_height = mobile_height;
+      adminHeroConfig.fit = fit;
+      adminHeroConfig.autoplay = autoplay;
+      adminHeroConfig.interval = interval;
+      adminSiteNotice = site_notice;
+
+      await saveHeroBannersToServer('Global banner board settings saved & synced! 🚀');
+    }
+
+    async function saveHeroBannersToServer(customSuccessMsg) {
+      try {
+        const res = await fetch('/api/admin/banners', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            banners: adminHeroConfig,
+            site_notice: adminSiteNotice
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          showToast(data.message || 'Failed to save hero banners configuration', 'error');
+          return;
+        }
+
+        showToast(customSuccessMsg || 'Banner changes saved successfully! 💾', 'success');
+        renderAdminSlidesTable();
+        renderAdminLivePreview();
+      } catch (err) {
+        console.error('Error saving banners:', err);
+        showToast('Network error saving hero banners: ' + err.message, 'error');
+      }
+    }
+
+    async function toggleSlideActive(idx) {
+      if (!adminHeroConfig.slides || !adminHeroConfig.slides[idx]) return;
+      const slide = adminHeroConfig.slides[idx];
+      slide.active = slide.active === false ? true : false;
+      await saveHeroBannersToServer(`Slide status updated to ${slide.active ? 'Active ✓' : 'Hidden ✕'}.`);
+    }
+
+    async function moveSlide(idx, delta) {
+      const slides = adminHeroConfig.slides || [];
+      const newIdx = idx + delta;
+      if (newIdx < 0 || newIdx >= slides.length) return;
+
+      const temp = slides[idx];
+      slides[idx] = slides[newIdx];
+      slides[newIdx] = temp;
+
+      await saveHeroBannersToServer('Slide order updated & saved.');
+    }
+
+    async function deleteSlide(slideId) {
+      const slide = (adminHeroConfig.slides || []).find(s => s.id === slideId || String(s.id) === String(slideId));
+      const title = slide ? (slide.title || 'this slide') : 'this slide';
+
+      if (!confirm(`Are you sure you want to delete banner slide "${title}"?`)) {
+        return;
+      }
+
+      adminHeroConfig.slides = (adminHeroConfig.slides || []).filter(s => s.id !== slideId && String(s.id) !== String(slideId));
+      await saveHeroBannersToServer('Banner slide deleted.');
+    }
+
+    async function load7SPresets() {
+      if (!confirm('Load the default 7S World high-converting gaming banner slides? (This will reset current slides to recommended artwork).')) {
+        return;
+      }
+
+      adminHeroConfig.enabled = true;
+      adminHeroConfig.height = 240;
+      adminHeroConfig.mobile_height = 150;
+      adminHeroConfig.fit = 'cover';
+      adminHeroConfig.autoplay = true;
+      adminHeroConfig.interval = 6000;
+      adminHeroConfig.slides = [
+        {
+          id: 'slide_vip_exact',
+          title: 'BR MODS VIP BYPASS',
+          highlight: 'VIP BYPASS',
+          badge: '⚡ ZERO BAN MEMORY INJECTION',
+          desc: 'High tick-rate internal aimbot, precision bones tracker, stream-proof glow visual radar.',
+          bg_image: '/assets/images/store-hero-clean.png',
+          image_fit: 'cover',
+          show_buy: true,
+          buy_text: 'BUY VIP ACCESS',
+          buy_url: '/products.html',
+          active: true
+        },
+        {
+          id: 'slide_apex_hero',
+          title: 'ZERO RECOIL PREDICTION',
+          highlight: 'ZERO RECOIL',
+          badge: '🛡️ SERVER-SIDE PROTECTION',
+          desc: 'Automated recoil compensation engine with micro-drift bullet prediction on all rifles.',
+          bg_image: '/assets/images/store-hero-exact.png',
+          image_fit: 'cover',
+          show_buy: true,
+          buy_text: 'VIEW PRODUCTS',
+          buy_url: '/products.html',
+          active: true
+        },
+        {
+          id: 'slide_ref_showcase',
+          title: 'WHITE X EXCLUSIVE SOFTWARE',
+          highlight: 'WHITE X EXCLUSIVE',
+          badge: '💎 24/7 INSTANT DISPATCH',
+          desc: 'Automated instant key generation after verified payment. Undetected ring-0 hypervisor builds.',
+          bg_image: '/assets/images/store-hero-reference.png',
+          image_fit: 'cover',
+          show_buy: true,
+          buy_text: 'DISCORD SUPPORT',
+          buy_url: 'https://discord.gg/whitex',
+          active: true
+        }
+      ];
+
+      // Update inputs
+      const chkEnabled = document.getElementById('banner-cfg-enabled');
+      if (chkEnabled) chkEnabled.checked = true;
+      const numHeight = document.getElementById('banner-cfg-height');
+      if (numHeight) numHeight.value = 240;
+      const numMobileHeight = document.getElementById('banner-cfg-mobile-height');
+      if (numMobileHeight) numMobileHeight.value = 150;
+      const selFit = document.getElementById('banner-cfg-fit');
+      if (selFit) selFit.value = 'cover';
+
+      await saveHeroBannersToServer('Default 7S banner presets restored & saved! ⚡');
+    }
+
+    // Expose banner functions globally for inline onclick / onchange handlers
+    window.loadHeroBannersAdmin = loadHeroBannersAdmin;
+    window.renderAdminSlidesTable = renderAdminSlidesTable;
+    window.renderAdminLivePreview = renderAdminLivePreview;
+    window.openSlideModal = openSlideModal;
+    window.toggleSlideBuyFields = toggleSlideBuyFields;
+    window.setSlidePresetImage = setSlidePresetImage;
+    window.updateSlideModalPreview = updateSlideModalPreview;
+    window.handleSlideFilePick = handleSlideFilePick;
+    window.handleSaveSlideModal = handleSaveSlideModal;
+    window.handleSaveGlobalBanners = handleSaveGlobalBanners;
+    window.saveHeroBannersToServer = saveHeroBannersToServer;
+    window.toggleSlideActive = toggleSlideActive;
+    window.moveSlide = moveSlide;
+    window.deleteSlide = deleteSlide;
+    window.load7SPresets = load7SPresets;
 
     async function testDiscordWebhook() {
       showToast('Sending test notification to Discord...', 'info');

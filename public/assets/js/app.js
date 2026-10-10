@@ -201,6 +201,15 @@ async function loadRatesAndSettings() {
           noticeEl.textContent = data.site_notice;
           noticeEl.style.display = 'block';
         }
+      } else {
+        const noticeEl = document.getElementById('site-banner-notice');
+        if (noticeEl) noticeEl.style.display = 'none';
+      }
+      if (data.hero_banners) {
+        window.currentHeroBannersConfig = data.hero_banners;
+        if (typeof renderHeroSlider === 'function') {
+          renderHeroSlider();
+        }
       }
       if (data.social_links && Array.isArray(data.social_links)) {
         Store.socialLinks = data.social_links;
@@ -220,6 +229,24 @@ async function loadRatesAndSettings() {
     console.warn('Could not fetch settings:', err);
   }
 }
+
+async function loadHeroBanners() {
+  try {
+    const res = await fetch('/api/banners');
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success && data.banners) {
+        window.currentHeroBannersConfig = data.banners;
+        if (typeof renderHeroSlider === 'function') {
+          renderHeroSlider();
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('Could not fetch banners:', err);
+  }
+}
+window.loadHeroBanners = loadHeroBanners;
 
 /* ==============================================================
    AUTHENTICATION STATE

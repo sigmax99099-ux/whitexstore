@@ -7,7 +7,7 @@ export default async function handler(req, res) {
 
   try {
     const settingsRes = await query(
-      "SELECT setting_key, setting_value FROM settings WHERE setting_key IN ('whatsapp_number', 'npr_usd_rate', 'inr_usd_rate', 'min_topup_npr', 'site_notice')"
+      "SELECT setting_key, setting_value FROM settings WHERE setting_key IN ('whatsapp_number', 'npr_usd_rate', 'inr_usd_rate', 'min_topup_npr', 'site_notice', 'hero_banners_config')"
     );
 
     const settings = {
@@ -15,7 +15,8 @@ export default async function handler(req, res) {
       npr_usd_rate: '134.50',
       inr_usd_rate: '84.00',
       min_topup_npr: '200',
-      site_notice: ''
+      site_notice: '',
+      hero_banners_config: ''
     };
 
     settingsRes.rows.forEach(r => {
@@ -27,6 +28,18 @@ export default async function handler(req, res) {
       NPR: parseFloat(settings.npr_usd_rate || '134.50'),
       INR: parseFloat(settings.inr_usd_rate || '84.00')
     };
+
+    let heroBanners = null;
+    if (settings.hero_banners_config) {
+      try {
+        heroBanners = JSON.parse(settings.hero_banners_config);
+        if (heroBanners && Array.isArray(heroBanners.slides)) {
+          heroBanners.slides = heroBanners.slides.filter(s => s && s.active !== false);
+        }
+      } catch (e) {
+        console.warn('Failed to parse hero_banners_config');
+      }
+    }
 
     let socialLinks = [];
     try {
@@ -47,7 +60,8 @@ export default async function handler(req, res) {
       rates,
       whatsapp_number: settings.whatsapp_number,
       site_notice: settings.site_notice,
-      social_links: socialLinks
+      social_links: socialLinks,
+      hero_banners: heroBanners
     });
   } catch (err) {
     console.error('Settings public fetch error:', err);
