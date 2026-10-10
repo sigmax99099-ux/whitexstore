@@ -20,7 +20,7 @@ export default async function handler(req, res) {
 
     // Fetch product
     const productRes = await query(
-      'SELECT id, name, category, description, features, image, status, featured FROM products WHERE id = $1',
+      'SELECT id, name, category, description, features, image, status, featured, COALESCE(is_in_stock, TRUE) as is_in_stock FROM products WHERE id = $1',
       [productId]
     );
 
@@ -113,6 +113,7 @@ export default async function handler(req, res) {
       success: true,
       product: {
         ...product,
+        is_in_stock: product.is_in_stock !== false,
         features_list: product.features ? product.features.split('\n').map(f => f.trim()).filter(Boolean) : []
       },
       plans,

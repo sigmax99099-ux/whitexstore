@@ -40,7 +40,7 @@ export default async function handler(req, res) {
   // PUT: Update an existing product
   if (req.method === 'PUT') {
     try {
-      const { id, name, category, description, features, image, status, featured, sort_order } = req.body || {};
+      const { id, name, category, description, features, image, status, featured, sort_order, is_in_stock } = req.body || {};
 
       if (!id) {
         return res.status(400).json({ success: false, message: 'Product ID is required' });
@@ -71,8 +71,9 @@ export default async function handler(req, res) {
              image = COALESCE($5, image),
              status = COALESCE($6, status),
              featured = COALESCE($7, featured),
-             sort_order = COALESCE($8, sort_order)
-         WHERE id = $9
+             sort_order = COALESCE($8, sort_order),
+             is_in_stock = COALESCE($9, is_in_stock)
+         WHERE id = $10
          RETURNING *`,
         [
           name ? String(name).trim() : null,
@@ -83,6 +84,7 @@ export default async function handler(req, res) {
           status || null,
           featured !== undefined ? (featured === true || featured === 'true') : null,
           sort_order !== undefined ? parseInt(sort_order, 10) : null,
+          is_in_stock !== undefined ? (is_in_stock === true || is_in_stock === 'true' || is_in_stock === 1 || is_in_stock === '1') : null,
           id
         ]
       );

@@ -875,7 +875,7 @@ function render7SProductCardHtml(p) {
   const maxDiscount = parseFloat(p.max_discount_percent || 0);
   const hasDiscount = maxDiscount > 0 && parseFloat(origPriceUsd) > parseFloat(lowestPriceUsd);
   const imgUrl = p.image || '/assets/images/store-hero-clean.png';
-  const isOutOfStock = p.available_keys_count === 0 && (p.total_plans > 0);
+  const isOutOfStock = p.is_in_stock === false || (p.available_keys_count === 0 && (p.total_plans > 0) && p.is_in_stock !== true);
   const stockText = isOutOfStock ? 'OUT OF STOCK' : 'IN STOCK';
 
   let durationList = [];
@@ -927,8 +927,8 @@ function render7SProductCardHtml(p) {
           <a href="/product.html?id=${p.id}" class="card-details-btn" title="View Details">
             <span>DETAILS</span> <span class="info-icon">ⓘ</span>
           </a>
-          <a href="/product.html?id=${p.id}" class="card-buy-btn" title="Buy Product">
-            <span>BUY PRODUCT</span> <span class="arrow-icon">↗</span>
+          <a href="/product.html?id=${p.id}" class="card-buy-btn" title="${isOutOfStock ? 'Currently Out of Stock' : 'Buy Product'}" style="${isOutOfStock ? 'opacity: 0.75; background: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.4); color: #f87171;' : ''}">
+            <span>${isOutOfStock ? 'OUT OF STOCK' : 'BUY PRODUCT'}</span> <span class="arrow-icon">${isOutOfStock ? '🔒' : '↗'}</span>
           </a>
         </div>
       </div>

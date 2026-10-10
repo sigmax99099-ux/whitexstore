@@ -13,7 +13,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { name, category, description, features, image, status, featured, sort_order } = req.body || {};
+    const { name, category, description, features, image, status, featured, sort_order, is_in_stock } = req.body || {};
 
     if (!name || !category || !description) {
       return res.status(400).json({ success: false, message: 'Name, category, and description are required.' });
@@ -45,9 +45,9 @@ export default async function handler(req, res) {
     }
 
     const insertRes = await query(
-      `INSERT INTO products (name, category, description, features, image, status, featured, sort_order)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, COALESCE(NULLIF($8::int, 0), (SELECT COALESCE(MAX(sort_order), 0) + 1 FROM products)))
-       RETURNING id, name, category, description, features, image, status, featured, sort_order, created_at`,
+      `INSERT INTO products (name, category, description, features, image, status, featured, sort_order, is_in_stock)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, COALESCE(NULLIF($8::int, 0), (SELECT COALESCE(MAX(sort_order), 0) + 1 FROM products)), $9)
+       RETURNING id, name, category, description, features, image, status, featured, sort_order, is_in_stock, created_at`,
       [
         String(name).trim(),
         String(category).trim(),
@@ -56,7 +56,8 @@ export default async function handler(req, res) {
         imageUrl,
         status || 'active',
         featured === true || featured === 'true',
-        parseInt(sort_order, 10) || 0
+        parseInt(sort_order, 10) || 0,
+        is_in_stock !== undefined ? (is_in_stock === true || is_in_stock === 'true') : true
       ]
     );
 

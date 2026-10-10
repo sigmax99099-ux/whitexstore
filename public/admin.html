@@ -89,6 +89,46 @@
       color: #fda4af;
       box-shadow: 0 0 8px rgba(244, 63, 94, 0.35);
     }
+    .btn-stock-toggle {
+      border-radius: 999px;
+      padding: 4px 12px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      line-height: 1.3;
+      white-space: nowrap;
+    }
+    .btn-stock-toggle.in-stock {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.5);
+      color: #34d399;
+      box-shadow: 0 0 8px rgba(16, 185, 129, 0.2);
+    }
+    .btn-stock-toggle.in-stock:hover {
+      background: rgba(16, 185, 129, 0.3);
+      border-color: #10b981;
+      color: #a7f3d0;
+      box-shadow: 0 0 14px rgba(16, 185, 129, 0.45);
+      transform: scale(1.02);
+    }
+    .btn-stock-toggle.out-of-stock {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.5);
+      color: #f87171;
+      box-shadow: 0 0 8px rgba(239, 68, 68, 0.2);
+    }
+    .btn-stock-toggle.out-of-stock:hover {
+      background: rgba(239, 68, 68, 0.3);
+      border-color: #ef4444;
+      color: #fca5a5;
+      box-shadow: 0 0 14px rgba(239, 68, 68, 0.45);
+      transform: scale(1.02);
+    }
     .prod-status-dot {
       display: inline-block;
       width: 12px;
@@ -720,12 +760,13 @@
                 <th style="width:70px;">IMAGE</th>
                 <th>NAME</th>
                 <th>CATEGORY</th>
+                <th style="width:130px; text-align:center;">STOCK</th>
                 <th style="width:80px; text-align:center;">STATUS</th>
-                <th style="width:195px;">ACTIONS</th>
+                <th style="width:235px;">ACTIONS</th>
               </tr>
             </thead>
             <tbody id="admin-products-tbody">
-              <tr><td colspan="7" style="text-align: center; padding: 2rem;">Loading products...</td></tr>
+              <tr><td colspan="8" style="text-align: center; padding: 2rem;">Loading products...</td></tr>
             </tbody>
           </table>
         </div>
@@ -1919,9 +1960,12 @@
           </div>
         </div>
 
-        <div style="display: flex; gap: 1.5rem; margin-bottom: 1.25rem; align-items: center;">
+        <div style="display: flex; gap: 1.5rem; margin-bottom: 1.25rem; align-items: center; flex-wrap: wrap;">
           <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.88rem; cursor: pointer;">
             <input type="checkbox" id="prod-featured"> ⭐ Featured on Homepage
+          </label>
+          <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.88rem; cursor: pointer;">
+            <input type="checkbox" id="prod-in-stock" checked> 🟢 In Stock (Available for Instant Delivery)
           </label>
         </div>
         <button type="submit" id="btn-save-product" class="btn btn-primary btn-block btn-lg btn-glow">Create Product ⚡</button>
@@ -3974,6 +4018,7 @@
           const orderVal = (p.sort_order != null && p.sort_order > 0) ? p.sort_order : (idx + 1);
           const isActive = p.status === 'active';
           const isFeatured = p.featured === true || p.featured === 'true';
+          const isInStock = p.is_in_stock !== false;
           return `
           <tr>
             <td>
@@ -4000,15 +4045,31 @@
             <td><strong style="color:#ffffff; font-weight:700; font-size:0.95rem; letter-spacing:0.3px;">${escapeHtml(p.name)}</strong></td>
             <td><span style="color:#94a3b8; font-size:0.85rem; font-weight:500; text-transform:uppercase; letter-spacing:0.5px;">${escapeHtml(p.category)}</span></td>
             <td style="text-align:center;">
+              <button
+                type="button"
+                id="stock-btn-${p.id}"
+                class="btn-stock-toggle ${isInStock ? 'in-stock' : 'out-of-stock'}"
+                onclick="toggleProductStock(${p.id}, ${isInStock})"
+                title="Click to toggle Stock Status (Currently ${isInStock ? 'In Stock' : 'Out of Stock'})"
+              >
+                ${isInStock ? '🟢 IN STOCK' : '🔴 OUT OF STOCK'}
+              </button>
+            </td>
+            <td style="text-align:center;">
               <span
                 class="prod-status-dot ${isActive ? 'active' : 'hidden'}"
-                title="Status: ${isActive ? 'Active' : 'Hidden'} (Click Toggle in Actions to switch)"
+                title="Status: ${isActive ? 'Active' : 'Hidden'} (Click Visibility to switch)"
               ></span>
             </td>
             <td>
-              <div style="display:flex; gap:8px; align-items:center;">
+              <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
                 <button type="button" class="btn-action-edit" onclick="openEditProductModal(${p.id})">Edit</button>
-                <button type="button" class="btn-action-toggle" onclick="toggleProductStatus(${p.id}, '${p.status}')">Toggle</button>
+                <button type="button" class="btn-action-toggle" onclick="toggleProductStock(${p.id}, ${isInStock})" title="Quick Toggle Stock" style="border-color: ${isInStock ? 'rgba(16, 185, 129, 0.4)' : 'rgba(239, 68, 68, 0.4)'}; color: ${isInStock ? '#34d399' : '#f87171'}; font-weight: 700;">
+                  ${isInStock ? 'Stock: ON' : 'Stock: OFF'}
+                </button>
+                <button type="button" class="btn-action-toggle" onclick="toggleProductStatus(${p.id}, '${p.status}')" title="Toggle Active/Hidden">
+                  ${isActive ? 'Hide' : 'Show'}
+                </button>
                 <button type="button" class="btn-action-del" onclick="deleteProduct(${p.id})">Del</button>
               </div>
             </td>
@@ -4126,6 +4187,8 @@
       if (btn) btn.textContent = 'Create Product ⚡';
       const previewBox = document.getElementById('prod-img-preview');
       if (previewBox) previewBox.style.display = 'none';
+      const inStockEl = document.getElementById('prod-in-stock');
+      if (inStockEl) inStockEl.checked = true;
       
       // Load and populate categories
       loadCategories().then(() => {
@@ -4153,6 +4216,8 @@
       document.getElementById('prod-desc').value = p.description || '';
       document.getElementById('prod-features').value = p.features || '';
       document.getElementById('prod-featured').checked = (p.featured === true || p.featured === 'true');
+      const inStockEl = document.getElementById('prod-in-stock');
+      if (inStockEl) inStockEl.checked = (p.is_in_stock !== false);
       document.getElementById('prod-img-url').value = p.image || '';
 
       const previewBox = document.getElementById('prod-img-preview');
@@ -4438,6 +4503,8 @@
           imageUrl = await compressImageFile(fileInput.files[0]);
         }
 
+        const isInStock = document.getElementById('prod-in-stock') ? document.getElementById('prod-in-stock').checked : true;
+
         if (editId) {
           await sendUpdateProduct({
             id: parseInt(editId, 10),
@@ -4446,13 +4513,14 @@
             description,
             features,
             image: imageUrl || undefined,
-            featured
+            featured,
+            is_in_stock: isInStock
           });
         } else {
           if (!imageUrl) {
             imageUrl = 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800&q=80';
           }
-          await sendAddProduct({ name, category, description, features, image: imageUrl, featured });
+          await sendAddProduct({ name, category, description, features, image: imageUrl, featured, is_in_stock: isInStock });
         }
       } catch (err) {
         console.error('Add/Edit product error:', err);
@@ -4526,6 +4594,34 @@
         await loadAdminProducts();
       } catch (err) {
         showToast('Error updating product status', 'error');
+      }
+    }
+
+    async function toggleProductStock(id, currentInStock) {
+      const newStock = !currentInStock;
+      const btn = document.getElementById(`stock-btn-${id}`);
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Updating...';
+      }
+      try {
+        const res = await fetch('/api/admin/products', {
+          method: 'PUT',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, is_in_stock: newStock })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          showToast(data.message || 'Failed to update stock status', 'error');
+          if (btn) btn.disabled = false;
+          return;
+        }
+        showToast(`Product marked ${newStock ? 'IN STOCK 🟢' : 'OUT OF STOCK 🔴'}`, 'success');
+        await loadAdminProducts();
+      } catch (err) {
+        showToast('Error updating stock status', 'error');
+        if (btn) btn.disabled = false;
       }
     }
 

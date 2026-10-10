@@ -309,6 +309,18 @@
 
         updateOrderPricingDisplay();
 
+        if (productData.is_in_stock === false) {
+          const btn = document.getElementById('btn-submit-order');
+          if (btn) {
+            btn.disabled = true;
+            btn.style.opacity = '0.65';
+            btn.style.cursor = 'not-allowed';
+            btn.style.background = '#334155';
+            btn.textContent = 'Product Out of Stock 🔒';
+          }
+          showToast('Notice: This product is currently marked out of stock.', 'warning');
+        }
+
       } catch (err) {
         console.error('Checkout load error:', err);
       }
@@ -524,6 +536,11 @@
     }
 
     async function submitOrder() {
+      if (productData && productData.is_in_stock === false) {
+        showToast('This product is currently out of stock.', 'error');
+        return;
+      }
+
       const btn = document.getElementById('btn-submit-order');
       btn.disabled = true;
       btn.textContent = 'Processing Transaction...';

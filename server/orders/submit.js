@@ -28,7 +28,8 @@ export default async function handler(req, res) {
     // 1. Fetch Product & Plan details
     const planRes = await client.query(
       `SELECT pl.id as plan_id, pl.plan_name, pl.duration_type, pl.days, pl.price_usd, pl.discount_percent,
-              p.id as product_id, p.name as product_name, p.status as product_status
+              p.id as product_id, p.name as product_name, p.status as product_status,
+              COALESCE(p.is_in_stock, TRUE) as is_in_stock
        FROM plans pl
        JOIN products p ON pl.product_id = p.id
        WHERE pl.id = $1 AND p.id = $2`,
@@ -45,6 +46,11 @@ export default async function handler(req, res) {
     if (item.product_status !== 'active') {
       client.release && client.release();
       return res.status(400).json({ success: false, message: 'This product is currently inactive.' });
+    }
+
+    if (item.is_in_stock === false) {
+      client.release && client.release();
+      return res.status(400).json({ success: false, message: 'This product is currently out of stock. Please check back later.' });
     }
 
     // 2. Fetch NPR exchange rate

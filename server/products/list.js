@@ -23,6 +23,7 @@ export default async function handler(req, res) {
         p.status,
         p.featured,
         p.sort_order,
+        COALESCE(p.is_in_stock, TRUE) as is_in_stock,
         COALESCE(
           MIN(pl.price_usd * (1 - pl.discount_percent / 100.0)),
           0
@@ -87,6 +88,7 @@ export default async function handler(req, res) {
         lowest_price_usd: parseFloat(prod.lowest_price_usd).toFixed(2),
         original_lowest_price_usd: parseFloat(prod.original_lowest_price_usd || prod.lowest_price_usd).toFixed(2),
         max_discount_percent: parseFloat(prod.max_discount_percent || 0),
+        is_in_stock: prod.is_in_stock !== false,
         features_list: prod.features ? prod.features.split('\n').map(f => f.trim()).filter(Boolean) : []
       }))
     });

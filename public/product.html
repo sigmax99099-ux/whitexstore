@@ -117,8 +117,8 @@
               <p id="detail-desc" style="font-size: 0.95rem; margin-bottom: 1.5rem;">Description</p>
 
               <!-- Stock Alert -->
-              <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: var(--radius-md); margin-bottom: 1.5rem;">
-                <div style="display: flex; align-items: center; gap: 0.5rem; color: #34d399; font-weight: 600; font-size: 0.88rem;">
+              <div id="stock-status-alert-box" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: var(--radius-md); margin-bottom: 1.5rem;">
+                <div id="stock-delivery-text" style="display: flex; align-items: center; gap: 0.5rem; color: #34d399; font-weight: 600; font-size: 0.88rem;">
                   <span>⚡</span> Instant Delivery Active
                 </div>
                 <div style="font-size: 0.82rem; color: var(--text-muted);">
@@ -192,6 +192,10 @@
       loadProduct(prodId);
 
       document.getElementById('btn-proceed-checkout').addEventListener('click', () => {
+        if (currentProduct && currentProduct.is_in_stock === false) {
+          showToast('This product is currently out of stock.', 'warning');
+          return;
+        }
         if (!selectedPlan) {
           showToast('Please select a plan duration first.', 'warning');
           return;
@@ -228,7 +232,34 @@
         document.getElementById('detail-cat-badge').textContent = currentProduct.category;
         document.getElementById('detail-desc').textContent = currentProduct.description;
         document.getElementById('detail-img').src = currentProduct.image;
-        document.getElementById('detail-stock-count').textContent = `${data.available_stock || 'Instant'} Available`;
+        
+        const isInStock = currentProduct.is_in_stock !== false;
+        const stockCountEl = document.getElementById('detail-stock-count');
+        const alertBox = document.getElementById('stock-status-alert-box');
+        const deliveryText = document.getElementById('stock-delivery-text');
+        const checkoutBtn = document.getElementById('btn-proceed-checkout');
+
+        if (!isInStock) {
+          stockCountEl.textContent = 'Out of Stock';
+          stockCountEl.style.color = '#f87171';
+          if (alertBox) {
+            alertBox.style.background = 'rgba(239, 68, 68, 0.12)';
+            alertBox.style.borderColor = 'rgba(239, 68, 68, 0.35)';
+          }
+          if (deliveryText) {
+            deliveryText.innerHTML = `<span>🔒</span> Restocking Soon — Orders Paused`;
+            deliveryText.style.color = '#f87171';
+          }
+          if (checkoutBtn) {
+            checkoutBtn.disabled = true;
+            checkoutBtn.style.opacity = '0.65';
+            checkoutBtn.style.cursor = 'not-allowed';
+            checkoutBtn.style.background = '#334155';
+            checkoutBtn.textContent = 'Out of Stock 🔒';
+          }
+        } else {
+          stockCountEl.textContent = `${data.available_stock || 'Instant'} Available`;
+        }
 
         // Render Features
         const featList = document.getElementById('detail-features-list');

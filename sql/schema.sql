@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS products (
   status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'hidden')),
   featured BOOLEAN NOT NULL DEFAULT FALSE,
   sort_order INT NOT NULL DEFAULT 0,
+  is_in_stock BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
