@@ -45,14 +45,15 @@ export default async function handler(req, res) {
         `SELECT d.*, 
                 o.order_code, o.amount_usd, o.status as order_status, o.created_at as order_created,
                 u.name as customer_name, u.email as customer_email,
-                p.name as product_name,
-                pl.plan_name, pl.days,
+                COALESCE(p.name, o.product_name, 'Product') as product_name,
+                COALESCE(pl.plan_name, o.plan_name, 'Standard') as plan_name, 
+                COALESCE(pl.days, 0) as days,
                 pm.supplier_product_name
          FROM deliveries d
          JOIN orders o ON d.order_id = o.id
          JOIN users u ON o.user_id = u.id
-         JOIN products p ON o.product_id = p.id
-         JOIN plans pl ON o.plan_id = pl.id
+         LEFT JOIN products p ON o.product_id = p.id
+         LEFT JOIN plans pl ON o.plan_id = pl.id
          LEFT JOIN product_mappings pm ON d.product_mapping_id = pm.id
          ${whereClause}
          ORDER BY d.created_at DESC

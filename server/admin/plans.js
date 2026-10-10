@@ -1,5 +1,6 @@
 import { query } from '../../lib/db.js';
 import { getAuthAdmin } from '../../lib/auth.js';
+import { ensureProductCascadeSchema } from '../../lib/schema-migration.js';
 
 export default async function handler(req, res) {
   const admin = await getAuthAdmin(req);
@@ -101,15 +102,48 @@ export default async function handler(req, res) {
     }
   }
 
-  // DELETE: Delete plan
+  // DELETE: Delete plan safely without foreign key RESTRICT constraint errors
   if (req.method === 'DELETE') {
     try {
-      const { id } = req.query;
-      if (!id) {
+      const rawId = req.query?.id || req.body?.id;
+      if (!rawId) {
         return res.status(400).json({ success: false, message: 'Plan ID is required' });
       }
-      await query('DELETE FROM plans WHERE id = $1', [id]);
-      return res.status(200).json({ success: true, message: 'Plan deleted' });
+
+      const planId = parseInt(rawId, 10);
+      if (isNaN(planId)) {
+        return res.status(400).json({ success: false, message: 'Invalid plan ID' });
+      }
+
+      // Ensure DB supports ON DELETE SET NULL on orders
+      await ensureProductCascadeSchema();
+
+      // Snapshot plan name into orders
+      await query(`
+        UPDATE orders o
+        SET plan_name = COALESCE(o.plan_name, pl.plan_name)
+        FROM plans pl
+        WHERE o.plan_id = $1 AND pl.id = $1
+      `, [planId]).catch(e => console.warn('Snapshot order plan_name notice:', e.message));
+
+      // Disassociate orders
+      await query('UPDATE orders SET plan_id = NULL WHERE plan_id = $1', [planId])
+        .catch(e => console.warn('Disassociate orders plan_id notice:', e.message));
+
+      // Clean up mappings, variants, and reseller prices
+      await query('DELETE FROM product_mappings WHERE plan_id = $1', [planId]).catch(() => {});
+      await query('DELETE FROM supplier_variants WHERE plan_id = $1', [planId]).catch(() => {});
+      await query('DELETE FROM reseller_prices WHERE plan_id = $1', [planId]).catch(() => {});
+
+      const delRes = await query('DELETE FROM plans WHERE id = $1 RETURNING id, plan_name', [planId]);
+      if (delRes.rows.length === 0) {
+        return res.status(404).json({ success: false, message: 'Plan not found' });
+      }
+
+      return res.status(200).json({ 
+        success: true, 
+        message: `Plan "${delRes.rows[0].plan_name}" deleted successfully` 
+      });
     } catch (err) {
       console.error('Delete plan error:', err);
       return res.status(500).json({ success: false, message: 'Failed to delete plan: ' + err.message });

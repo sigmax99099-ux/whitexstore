@@ -25,17 +25,17 @@ export default async function handler(req, res) {
         u.name as user_name,
         u.email as user_email,
         u.phone as user_phone,
-        p.id as product_id,
-        p.name as product_name,
-        pl.id as plan_id,
-        pl.plan_name,
-        pl.days,
-        pl.duration_type,
+        COALESCE(p.id, o.product_id) as product_id,
+        COALESCE(p.name, o.product_name, 'Deleted Product') as product_name,
+        COALESCE(pl.id, o.plan_id) as plan_id,
+        COALESCE(pl.plan_name, o.plan_name, 'Standard') as plan_name,
+        COALESCE(pl.days, 0) as days,
+        COALESCE(pl.duration_type, 'days') as duration_type,
         lk.key_code
       FROM orders o
       JOIN users u ON o.user_id = u.id
-      JOIN products p ON o.product_id = p.id
-      JOIN plans pl ON o.plan_id = pl.id
+      LEFT JOIN products p ON o.product_id = p.id
+      LEFT JOIN plans pl ON o.plan_id = pl.id
       LEFT JOIN license_keys lk ON lk.assigned_order_id = o.id
       WHERE 1=1
     `;
@@ -49,7 +49,7 @@ export default async function handler(req, res) {
 
     if (search) {
       params.push(`%${search}%`);
-      sql += ` AND (o.order_code ILIKE $${params.length} OR u.email ILIKE $${params.length} OR u.name ILIKE $${params.length})`;
+      sql += ` AND (o.order_code ILIKE $${params.length} OR u.email ILIKE $${params.length} OR u.name ILIKE $${params.length} OR COALESCE(p.name, o.product_name, '') ILIKE $${params.length})`;
     }
 
     sql += ' ORDER BY o.created_at DESC LIMIT 100';

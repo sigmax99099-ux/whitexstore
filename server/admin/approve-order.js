@@ -27,13 +27,15 @@ export default async function handler(req, res) {
     // 1. Fetch order details
     const orderRes = await client.query(
       `SELECT o.id, o.order_code, o.user_id, o.product_id, o.plan_id, o.status,
-              p.name as product_name,
-              pl.plan_name, pl.days, pl.duration_type,
+              COALESCE(p.name, o.product_name, 'Product') as product_name,
+              COALESCE(pl.plan_name, o.plan_name, 'Standard') as plan_name,
+              COALESCE(pl.days, 0) as days,
+              COALESCE(pl.duration_type, 'days') as duration_type,
               u.name as user_name, u.email as user_email
        FROM orders o
-       JOIN products p ON o.product_id = p.id
-       JOIN plans pl ON o.plan_id = pl.id
        JOIN users u ON o.user_id = u.id
+       LEFT JOIN products p ON o.product_id = p.id
+       LEFT JOIN plans pl ON o.plan_id = pl.id
        WHERE o.id = $1`,
       [order_id]
     );

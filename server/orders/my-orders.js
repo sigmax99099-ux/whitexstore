@@ -20,13 +20,13 @@ export default async function handler(req, res) {
         o.status,
         o.reject_reason,
         o.created_at,
-        p.id as product_id,
-        p.name as product_name,
+        COALESCE(p.id, o.product_id) as product_id,
+        COALESCE(p.name, o.product_name, 'Product') as product_name,
         p.image as product_image,
         p.category as product_category,
-        pl.plan_name,
-        pl.duration_type,
-        pl.days,
+        COALESCE(pl.plan_name, o.plan_name, 'Standard') as plan_name,
+        COALESCE(pl.duration_type, 'days') as duration_type,
+        COALESCE(pl.days, 0) as days,
         lk.key_code,
         -- Delivery info
         d.id as delivery_id,
@@ -43,8 +43,8 @@ export default async function handler(req, res) {
         d.created_at as delivery_created_at,
         d.delivered_at as delivery_delivered_at
       FROM orders o
-      JOIN products p ON o.product_id = p.id
-      JOIN plans pl ON o.plan_id = pl.id
+      LEFT JOIN products p ON o.product_id = p.id
+      LEFT JOIN plans pl ON o.plan_id = pl.id
       LEFT JOIN license_keys lk ON lk.assigned_order_id = o.id AND lk.status = 'sold'
       LEFT JOIN deliveries d ON d.order_id = o.id
       WHERE o.user_id = $1

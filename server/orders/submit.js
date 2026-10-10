@@ -175,12 +175,26 @@ export default async function handler(req, res) {
 
     // 6. Create Order with status 'pending'
     const orderCode = 'WX-' + crypto.randomBytes(4).toString('hex').toUpperCase();
-    const orderRes = await client.query(
-      `INSERT INTO orders (order_code, user_id, product_id, plan_id, amount_usd, status)
-       VALUES ($1, $2, $3, $4, $5, 'pending')
-       RETURNING id, order_code, user_id, product_id, plan_id, amount_usd, status, created_at`,
-      [orderCode, user.id, product_id, plan_id, finalPriceUsd]
-    );
+    let orderRes;
+    try {
+      orderRes = await client.query(
+        `INSERT INTO orders (order_code, user_id, product_id, plan_id, amount_usd, status, product_name, plan_name)
+         VALUES ($1, $2, $3, $4, $5, 'pending', $6, $7)
+         RETURNING id, order_code, user_id, product_id, plan_id, amount_usd, status, created_at, product_name, plan_name`,
+        [orderCode, user.id, product_id, plan_id, finalPriceUsd, item.product_name, item.plan_name]
+      );
+    } catch (insertErr) {
+      if (insertErr.message && (insertErr.message.includes('product_name') || insertErr.message.includes('column'))) {
+        orderRes = await client.query(
+          `INSERT INTO orders (order_code, user_id, product_id, plan_id, amount_usd, status)
+           VALUES ($1, $2, $3, $4, $5, 'pending')
+           RETURNING id, order_code, user_id, product_id, plan_id, amount_usd, status, created_at`,
+          [orderCode, user.id, product_id, plan_id, finalPriceUsd]
+        );
+      } else {
+        throw insertErr;
+      }
+    }
     const order = orderRes.rows[0];
 
     // Record wallet transaction (Debit)

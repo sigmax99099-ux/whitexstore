@@ -96,12 +96,13 @@ export async function deliverOrder(orderId) {
     const orderRes = await client.query(
       `SELECT o.id, o.order_code, o.user_id, o.product_id, o.plan_id, o.status,
               u.name as user_name, u.email as user_email,
-              p.name as product_name,
-              pl.plan_name, pl.days
+              COALESCE(p.name, o.product_name, 'Product') as product_name,
+              COALESCE(pl.plan_name, o.plan_name, 'Standard') as plan_name,
+              COALESCE(pl.days, 0) as days
        FROM orders o
        JOIN users u ON o.user_id = u.id
-       JOIN products p ON o.product_id = p.id
-       JOIN plans pl ON o.plan_id = pl.id
+       LEFT JOIN products p ON o.product_id = p.id
+       LEFT JOIN plans pl ON o.plan_id = pl.id
        WHERE o.id = $1`,
       [orderId]
     );
@@ -461,11 +462,12 @@ export async function retryPendingDeliveries() {
       const orderRes = await client.query(
         `SELECT o.id, o.order_code, o.user_id, o.product_id, o.plan_id, o.status,
                 u.name as user_name, u.email as user_email,
-                p.name as product_name, pl.plan_name
+                COALESCE(p.name, o.product_name, 'Product') as product_name,
+                COALESCE(pl.plan_name, o.plan_name, 'Standard') as plan_name
          FROM orders o
          JOIN users u ON o.user_id = u.id
-         JOIN products p ON o.product_id = p.id
-         JOIN plans pl ON o.plan_id = pl.id
+         LEFT JOIN products p ON o.product_id = p.id
+         LEFT JOIN plans pl ON o.plan_id = pl.id
          WHERE o.id = $1 AND o.status = 'pending'`,
         [delivery.order_id]
       );
@@ -517,12 +519,13 @@ export async function adminRetryDelivery(deliveryId) {
     const deliveryRes = await client.query(
       `SELECT d.*, o.order_code, o.user_id, o.product_id, o.plan_id, o.status,
               u.name as user_name, u.email as user_email,
-              p.name as product_name, pl.plan_name
+              COALESCE(p.name, o.product_name, 'Product') as product_name,
+              COALESCE(pl.plan_name, o.plan_name, 'Standard') as plan_name
        FROM deliveries d
        JOIN orders o ON d.order_id = o.id
        JOIN users u ON o.user_id = u.id
-       JOIN products p ON o.product_id = p.id
-       JOIN plans pl ON o.plan_id = pl.id
+       LEFT JOIN products p ON o.product_id = p.id
+       LEFT JOIN plans pl ON o.plan_id = pl.id
        WHERE d.id = $1`,
       [deliveryId]
     );
