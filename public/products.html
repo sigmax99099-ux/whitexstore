@@ -50,38 +50,43 @@
     </div>
   </nav>
 
-  <!-- Page Header -->
-  <header style="padding: 3rem 0 1.5rem; text-align: center;">
+  <!-- Main Products Store Area -->
+  <main class="section" style="padding-top: 1.5rem;">
     <div class="container">
-      <h1 style="font-size: 2.8rem; margin-bottom: 0.5rem;">
-        GAMING CHEATS & <span style="color: var(--primary);">LICENSE KEYS</span>
-      </h1>
-      <p style="max-width: 600px; margin: 0 auto; color: var(--text-muted);">
-        Select your game below. All licenses feature 100% automated instant dispatch to your client dashboard upon confirmation.
-      </p>
+      <!-- 7S DYNAMIC ADVERTISED BOARD (HERO BANNER SLIDER) -->
+      <div class="hero-slider-wrap" id="heroSliderWrap">
+        <div class="hero-slider-viewport" id="heroSliderViewport"></div>
+        <button type="button" class="hero-slider-arrow hero-arrow-prev" id="heroSliderPrevBtn" onclick="heroSliderPrev()" title="Previous slide" aria-label="Previous slide">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
+        <button type="button" class="hero-slider-arrow hero-arrow-next" id="heroSliderNextBtn" onclick="heroSliderNext()" title="Next slide" aria-label="Next slide">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </button>
+        <div class="hero-slider-dots" id="heroSliderDots"></div>
+      </div>
 
-      <!-- Category Filter Pills & Search Bar -->
-      <div style="margin-top: 2rem; display: flex; flex-direction: column; align-items: center; gap: 1.25rem;">
-        <div style="max-width: 450px; width: 100%;">
-          <input type="text" id="product-search-input" class="form-input" placeholder="🔍 Search game or cheat name..." style="text-align: center; border-radius: var(--radius-full);">
+      <!-- 7S PRODUCT CATEGORIES FILTER BAR -->
+      <div class="store-category-wrapper">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+          <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+            <span style="font-family: var(--font-cyber); font-size: 11px; font-weight: 800; letter-spacing: 1.2px; color: #00e5ff; text-transform: uppercase;">
+              PRODUCT CATEGORIES
+            </span>
+            <div style="position: relative; width: 220px;">
+              <input type="text" id="product-search-input" class="form-input" placeholder="🔍 Search game or cheat..." style="background: rgba(4, 12, 18, 0.85); border: 1px solid rgba(0, 195, 255, 0.25); border-radius: 999px; padding: 5px 14px; font-size: 11.5px; color: #fff; height: 32px; width: 100%;">
+            </div>
+          </div>
+          <span style="font-family: var(--font-cyber); font-size: 10.5px; font-weight: 700; color: #718096;" id="category-items-count">
+            Showing All (0 items)
+          </span>
         </div>
-
-        <div id="category-pills-container" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem;">
-          <button class="btn btn-primary btn-sm cat-pill" data-category="All">All Games</button>
-          <button class="btn btn-outline btn-sm cat-pill" data-category="Apex Legends">Apex Legends</button>
-          <button class="btn btn-outline btn-sm cat-pill" data-category="Valorant">Valorant</button>
-          <button class="btn btn-outline btn-sm cat-pill" data-category="PUBG Mobile">PUBG Mobile</button>
-          <button class="btn btn-outline btn-sm cat-pill" data-category="Warzone">Warzone</button>
-          <button class="btn btn-outline btn-sm cat-pill" data-category="Fortnite">Fortnite</button>
+        <div class="cat-pills-scroll" id="category-pills-list">
+          <button type="button" class="cat-pill-btn active" data-category="All">ALL PRODUCTS (0)</button>
         </div>
       </div>
-    </div>
-  </header>
 
-  <!-- Products Grid -->
-  <main class="section">
-    <div class="container">
-      <div class="cards-grid" id="products-grid">
+      <!-- 7S PRODUCTS GRID -->
+      <div class="store-grid" id="products-grid">
         <div style="grid-column: 1/-1; text-align: center; padding: 4rem; color: var(--text-dim);">
           Loading game software catalog...
         </div>
@@ -112,25 +117,47 @@
         currentCategory = catParam;
       }
       
-      initCategoryPills();
+      if (typeof renderHeroSlider === 'function') {
+        renderHeroSlider();
+      }
+
       initSearch();
       fetchProducts();
     });
 
-    function initCategoryPills() {
-      const pills = document.querySelectorAll('.cat-pill');
-      pills.forEach(pill => {
-        const cat = pill.getAttribute('data-category');
-        if (cat.toLowerCase() === currentCategory.toLowerCase()) {
-          pill.className = 'btn btn-primary btn-sm cat-pill';
-        } else {
-          pill.className = 'btn btn-outline btn-sm cat-pill';
-        }
+    function buildCategoryPills() {
+      const container = document.getElementById('category-pills-list');
+      if (!container) return;
 
-        pill.addEventListener('click', () => {
-          currentCategory = cat;
-          pills.forEach(p => p.className = 'btn btn-outline btn-sm cat-pill');
-          pill.className = 'btn btn-primary btn-sm cat-pill';
+      const counts = {};
+      allProducts.forEach(p => {
+        const cat = p.category || 'PC PANEL';
+        counts[cat] = (counts[cat] || 0) + 1;
+      });
+
+      const categories = Object.keys(counts);
+      let html = `
+        <button type="button" class="cat-pill-btn ${currentCategory.toLowerCase() === 'all' ? 'active' : ''}" data-category="All">
+          ALL PRODUCTS (${allProducts.length})
+        </button>
+      `;
+
+      categories.forEach(cat => {
+        const isActive = currentCategory.toLowerCase() === cat.toLowerCase();
+        html += `
+          <button type="button" class="cat-pill-btn ${isActive ? 'active' : ''}" data-category="${escapeHtml(cat)}">
+            ${escapeHtml(cat.toUpperCase())} (${counts[cat]})
+          </button>
+        `;
+      });
+
+      container.innerHTML = html;
+
+      container.querySelectorAll('.cat-pill-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          currentCategory = btn.getAttribute('data-category');
+          container.querySelectorAll('.cat-pill-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
           filterAndRenderProducts();
         });
       });
@@ -138,6 +165,7 @@
 
     function initSearch() {
       const input = document.getElementById('product-search-input');
+      if (!input) return;
       input.addEventListener('input', () => {
         filterAndRenderProducts();
       });
@@ -147,7 +175,7 @@
       const grid = document.getElementById('products-grid');
       try {
         if (window.location.protocol === 'file:') {
-          throw new Error('Please open this page via http://localhost:3000/products.html or your Vercel URL, not by opening the file directly.');
+          throw new Error('Please open this page via your web server URL, not by opening the file directly.');
         }
 
         const res = await fetch('/api/products/list', { credentials: 'include' });
@@ -157,13 +185,13 @@
         const data = await res.json();
         if (data.success && Array.isArray(data.products)) {
           allProducts = data.products;
+          buildCategoryPills();
           filterAndRenderProducts();
         } else {
           throw new Error(data.message || 'Invalid products response');
         }
       } catch (err) {
         if (retryCount < 2) {
-          // Auto-retry once after 1.2s in case of serverless cold-start wake up
           setTimeout(() => fetchProducts(retryCount + 1), 1200);
           return;
         }
@@ -184,70 +212,43 @@
     }
 
     function filterAndRenderProducts() {
-      const query = (document.getElementById('product-search-input').value || '').toLowerCase().trim();
+      const searchEl = document.getElementById('product-search-input');
+      const query = (searchEl ? searchEl.value : '').toLowerCase().trim();
       const grid = document.getElementById('products-grid');
+      const countEl = document.getElementById('category-items-count');
 
       let filtered = allProducts;
 
       if (currentCategory !== 'All') {
-        filtered = filtered.filter(p => p.category.toLowerCase() === currentCategory.toLowerCase());
+        filtered = filtered.filter(p => (p.category || '').toLowerCase() === currentCategory.toLowerCase());
       }
 
       if (query) {
         filtered = filtered.filter(p => 
-          p.name.toLowerCase().includes(query) || 
-          p.category.toLowerCase().includes(query) ||
-          p.description.toLowerCase().includes(query)
+          (p.name || '').toLowerCase().includes(query) || 
+          (p.category || '').toLowerCase().includes(query) ||
+          (p.description || '').toLowerCase().includes(query)
         );
+      }
+
+      if (countEl) {
+        countEl.textContent = `Showing ${currentCategory === 'All' ? 'All' : currentCategory.toUpperCase()} (${filtered.length} item${filtered.length === 1 ? '' : 's'})`;
       }
 
       if (filtered.length === 0) {
         grid.innerHTML = `
           <div style="grid-column: 1/-1; text-align: center; padding: 4rem; color: var(--text-dim);">
-            <h3>No products found matching your search.</h3>
-            <p style="margin-top: 0.5rem;">Try selecting "All Games" or clear your search term.</p>
+            <h3>No products found matching your filter.</h3>
+            <p style="margin-top: 0.5rem;">Try selecting "ALL PRODUCTS" or clear your search term.</p>
           </div>
         `;
         return;
       }
 
-      grid.innerHTML = filtered.map(p => `
-        <div class="product-card" id="product-${p.id}">
-          <div class="product-card-img-wrap">
-            <img src="${p.image}" alt="${escapeHtml(p.name)}" class="product-card-img" loading="lazy">
-            <div class="product-card-badges">
-              <span class="badge badge-undetected"><span class="pulse-dot"></span> Undetected</span>
-              <span class="badge" style="background: rgba(0,0,0,0.7); color: #fff;">${escapeHtml(p.category)}</span>
-            </div>
-          </div>
-          <div class="product-card-body">
-            <div class="product-cat">${escapeHtml(p.category)}</div>
-            <h3 class="product-title">${escapeHtml(p.name)}</h3>
-            <p style="font-size: 0.88rem; margin-bottom: 0.6rem;">${escapeHtml(p.description.slice(0, 95))}...</p>
-            
-            <ul class="product-features-preview">
-              ${p.features_list.slice(0, 3).map(f => `<li>${escapeHtml(f)}</li>`).join('')}
-            </ul>
-
-            <div class="product-card-footer">
-              <div class="price-box">
-                <span class="price-lbl">Starting at</span>
-                <span class="price-amount" data-usd-price="${p.lowest_price_usd}">
-                  ${formatPrice(p.lowest_price_usd)}
-                </span>
-              </div>
-              <div style="display: flex; gap: 6px;">
-                <a href="/product.html?id=${p.id}" class="btn btn-outline btn-sm">
-                  Details
-                </a>
-                <a href="/product.html?id=${p.id}" class="btn btn-primary btn-sm btn-glow">
-                  Select Plan ⚡
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      `).join('');
+      grid.innerHTML = filtered.map(p => render7SProductCardHtml(p)).join('');
+      if (typeof updateAllPricesOnPage === 'function') {
+        updateAllPricesOnPage();
+      }
     }
   </script>
 </body>

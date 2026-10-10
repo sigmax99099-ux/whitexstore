@@ -509,3 +509,328 @@ window.escapeHtml = escapeHtml;
 window.toggleTheme = toggleTheme;
 window.updateWhatsAppLinks = updateWhatsAppLinks;
 window.init3DTilt = init3DTilt;
+
+/* ==============================================================
+   7S WORLD ADVERTISED BOARD (HERO BANNER SLIDER) & PRODUCT SYSTEM
+   ============================================================== */
+const DEFAULT_HERO_BANNERS_CONFIG = {
+  enabled: true,
+  height: 240,
+  mobileHeight: 150,
+  imageFit: 'cover',
+  autoPlay: true,
+  autoPlayInterval: 6000,
+  slides: [
+    {
+      id: "slide_1",
+      badge: "⚡ 100% SAFE AIMBOT PANEL",
+      title: "",
+      description: "",
+      bgImage: "/assets/images/store-hero-reference.png",
+      showBuyBtn: false,
+      buyUrl: "/products.html",
+      active: true
+    },
+    {
+      id: "slide_2",
+      badge: "⚡ ZERO BAN MEMORY INJECTION",
+      title: "BR MODS VIP BYPASS",
+      highlight: "VIP BYPASS",
+      description: "Dominate with precision aimbot, ESP radar, and high FPS optimization for all emulators.",
+      bgImage: "/assets/images/store-hero-clean.png",
+      showBuyBtn: true,
+      buyBtnText: "ORDER VIP ACCESS",
+      buyUrl: "/products.html",
+      active: true
+    },
+    {
+      id: "slide_3",
+      badge: "🛡️ INSTANT KEY DISPATCH",
+      title: "WHITE X EXCLUSIVE ACCESS",
+      highlight: "EXCLUSIVE ACCESS",
+      description: "24/7 automated instant key activation with continuous anti-cheat kernel updates.",
+      bgImage: "/assets/images/store-hero-exact.png",
+      showBuyBtn: true,
+      buyBtnText: "EXPLORE CHEATS",
+      buyUrl: "/products.html",
+      active: true
+    }
+  ]
+};
+
+window.DEFAULT_HERO_BANNERS_CONFIG = DEFAULT_HERO_BANNERS_CONFIG;
+window.currentHeroBannersConfig = JSON.parse(JSON.stringify(DEFAULT_HERO_BANNERS_CONFIG));
+window.currentHeroSlideIndex = 0;
+window.heroSliderIntervalTimer = null;
+
+function renderHeroSlider() {
+  const container = document.getElementById("heroSliderWrap");
+  const viewport = document.getElementById("heroSliderViewport");
+  const dotsContainer = document.getElementById("heroSliderDots");
+  const prevBtn = document.getElementById("heroSliderPrevBtn");
+  const nextBtn = document.getElementById("heroSliderNextBtn");
+  if (!container || !viewport) return;
+
+  const cfg = window.currentHeroBannersConfig || DEFAULT_HERO_BANNERS_CONFIG;
+  if (cfg.enabled === false) {
+    container.style.display = "none";
+    return;
+  }
+  container.style.display = "block";
+
+  const heightVal = Math.min(500, Math.max(120, Number(cfg.height || 240)));
+  const mobileHeightVal = Math.min(350, Math.max(80, Number(cfg.mobileHeight || 150)));
+  container.style.setProperty('--hero-height', heightVal + 'px');
+  container.style.setProperty('--hero-mobile-height', mobileHeightVal + 'px');
+  viewport.style.minHeight = heightVal + 'px';
+  viewport.style.height = heightVal + 'px';
+
+  const globalFit = cfg.imageFit || 'cover';
+  const globalSizeVal = (globalFit === 'contain') ? 'contain' : (globalFit === 'cover' ? 'cover' : '100% 100%');
+  container.style.setProperty('--hero-bg-size', globalSizeVal);
+
+  const activeSlides = (cfg.slides || []).filter(s => s && s.active !== false);
+  if (activeSlides.length === 0) {
+    container.style.display = "none";
+    return;
+  }
+
+  if (window.currentHeroSlideIndex >= activeSlides.length) {
+    window.currentHeroSlideIndex = 0;
+  }
+
+  viewport.innerHTML = activeSlides.map((slide, idx) => {
+    const isActive = idx === window.currentHeroSlideIndex;
+    let bg = slide.bgImage ? slide.bgImage.trim() : "/assets/images/store-hero-reference.png";
+
+    const slideFitMode = (slide.imageFit && slide.imageFit !== 'inherit') ? slide.imageFit : globalFit;
+    const slideFitCss = (slideFitMode === 'contain') ? 'contain' : (slideFitMode === 'cover' ? 'cover' : '100% 100%');
+
+    const buyBtnHtml = (slide.showBuyBtn !== false && slide.buyBtnText) ? `
+      <a href="${escapeHtml(slide.buyUrl || '/products.html')}" class="hero-btn hero-btn-buy" title="Order Now">
+        <span class="buy-icon">⚡</span>
+        <span>${escapeHtml(slide.buyBtnText || "BUY NOW")}</span>
+      </a>
+    ` : "";
+
+    const hasTitle = Boolean(slide.title && slide.title.trim());
+    const hasDesc = Boolean(slide.description && slide.description.trim());
+    const hasActions = Boolean(buyBtnHtml);
+    const isCleanGraphic = !hasTitle && !hasDesc && !hasActions;
+
+    let titleHtml = "";
+    if (hasTitle) {
+      titleHtml = escapeHtml(slide.title.trim());
+      const hl = (slide.highlight || "").trim();
+      if (hl && slide.title && slide.title.toLowerCase().includes(hl.toLowerCase())) {
+        const regex = new RegExp(`(${hl.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi");
+        titleHtml = escapeHtml(slide.title).replace(regex, `<b class="glow-highlight">$1</b>`);
+      }
+    }
+
+    return `
+      <div class="hero-slide ${isActive ? "active" : ""}" data-slide-index="${idx}">
+        <div class="hero-slide-bg-ambient" style="background-image: url('${bg}');"></div>
+        <div class="hero-slide-bg" style="background-image: url('${bg}'); --slide-fit: ${slideFitCss};"></div>
+        <div class="hero-slide-overlay ${isCleanGraphic ? 'transparent-overlay' : ''}"></div>
+        
+        ${slide.badge && !isCleanGraphic ? `
+          <div class="hero-slide-top-badge-bar">
+            <span class="hero-slide-badge"><span style="color:#00e5ff;font-size:9px">●</span> ${escapeHtml(slide.badge)}</span>
+          </div>
+        ` : ""}
+
+        ${(hasTitle || hasDesc || hasActions) ? `
+          <div class="hero-slide-inner">
+            ${hasTitle ? `<h2 class="hero-slide-title">${titleHtml}</h2>` : ""}
+            ${hasDesc ? `<p class="hero-slide-desc">${escapeHtml(slide.description)}</p>` : ""}
+            ${hasActions ? `
+              <div class="hero-slide-actions">
+                ${buyBtnHtml}
+              </div>
+            ` : ""}
+          </div>
+        ` : ""}
+      </div>
+    `;
+  }).join("");
+
+  const showControls = activeSlides.length > 1;
+  if (prevBtn) prevBtn.style.display = showControls ? "flex" : "none";
+  if (nextBtn) nextBtn.style.display = showControls ? "flex" : "none";
+
+  if (dotsContainer) {
+    if (showControls) {
+      dotsContainer.style.display = "flex";
+      dotsContainer.innerHTML = activeSlides.map((_, idx) => `
+        <button type="button" class="hero-dot ${idx === window.currentHeroSlideIndex ? "active" : ""}" onclick="heroSliderGoTo(${idx})" title="Go to slide ${idx + 1}" aria-label="Slide ${idx + 1}"></button>
+      `).join("");
+    } else {
+      dotsContainer.style.display = "none";
+    }
+  }
+
+  setupHeroSliderAutoPlay();
+  attachHeroSliderHoverEvents();
+}
+
+function updateHeroSliderActiveSlide() {
+  const viewport = document.getElementById("heroSliderViewport");
+  const dotsContainer = document.getElementById("heroSliderDots");
+  if (!viewport) return;
+
+  const slideEls = viewport.querySelectorAll(".hero-slide");
+  slideEls.forEach((el, idx) => {
+    el.classList.toggle("active", idx === window.currentHeroSlideIndex);
+  });
+
+  if (dotsContainer) {
+    const dots = dotsContainer.querySelectorAll(".hero-dot");
+    dots.forEach((dot, idx) => {
+      dot.classList.toggle("active", idx === window.currentHeroSlideIndex);
+    });
+  }
+}
+
+function setupHeroSliderAutoPlay() {
+  if (window.heroSliderIntervalTimer) {
+    clearInterval(window.heroSliderIntervalTimer);
+    window.heroSliderIntervalTimer = null;
+  }
+  const cfg = window.currentHeroBannersConfig || DEFAULT_HERO_BANNERS_CONFIG;
+  const activeSlides = (cfg.slides || []).filter(s => s && s.active !== false);
+  if (activeSlides.length <= 1 || cfg.autoPlay === false) return;
+
+  const interval = Math.max(3000, Number(cfg.autoPlayInterval || 6000));
+  window.heroSliderIntervalTimer = setInterval(() => {
+    heroSliderNext();
+  }, interval);
+}
+
+function heroSliderNext() {
+  const cfg = window.currentHeroBannersConfig || DEFAULT_HERO_BANNERS_CONFIG;
+  const activeSlides = (cfg.slides || []).filter(s => s && s.active !== false);
+  if (activeSlides.length <= 1) return;
+  window.currentHeroSlideIndex = (window.currentHeroSlideIndex + 1) % activeSlides.length;
+  updateHeroSliderActiveSlide();
+}
+
+function heroSliderPrev() {
+  const cfg = window.currentHeroBannersConfig || DEFAULT_HERO_BANNERS_CONFIG;
+  const activeSlides = (cfg.slides || []).filter(s => s && s.active !== false);
+  if (activeSlides.length <= 1) return;
+  window.currentHeroSlideIndex = (window.currentHeroSlideIndex - 1 + activeSlides.length) % activeSlides.length;
+  updateHeroSliderActiveSlide();
+}
+
+function heroSliderGoTo(idx) {
+  window.currentHeroSlideIndex = idx;
+  updateHeroSliderActiveSlide();
+  setupHeroSliderAutoPlay();
+}
+
+function attachHeroSliderHoverEvents() {
+  const container = document.getElementById("heroSliderWrap");
+  if (!container || container._hasHoverEvents) return;
+  container._hasHoverEvents = true;
+
+  container.addEventListener("mouseenter", () => {
+    if (window.heroSliderIntervalTimer) {
+      clearInterval(window.heroSliderIntervalTimer);
+      window.heroSliderIntervalTimer = null;
+    }
+  });
+
+  container.addEventListener("mouseleave", () => {
+    setupHeroSliderAutoPlay();
+  });
+
+  let touchStartX = 0;
+  let touchEndX = 0;
+  container.addEventListener("touchstart", (e) => {
+    if (e.changedTouches && e.changedTouches[0]) {
+      touchStartX = e.changedTouches[0].screenX;
+    }
+  }, { passive: true });
+
+  container.addEventListener("touchend", (e) => {
+    if (e.changedTouches && e.changedTouches[0]) {
+      touchEndX = e.changedTouches[0].screenX;
+      if (touchStartX - touchEndX > 45) {
+        heroSliderNext();
+      } else if (touchEndX - touchStartX > 45) {
+        heroSliderPrev();
+      }
+    }
+  }, { passive: true });
+}
+
+function render7SProductCardHtml(p) {
+  const pName = p.name || 'Game Software';
+  const pCat = p.category || 'PC PANEL';
+  const lowestPriceUsd = p.lowest_price_usd || '0.00';
+  const imgUrl = p.image || '/assets/images/store-hero-clean.png';
+  const isOutOfStock = p.available_keys_count === 0 && (p.total_plans > 0);
+  const stockText = isOutOfStock ? 'OUT OF STOCK' : 'IN STOCK';
+
+  let durationList = [];
+  if (Array.isArray(p.plans) && p.plans.length > 0) {
+    durationList = p.plans.map(pl => pl.plan_name || `${pl.days} Days`);
+  } else if (Array.isArray(p.plan_names) && p.plan_names.length > 0) {
+    durationList = p.plan_names;
+  } else {
+    durationList = ['1 Day', '7 Days', '30 Days', 'Lifetime'];
+  }
+
+  const durationChips = `
+    <div class="card-duration-row">
+      ${durationList.slice(0, 4).map(d => `
+        <span class="duration-chip"><span class="chip-icon">■</span> ${escapeHtml(d.replace(' Access', '').replace(' Pass', '').replace(' Key', '').replace(' VIP', ''))}</span>
+      `).join('')}
+    </div>
+  `;
+
+  return `
+    <article class="card product-card" id="product-${p.id}">
+      <div class="card-cover-wrap" onclick="window.location.href='/product.html?id=${p.id}'" title="Click to view ${escapeHtml(pName)}">
+        <img src="${imgUrl}" alt="${escapeHtml(pName)}" class="card-cover-img" loading="lazy" onerror="this.onerror=null; this.src='/assets/images/store-hero-clean.png';">
+        <span class="stock-pill ${isOutOfStock ? 'out-of-stock' : ''}">${stockText}</span>
+      </div>
+      <div class="card-body">
+        <h3 class="card-title" onclick="window.location.href='/product.html?id=${p.id}'" title="Click to view ${escapeHtml(pName)}">${escapeHtml(pName)}</h3>
+        
+        <div class="card-tags-row">
+          <span class="card-cat-tag">${escapeHtml(pCat)}</span>
+          <span class="card-cat-tag">PREMIUM</span>
+        </div>
+
+        ${durationChips}
+
+        <div class="card-price-box">
+          <span class="price-box-label">STARTING AT</span>
+          <div class="price-box-val">
+            <span class="price-amount" data-usd-price="${lowestPriceUsd}">
+              ${formatPrice(lowestPriceUsd)}
+            </span>
+          </div>
+        </div>
+
+        <div class="card-actions-row">
+          <a href="/product.html?id=${p.id}" class="card-details-btn" title="View Details">
+            <span>DETAILS</span> <span class="info-icon">ⓘ</span>
+          </a>
+          <a href="/product.html?id=${p.id}" class="card-buy-btn" title="Buy Product">
+            <span>BUY PRODUCT</span> <span class="arrow-icon">↗</span>
+          </a>
+        </div>
+      </div>
+    </article>
+  `;
+}
+
+window.renderHeroSlider = renderHeroSlider;
+window.heroSliderNext = heroSliderNext;
+window.heroSliderPrev = heroSliderPrev;
+window.heroSliderGoTo = heroSliderGoTo;
+window.setupHeroSliderAutoPlay = setupHeroSliderAutoPlay;
+window.render7SProductCardHtml = render7SProductCardHtml;
