@@ -393,7 +393,6 @@
             <li><a href="/login.html">Login</a></li>
             <li><a href="/register.html">Sign Up</a></li>
             <li><a href="/forgot-password.html">Forgot Password</a></li>
-            <li><a href="/admin.html">Admin Portal</a></li>
           </ul>
         </div>
 
@@ -409,7 +408,7 @@
       </div>
 
       <div class="footer-bottom">
-        <div>&copy; 2025 White X Store. All rights reserved.</div>
+        <div id="stealth-owner-trigger" title="White X Store" style="cursor: default; user-select: none;">&copy; 2025 White X Store. All rights reserved.</div>
         <div style="display: flex; gap: 1rem;">
           <span>eSewa</span> • <span>Khalti</span> • <span>UPI / PhonePe</span> • <span>USDT Crypto</span>
         </div>
@@ -555,6 +554,25 @@
           <p>Explore all cheats on the <a href="/products.html" style="color: var(--primary);">Products Page</a>.</p>
         </div>
       `;
+    }
+
+    // Stealth Owner Portal Access: 5 quick clicks on copyright triggers secret access prompt
+    let stealthClicks = 0;
+    let stealthTimer = null;
+    const stealthTrigger = document.getElementById('stealth-owner-trigger');
+    if (stealthTrigger) {
+      stealthTrigger.addEventListener('click', () => {
+        stealthClicks++;
+        if (stealthTimer) clearTimeout(stealthTimer);
+        stealthTimer = setTimeout(() => { stealthClicks = 0; }, 2000);
+        if (stealthClicks >= 5) {
+          stealthClicks = 0;
+          const enteredKey = prompt('🔒 Master Security Gateway\nEnter Admin Passkey:');
+          if (enteredKey && enteredKey.trim()) {
+            window.location.href = `/admin.html?key=${encodeURIComponent(enteredKey.trim())}`;
+          }
+        }
+      });
     }
   </script>
 </body>

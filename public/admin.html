@@ -329,10 +329,117 @@
       line-height: 1.4;
       display: none;
     }
+
+    /* STEALTH 404 CLOAK FOR UNAUTHORIZED VISITORS */
+    .admin-cloak-wrap {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at 50% 30%, #0d122b 0%, #030511 70%, #000 100%);
+      z-index: 999999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      text-align: center;
+      color: #fff;
+    }
+    .admin-cloak-wrap.hidden {
+      display: none !important;
+    }
+    .cloak-404-card {
+      max-width: 480px;
+      width: 100%;
+    }
+    .cloak-404-code {
+      font-size: clamp(5.5rem, 16vw, 9.5rem);
+      font-weight: 900;
+      line-height: 1;
+      font-family: var(--font-heading, monospace);
+      letter-spacing: 4px;
+      color: #ffffff;
+      text-shadow: 0 0 35px rgba(255, 42, 133, 0.45);
+      user-select: none;
+      cursor: default;
+      transition: transform 0.15s ease;
+    }
+    .cloak-404-code:active {
+      transform: scale(0.96);
+    }
+    .cloak-title {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #fff;
+      margin: 1.25rem 0 0.5rem;
+      letter-spacing: 1.5px;
+    }
+    .cloak-desc {
+      color: #94a3b8;
+      font-size: 0.92rem;
+      line-height: 1.5;
+      margin-bottom: 1.75rem;
+    }
+    .cloak-prompt-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(8px);
+      z-index: 1000000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1.25rem;
+    }
+    .cloak-prompt-box {
+      background: #080c1b;
+      border: 1px solid rgba(255, 42, 133, 0.4);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8), 0 0 25px rgba(255, 42, 133, 0.25);
+      border-radius: 12px;
+      padding: 1.75rem;
+      width: 100%;
+      max-width: 380px;
+      text-align: left;
+    }
   </style>
 </head>
 <body>
   <div id="vanta-3d-bg" aria-hidden="true"></div>
+
+  <!-- STEALTH 404 CLOAK SCREEN (Rendered to unauthorized visitors) -->
+  <div id="admin-404-screen" class="admin-cloak-wrap">
+    <div class="cloak-404-card">
+      <div class="cloak-404-code" id="cloak-easter-trigger" title="404">404</div>
+      <h1 class="cloak-title">PAGE NOT FOUND</h1>
+      <p class="cloak-desc">The requested resource could not be found or has been permanently moved.</p>
+      <div>
+        <a href="/index.html" class="btn btn-outline btn-sm">← Back to Homepage</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stealth Passkey Unlock Modal -->
+  <div id="cloak-prompt-modal" class="cloak-prompt-modal">
+    <div class="cloak-prompt-box">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+        <div style="font-weight: 800; color: #ff2a85; font-size: 0.92rem; letter-spacing: 1px;">
+          🔒 SECURITY GATEWAY
+        </div>
+        <button type="button" onclick="closeCloakPromptModal()" style="background: none; border: none; color: #94a3b8; font-size: 1.1rem; cursor: pointer;">✕</button>
+      </div>
+      <p style="font-size: 0.8rem; color: #cbd5e1; margin-bottom: 1rem; line-height: 1.4;">
+        Restricted administrative terminal. Please enter the master passkey:
+      </p>
+      <form id="cloak-prompt-form">
+        <div style="margin-bottom: 1rem;">
+          <input type="password" id="cloak-prompt-key" class="form-input" placeholder="Enter master passkey..." autocomplete="off" autofocus required style="padding: 0.65rem 0.9rem; font-size: 0.9rem;">
+        </div>
+        <div id="cloak-prompt-error" style="color: #ef4444; font-size: 0.8rem; margin-bottom: 0.75rem; display: none;"></div>
+        <button type="submit" id="btn-cloak-prompt-submit" class="btn btn-primary btn-block btn-glow">
+          Unlock Terminal ⚡
+        </button>
+      </form>
+    </div>
+  </div>
 
   <!-- Admin Login Modal if Unauthenticated -->
   <div id="admin-login-overlay" class="modal-backdrop show" style="display: flex;">
@@ -1280,6 +1387,44 @@
                 Reset Form
               </button>
             </div>
+          </form>
+        </div>
+
+        <!-- STEALTH ADMIN GATE & SECRET PASSKEY CARD -->
+        <div class="admin-card" style="max-width: 680px; margin-top: 1.5rem; border-color: rgba(255, 42, 133, 0.35);">
+          <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.25rem; padding-bottom: 1rem; border-bottom: 1px solid var(--bg-card-border);">
+            <div style="width: 52px; height: 52px; border-radius: 12px; background: rgba(255, 42, 133, 0.15); border: 1px solid rgba(255, 42, 133, 0.35); display: flex; align-items: center; justify-content: center; font-size: 1.75rem;">
+              🛡️
+            </div>
+            <div>
+              <div style="font-size: 1.15rem; font-weight: 700; color: #fff;">Stealth Gate & Secret Access Passkey</div>
+              <div style="font-size: 0.82rem; color: var(--text-dim); margin-top: 0.2rem;">
+                Only YOU can find and unlock this admin page. Unauthorized visitors will always see a 404 page.
+              </div>
+            </div>
+          </div>
+
+          <form id="form-admin-stealth-key">
+            <div class="form-group" style="margin-bottom: 1.25rem;">
+              <label class="form-label" for="setting-stealth-key" style="color: #38bdf8; font-weight: 700;">
+                Master Secret Passkey *
+              </label>
+              <input type="text" id="setting-stealth-key" class="form-input" placeholder="e.g. whitex777" required autocomplete="off" style="font-weight: 700; letter-spacing: 0.5px;">
+              <div style="font-size: 0.76rem; color: var(--text-dim); margin-top: 0.5rem; line-height: 1.5; background: rgba(0,0,0,0.3); padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.06);">
+                <div>🔑 <strong>Your Private Direct Link:</strong></div>
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.35rem; flex-wrap: wrap;">
+                  <code id="secret-admin-link-preview" style="color: #ff2a85; background: #070a14; padding: 4px 8px; border-radius: 4px; font-size: 0.82rem; flex: 1; word-break: break-all;">/admin.html?key=whitex777</code>
+                  <button type="button" class="btn btn-outline btn-sm" onclick="copySecretAdminLink()" style="font-size: 0.75rem; white-space: nowrap;">📋 Copy Link</button>
+                </div>
+                <div style="margin-top: 0.5rem; color: #94a3b8;">
+                  💡 <em>If you visit <code>/admin.html</code> directly without this key, a fake 404 screen appears. Click the 404 number 5 times or press <kbd>Ctrl+Shift+A</kbd> to unlock it.</em>
+                </div>
+              </div>
+            </div>
+
+            <button type="submit" id="btn-save-stealth-key" class="btn btn-primary btn-glow">
+              Save Secret Passkey 🔑
+            </button>
           </form>
         </div>
       </section>
@@ -2465,9 +2610,171 @@
     let globalPlans = [];
     let adminFailedAttempts = 0;
     let adminLockoutTimer = null;
+    let cloakEasterClicks = 0;
+    let cloakEasterTimer = null;
+
+    // --- STEALTH GATE & CLOAK CONTROLLER ---
+    function openCloakPromptModal() {
+      const modal = document.getElementById('cloak-prompt-modal');
+      const errEl = document.getElementById('cloak-prompt-error');
+      const input = document.getElementById('cloak-prompt-key');
+      if (modal) {
+        modal.style.display = 'flex';
+        if (errEl) errEl.style.display = 'none';
+        if (input) {
+          input.value = '';
+          input.focus();
+        }
+      }
+    }
+    window.openCloakPromptModal = openCloakPromptModal;
+
+    function closeCloakPromptModal() {
+      const modal = document.getElementById('cloak-prompt-modal');
+      if (modal) modal.style.display = 'none';
+    }
+    window.closeCloakPromptModal = closeCloakPromptModal;
+
+    function liftCloak() {
+      const cloak = document.getElementById('admin-404-screen');
+      if (cloak) cloak.classList.add('hidden');
+      document.title = 'Admin Command Center — White X Store';
+    }
+
+    function enableCloak() {
+      const cloak = document.getElementById('admin-404-screen');
+      if (cloak) cloak.classList.remove('hidden');
+      document.title = '404 Not Found — White X Store';
+      const loginOverlay = document.getElementById('admin-login-overlay');
+      if (loginOverlay) loginOverlay.style.display = 'none';
+    }
+
+    function initCloakTriggers() {
+      // 1. Five quick clicks on the 404 code
+      const trigger = document.getElementById('cloak-easter-trigger');
+      if (trigger) {
+        trigger.addEventListener('click', () => {
+          cloakEasterClicks++;
+          if (cloakEasterTimer) clearTimeout(cloakEasterTimer);
+          cloakEasterTimer = setTimeout(() => { cloakEasterClicks = 0; }, 2500);
+          if (cloakEasterClicks >= 5) {
+            cloakEasterClicks = 0;
+            openCloakPromptModal();
+          }
+        });
+      }
+
+      // 2. Secret keyboard shortcuts: Ctrl+Shift+A or Alt+X
+      window.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'a') || (e.altKey && e.key.toLowerCase() === 'x')) {
+          e.preventDefault();
+          openCloakPromptModal();
+        }
+      });
+
+      // 3. Form submit to verify gate key
+      const form = document.getElementById('cloak-prompt-form');
+      if (form) {
+        form.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const input = document.getElementById('cloak-prompt-key');
+          const btn = document.getElementById('btn-cloak-prompt-submit');
+          const errEl = document.getElementById('cloak-prompt-error');
+          const submittedKey = input ? input.value.trim() : '';
+
+          if (!submittedKey) return;
+
+          btn.disabled = true;
+          btn.textContent = 'Verifying Gate...';
+          if (errEl) errEl.style.display = 'none';
+
+          try {
+            const res = await fetch('/api/admin/verify-gate', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ key: submittedKey })
+            });
+
+            const data = await res.json();
+            if (!res.ok || !data.authorized) {
+              btn.disabled = false;
+              btn.textContent = 'Unlock Terminal ⚡';
+              if (errEl) {
+                errEl.textContent = data.message || 'Access Denied. Invalid Passkey.';
+                errEl.style.display = 'block';
+              }
+              return;
+            }
+
+            // Success: save gate authorization
+            sessionStorage.setItem('wx_admin_gate_unlocked', 'true');
+            closeCloakPromptModal();
+            liftCloak();
+            document.getElementById('admin-login-overlay').style.display = 'flex';
+            showToast('Security gateway unlocked!', 'success');
+
+          } catch (err) {
+            btn.disabled = false;
+            btn.textContent = 'Unlock Terminal ⚡';
+            if (errEl) {
+              errEl.textContent = 'Verification error. Please retry.';
+              errEl.style.display = 'block';
+            }
+          }
+        });
+      }
+    }
+
+    async function evaluateAdminCloak() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlKey = urlParams.get('key') || urlParams.get('secret') || urlParams.get('pass');
+      const gateUnlocked = sessionStorage.getItem('wx_admin_gate_unlocked') === 'true';
+
+      // If active valid session in cookies / Authorization Bearer
+      try {
+        const meRes = await fetch('/api/admin/me', { credentials: 'include' });
+        const meData = await meRes.json();
+        if (meRes.ok && meData.authenticated && meData.admin) {
+          liftCloak();
+          return true;
+        }
+      } catch (e) {}
+
+      // If URL has secret key, verify via API
+      if (urlKey) {
+        try {
+          const vRes = await fetch('/api/admin/verify-gate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key: urlKey })
+          });
+          const vData = await vRes.json();
+          if (vRes.ok && vData.authorized) {
+            sessionStorage.setItem('wx_admin_gate_unlocked', 'true');
+            // Clean URL so key is not displayed in address bar
+            const cleanUrl = window.location.pathname + (window.location.hash || '');
+            window.history.replaceState({}, document.title, cleanUrl);
+            liftCloak();
+            return true;
+          }
+        } catch (e) {}
+      }
+
+      // If previously unlocked in this session
+      if (gateUnlocked) {
+        liftCloak();
+        return true;
+      }
+
+      // Default: KEEP CLOAK LOCKED
+      enableCloak();
+      return false;
+    }
 
     document.addEventListener('DOMContentLoaded', async () => {
-      initAdminAuth();
+      initCloakTriggers();
+      const isAuthorized = await evaluateAdminCloak();
+      initAdminAuth(isAuthorized);
       initTabNavigation();
       initProductImagePreview();
     });
@@ -2522,12 +2829,13 @@
       }, 1000);
     }
 
-    async function initAdminAuth() {
+    async function initAdminAuth(gateAlreadyUnlocked = false) {
       try {
         const res = await fetch('/api/admin/me', { credentials: 'include' });
         const data = await res.json();
 
         if (res.ok && data.authenticated && data.admin) {
+          liftCloak();
           document.body.classList.add('admin-authenticated');
           document.getElementById('admin-login-overlay').style.display = 'none';
           document.getElementById('admin-name-display').textContent = data.admin.username;
@@ -2535,13 +2843,23 @@
           loadDashboardData();
         } else {
           document.body.classList.remove('admin-authenticated');
-          document.getElementById('admin-login-overlay').style.display = 'flex';
           localStorage.removeItem('admin_token');
+          if (gateAlreadyUnlocked || sessionStorage.getItem('wx_admin_gate_unlocked') === 'true') {
+            liftCloak();
+            document.getElementById('admin-login-overlay').style.display = 'flex';
+          } else {
+            enableCloak();
+          }
         }
       } catch (err) {
         document.body.classList.remove('admin-authenticated');
-        document.getElementById('admin-login-overlay').style.display = 'flex';
         localStorage.removeItem('admin_token');
+        if (gateAlreadyUnlocked || sessionStorage.getItem('wx_admin_gate_unlocked') === 'true') {
+          liftCloak();
+          document.getElementById('admin-login-overlay').style.display = 'flex';
+        } else {
+          enableCloak();
+        }
       }
 
       document.getElementById('admin-login-form').addEventListener('submit', async (e) => {
@@ -2594,6 +2912,7 @@
           }
 
           showToast('Welcome, Administrator!', 'success');
+          liftCloak();
           document.body.classList.add('admin-authenticated');
           document.getElementById('admin-login-overlay').style.display = 'none';
           document.getElementById('admin-name-display').textContent = data.admin.username;
@@ -2609,12 +2928,14 @@
     }
 
     async function handleAdminLogout() {
+      sessionStorage.removeItem('wx_admin_gate_unlocked');
       localStorage.removeItem('admin_token');
       document.body.classList.remove('admin-authenticated');
       try {
         await fetch('/api/admin/logout', { method: 'POST', credentials: 'include' });
       } catch(e) {}
-      window.location.reload();
+      enableCloak();
+      window.location.href = '/index.html';
     }
 
     function initTabNavigation() {
@@ -2679,6 +3000,7 @@
       document.getElementById('form-reject-order').addEventListener('submit', handleRejectOrderSubmit);
       document.getElementById('admin-settings-form').addEventListener('submit', handleSettingsSubmit);
       document.getElementById('form-admin-change-credentials')?.addEventListener('submit', handleAdminChangeCredentialsSubmit);
+      document.getElementById('form-admin-stealth-key')?.addEventListener('submit', handleAdminStealthKeySubmit);
       document.getElementById('form-add-category').addEventListener('submit', handleAddCategorySubmit);
       document.getElementById('form-wallet-adjust').addEventListener('submit', handleWalletAdjustSubmit);
       document.getElementById('form-add-download-link').addEventListener('submit', handleAddDownloadLinkSubmit);
@@ -5227,6 +5549,80 @@
         }
       } catch (err) {
         console.error('Error loading admin details:', err);
+      }
+
+      // Load master stealth passkey from settings
+      try {
+        const sRes = await fetch('/api/admin/settings', { credentials: 'include' });
+        const sData = await sRes.json();
+        if (sData.settings) {
+          const key = sData.settings.admin_secret_key || 'whitex777';
+          const keyInput = document.getElementById('setting-stealth-key');
+          if (keyInput) keyInput.value = key;
+          updateSecretAdminLinkPreview(key);
+        }
+      } catch (err) {}
+    }
+
+    function updateSecretAdminLinkPreview(key) {
+      const preview = document.getElementById('secret-admin-link-preview');
+      if (preview) {
+        const origin = window.location.origin;
+        preview.textContent = `${origin}/admin.html?key=${encodeURIComponent(key)}`;
+      }
+    }
+    window.updateSecretAdminLinkPreview = updateSecretAdminLinkPreview;
+
+    function copySecretAdminLink() {
+      const keyInput = document.getElementById('setting-stealth-key');
+      const keyVal = keyInput ? keyInput.value.trim() : 'whitex777';
+      const fullUrl = `${window.location.origin}/admin.html?key=${encodeURIComponent(keyVal)}`;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(fullUrl).then(() => {
+          showToast('Secret Admin Link copied to clipboard! 📋', 'success');
+        }).catch(() => {
+          prompt('Copy your private admin link:', fullUrl);
+        });
+      } else {
+        prompt('Copy your private admin link:', fullUrl);
+      }
+    }
+    window.copySecretAdminLink = copySecretAdminLink;
+
+    async function handleAdminStealthKeySubmit(e) {
+      e.preventDefault();
+      const input = document.getElementById('setting-stealth-key');
+      const btn = document.getElementById('btn-save-stealth-key');
+      const keyVal = input ? input.value.trim() : '';
+
+      if (!keyVal) {
+        showToast('Secret passkey cannot be empty.', 'warning');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Saving Passkey...';
+
+      try {
+        const res = await fetch('/api/admin/settings', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ admin_secret_key: keyVal })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          showToast('Master secret passkey saved! Only you can access this portal now. 🔑', 'success');
+          updateSecretAdminLinkPreview(keyVal);
+        } else {
+          showToast(data.message || 'Failed to update passkey.', 'error');
+        }
+      } catch (err) {
+        showToast('Network error saving passkey.', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Save Secret Passkey 🔑';
       }
     }
 

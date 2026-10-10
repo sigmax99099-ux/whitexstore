@@ -66,6 +66,7 @@ import adminChangeCredentials from '../server/admin/change-credentials.js';
 import adminSocialLinks from '../server/admin/social-links.js';
 import adminRedeemCodes from '../server/admin/redeem-codes.js';
 import adminBanners from '../server/admin/banners.js';
+import adminVerifyGate from '../server/admin/verify-gate.js';
 
 // Public Settings, Social Links, Redeem Codes & Banners
 import publicSettings from '../server/settings.js';
@@ -112,6 +113,7 @@ const routes = {
   // Admin
   '/api/admin/login': adminLogin,
   '/api/admin/logout': authLogout,
+  '/api/admin/verify-gate': adminVerifyGate,
   '/api/admin/me': adminMe,
   '/api/admin/stats': adminStats,
   '/api/admin/products': adminProducts,
@@ -266,7 +268,7 @@ export default async function handler(req, res) {
   }
 
   // 3. Early Admin Authentication Gatekeeper (protects all /api/admin/* endpoints from unauthorized probing)
-  if (pathname.startsWith('/api/admin/') && pathname !== '/api/admin/login' && pathname !== '/api/admin/logout') {
+  if (pathname.startsWith('/api/admin/') && pathname !== '/api/admin/login' && pathname !== '/api/admin/logout' && pathname !== '/api/admin/verify-gate') {
     const adminToken = extractToken(req, 'admin_token');
     if (!adminToken) {
       return res.status(401).json({
