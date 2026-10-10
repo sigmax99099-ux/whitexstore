@@ -38,3 +38,6 @@ scripts/test-*.cjs
 # Misc
 *.pem
 .vercel
+*.cjs
+*.mjs
+cookies.txt
