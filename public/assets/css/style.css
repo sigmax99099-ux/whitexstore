@@ -3276,3 +3276,36 @@ a:hover {
   color: #ff2a85 !important;
   box-shadow: 0 0 20px rgba(255, 0, 85, 0.3) !important;
 }
+
+
+/* ==============================================================
+   WHITE X CUSTOM EMBLEM & LOGO STYLING
+   ============================================================== */
+.brand-logo-img {
+  width: 46px;
+  height: 46px;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 0 12px rgba(255, 0, 85, 0.75));
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), filter 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, filter;
+}
+
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+}
+
+.nav-brand:hover .brand-logo-img {
+  transform: scale(1.12) rotate(-3deg);
+  filter: drop-shadow(0 0 20px rgba(255, 0, 85, 1)) drop-shadow(0 0 35px rgba(255, 42, 133, 0.75));
+}
+
+@media (max-width: 768px) {
+  .brand-logo-img {
+    width: 38px !important;
+    height: 38px !important;
+  }
+}
