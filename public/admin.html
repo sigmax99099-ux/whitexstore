@@ -275,6 +275,38 @@
       box-shadow: 0 4px 18px rgba(220, 38, 38, 0.55);
       transform: translateY(-1px);
     }
+
+    /* Mobile Touch & Layout Polish */
+    * {
+      -webkit-tap-highlight-color: rgba(255, 42, 133, 0.2);
+    }
+    button, a, input, select, textarea {
+      touch-action: manipulation;
+    }
+    @media (max-width: 768px) {
+      .admin-card {
+        padding: 1.1rem 0.85rem !important;
+        margin-bottom: 1.25rem !important;
+      }
+      .admin-main section > div[style*="display: flex; justify-content: space-between"] {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 0.75rem !important;
+      }
+      .admin-main section > div[style*="display: flex; justify-content: space-between"] > button,
+      .admin-main section > div[style*="display: flex; justify-content: space-between"] > a {
+        width: 100% !important;
+        text-align: center !important;
+      }
+      .table-responsive {
+        border: 1px solid rgba(255, 42, 133, 0.28) !important;
+        border-radius: 8px !important;
+        margin-bottom: 1.25rem !important;
+      }
+      .table-custom {
+        min-width: 620px !important;
+      }
+    }
   </style>
 </head>
 <body>
@@ -305,31 +337,55 @@
 
   <!-- Top Admin Navbar -->
   <nav class="navbar" id="admin-top-nav">
-    <div class="container" style="max-width: 100%; padding: 0 1.5rem;">
-      <div style="display: flex; align-items: center; gap: 1rem;">
+    <div class="container admin-top-container">
+      <div class="admin-top-left">
+        <!-- Mobile Drawer Toggle Button -->
+        <button type="button" id="admin-mobile-menu-btn" class="admin-mobile-menu-btn" onclick="toggleAdminMobileDrawer()" aria-label="Open Navigation Drawer">
+          <span class="m-menu-icon">☰</span>
+          <span class="admin-menu-badge">21 TABS</span>
+        </button>
+
         <a href="/index.html" class="nav-brand">
           <img src="/assets/images/white-x-logo.png" alt="White X Logo" class="brand-logo-img">
-          <div class="brand-text">WHITE <span>X</span> ADMIN</div>
+          <div class="brand-text">WHITE <span>X</span> <span class="brand-sub-badge">ADMIN</span></div>
         </a>
-        <span class="badge badge-undetected">COMMAND CENTER</span>
+        <span class="badge badge-undetected admin-hide-mobile">COMMAND CENTER</span>
       </div>
 
-      <div style="display: flex; align-items: center; gap: 1rem;">
-        <span style="font-size: 0.85rem; color: var(--text-muted);">
+      <div class="admin-top-right">
+        <span class="admin-user-pill admin-hide-mobile">
           Logged in as: <strong id="admin-name-display" style="color: #fff;">admin</strong>
         </span>
-        <button type="button" onclick="switchAdminTab('tab-admin-account')" class="btn btn-outline btn-sm" title="Change Admin Username & Password">👤 Account</button>
-        <a href="/index.html" class="btn btn-outline btn-sm" target="_blank">View Live Store ↗</a>
-        <button onclick="handleAdminLogout()" class="btn btn-outline btn-sm" style="color: var(--danger);">Logout</button>
+        <button type="button" onclick="switchAdminTab('tab-admin-account')" class="btn btn-outline btn-sm admin-top-btn" title="Change Admin Username & Password">👤 <span class="btn-label-mobile-hide">Account</span></button>
+        <a href="/index.html" class="btn btn-outline btn-sm admin-top-btn admin-hide-mobile" target="_blank" title="View Store">View Store ↗</a>
+        <button onclick="handleAdminLogout()" class="btn btn-outline btn-sm admin-top-btn" style="color: var(--danger);" title="Logout">🚪 <span class="btn-label-mobile-hide">Logout</span></button>
       </div>
     </div>
   </nav>
 
+  <!-- Mobile Drawer Backdrop Overlay -->
+  <div id="admin-drawer-backdrop" class="admin-drawer-backdrop" onclick="closeAdminMobileDrawer()"></div>
+
   <!-- Admin Main Layout -->
   <div class="admin-layout">
     
-    <!-- Sidebar Navigation -->
-    <aside class="admin-sidebar">
+    <!-- Sidebar Navigation / Mobile Drawer -->
+    <aside class="admin-sidebar" id="admin-sidebar">
+      <div class="admin-drawer-header">
+        <div class="admin-drawer-brand">
+          <img src="/assets/images/white-x-logo.png" alt="White X" style="width: 26px; height: 26px; object-fit: contain;">
+          <div>
+            <div style="font-weight: 800; color: #fff; font-size: 0.95rem; font-family: var(--font-heading); line-height: 1.1;">WHITE X ADMIN</div>
+            <div style="font-size: 0.7rem; color: var(--text-dim);">Command Center Tabs</div>
+          </div>
+        </div>
+        <button type="button" class="admin-drawer-close" onclick="closeAdminMobileDrawer()" aria-label="Close menu">✕</button>
+      </div>
+
+      <div class="admin-drawer-search">
+        <input type="text" id="admin-tab-search-input" placeholder="🔍 Filter tabs..." oninput="filterAdminTabs(this.value)" autocomplete="off">
+      </div>
+
       <ul class="admin-nav" id="admin-nav-tabs">
         <li class="admin-nav-item"><button class="active" data-tab="tab-dashboard">📊 Dashboard</button></li>
         <li class="admin-nav-item"><button data-tab="tab-orders">📦 Orders</button></li>
@@ -357,6 +413,19 @@
 
     <!-- Main Content Area -->
     <main class="admin-main">
+      <!-- Mobile Quick Horizontal Strip -->
+      <div class="admin-mobile-quick-strip" id="admin-mobile-quick-strip">
+        <button type="button" class="m-quick-tab active" data-quick-tab="tab-dashboard" onclick="switchAdminTab('tab-dashboard')">📊 Overview</button>
+        <button type="button" class="m-quick-tab" data-quick-tab="tab-orders" onclick="switchAdminTab('tab-orders')">📦 Orders</button>
+        <button type="button" class="m-quick-tab" data-quick-tab="tab-wallets" onclick="switchAdminTab('tab-wallets')">💳 Wallets</button>
+        <button type="button" class="m-quick-tab" data-quick-tab="tab-products" onclick="switchAdminTab('tab-products')">🎮 Products</button>
+        <button type="button" class="m-quick-tab" data-quick-tab="tab-keys" onclick="switchAdminTab('tab-keys')">🔑 Keys</button>
+        <button type="button" class="m-quick-tab" data-quick-tab="tab-hero-banners" onclick="switchAdminTab('tab-hero-banners')">🖼️ Banners</button>
+        <button type="button" class="m-quick-tab" data-quick-tab="tab-redeem-codes" onclick="switchAdminTab('tab-redeem-codes')">🎁 Redeem</button>
+        <button type="button" class="m-quick-tab" data-quick-tab="tab-payment-methods" onclick="switchAdminTab('tab-payment-methods')">🏦 Gateways</button>
+        <button type="button" class="m-quick-tab" data-quick-tab="tab-users" onclick="switchAdminTab('tab-users')">👥 Users</button>
+        <button type="button" class="m-quick-tab m-more-btn" onclick="toggleAdminMobileDrawer()">☰ All Tabs...</button>
+      </div>
       
       <!-- TAB 1: DASHBOARD -->
       <section id="tab-dashboard" class="admin-tab-content active">
@@ -1710,9 +1779,6 @@
     </div>
   </div>
 
-  </div>
-  </div>
-
   <!-- Add Download Link Modal -->
   <div id="modal-add-download-link" class="modal-backdrop">
     <div class="modal-box" style="max-width: 580px; width: 95%;">
@@ -2407,6 +2473,10 @@
           const tabId = btn.getAttribute('data-tab');
           document.querySelectorAll('.admin-tab-content').forEach(c => c.classList.remove('active'));
           document.getElementById(tabId).classList.add('active');
+
+          // Sync mobile drawer & bottom dock indicators
+          if (typeof syncMobileTabIndicators === 'function') syncMobileTabIndicators(tabId);
+          if (typeof closeAdminMobileDrawer === 'function') closeAdminMobileDrawer();
 
           // Trigger tab-specific loader
           if (tabId === 'tab-dashboard') loadDashboardData();
@@ -7450,7 +7520,98 @@
       const m = document.getElementById(id);
       if (m) m.classList.remove('show');
     }
+
+    /* ==============================================================
+       MOBILE DRAWER & NAVIGATION CONTROLLERS
+       ============================================================== */
+    function toggleAdminMobileDrawer() {
+      const sidebar = document.getElementById('admin-sidebar');
+      const backdrop = document.getElementById('admin-drawer-backdrop');
+      if (!sidebar) return;
+      const isOpen = sidebar.classList.toggle('drawer-open');
+      if (backdrop) {
+        if (isOpen) backdrop.classList.add('show');
+        else backdrop.classList.remove('show');
+      }
+      if (isOpen) {
+        const searchInput = document.getElementById('admin-tab-search-input');
+        if (searchInput) setTimeout(() => searchInput.focus(), 150);
+      }
+    }
+
+    function closeAdminMobileDrawer() {
+      const sidebar = document.getElementById('admin-sidebar');
+      const backdrop = document.getElementById('admin-drawer-backdrop');
+      if (sidebar) sidebar.classList.remove('drawer-open');
+      if (backdrop) backdrop.classList.remove('show');
+    }
+
+    function filterAdminTabs(val) {
+      const q = (val || '').toLowerCase().trim();
+      const items = document.querySelectorAll('#admin-nav-tabs .admin-nav-item');
+      items.forEach(item => {
+        const txt = item.textContent.toLowerCase();
+        if (!q || txt.includes(q)) {
+          item.style.display = '';
+        } else {
+          item.style.display = 'none';
+        }
+      });
+    }
+
+    function syncMobileTabIndicators(tabId) {
+      // Sync quick strip pills
+      document.querySelectorAll('.m-quick-tab').forEach(b => {
+        if (b.getAttribute('data-quick-tab') === tabId) {
+          b.classList.add('active');
+          try {
+            b.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+          } catch (e) {}
+        } else {
+          b.classList.remove('active');
+        }
+      });
+
+      // Sync floating bottom bar buttons
+      document.querySelectorAll('.mobile-bar-btn').forEach(b => {
+        if (b.getAttribute('data-bottom-tab') === tabId) {
+          b.classList.add('active');
+        } else {
+          b.classList.remove('active');
+        }
+      });
+    }
+
+    window.toggleAdminMobileDrawer = toggleAdminMobileDrawer;
+    window.closeAdminMobileDrawer = closeAdminMobileDrawer;
+    window.filterAdminTabs = filterAdminTabs;
+    window.syncMobileTabIndicators = syncMobileTabIndicators;
   </script>
+
+  <!-- Floating Mobile Bottom Dock Navigation -->
+  <nav id="admin-mobile-bottom-bar" class="admin-mobile-bottom-bar" aria-label="Mobile Bottom Navigation">
+    <button type="button" class="mobile-bar-btn active" data-bottom-tab="tab-dashboard" onclick="switchAdminTab('tab-dashboard')" aria-label="Dashboard Overview">
+      <span class="m-bar-icon">📊</span>
+      <span class="m-bar-label">Stats</span>
+    </button>
+    <button type="button" class="mobile-bar-btn" data-bottom-tab="tab-orders" onclick="switchAdminTab('tab-orders')" aria-label="Orders Management">
+      <span class="m-bar-icon">📦</span>
+      <span class="m-bar-label">Orders</span>
+    </button>
+    <button type="button" class="mobile-bar-btn" data-bottom-tab="tab-products" onclick="switchAdminTab('tab-products')" aria-label="Products Catalog">
+      <span class="m-bar-icon">🎮</span>
+      <span class="m-bar-label">Products</span>
+    </button>
+    <button type="button" class="mobile-bar-btn" data-bottom-tab="tab-wallets" onclick="switchAdminTab('tab-wallets')" aria-label="Wallets and Topups">
+      <span class="m-bar-icon">💳</span>
+      <span class="m-bar-label">Wallets</span>
+    </button>
+    <button type="button" class="mobile-bar-btn" onclick="toggleAdminMobileDrawer()" aria-label="All Navigation Tabs">
+      <span class="m-bar-icon">☰</span>
+      <span class="m-bar-label">All Tabs</span>
+    </button>
+  </nav>
+
   <script src="/assets/js/three.r134.min.js"></script>
   <script src="/assets/js/vanta.globe.min.js"></script>
   <script src="/assets/js/3d-scene.js"></script>
