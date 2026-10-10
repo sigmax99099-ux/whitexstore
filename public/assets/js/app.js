@@ -255,7 +255,7 @@ function renderLoggedInNav(user) {
 
   container.innerHTML = `
     <div style="display: flex; align-items: center; gap: 0.75rem;">
-      <a href="/wallet.html" class="btn btn-outline btn-sm" title="Topup / Manage Wallet" style="border-color: rgba(239, 68, 68, 0.4);">
+      <a href="/wallet.html" class="btn btn-outline btn-sm" title="Topup / Manage Wallet" style="border-color: rgba(0, 229, 255, 0.45); background: rgba(0, 229, 255, 0.08); color: #00e5ff;">
         <span style="color: var(--primary);">⚡</span> NPR ${balanceNpr}
       </a>
       <a href="/dashboard.html" class="btn btn-outline btn-sm">

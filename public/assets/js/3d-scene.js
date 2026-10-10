@@ -30,7 +30,7 @@
       this.vx = (Math.random() - 0.5) * 0.7 * this.z;
       this.vy = (Math.random() - 0.5) * 0.7 * this.z;
       this.alpha = Math.random() * 0.6 + 0.3;
-      this.color = Math.random() > 0.3 ? '#ef4444' : '#dc2626';
+      this.color = Math.random() > 0.4 ? '#00e5ff' : '#008ba3';
     }
 
     update() {
@@ -63,7 +63,7 @@
       ctx.fillStyle = this.color;
       ctx.globalAlpha = this.alpha;
       ctx.shadowBlur = 10;
-      ctx.shadowColor = '#ef4444';
+      ctx.shadowColor = '#00e5ff';
       ctx.fill();
       ctx.shadowBlur = 0;
       ctx.globalAlpha = 1;
@@ -91,7 +91,7 @@
           ctx.beginPath();
           ctx.moveTo(p1.x, p1.y);
           ctx.lineTo(p2.x, p2.y);
-          ctx.strokeStyle = `rgba(239, 68, 68, ${alpha})`;
+          ctx.strokeStyle = `rgba(0, 229, 255, ${alpha})`;
           ctx.lineWidth = 1;
           ctx.stroke();
         }
