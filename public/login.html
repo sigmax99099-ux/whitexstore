@@ -115,6 +115,10 @@
             return;
           }
 
+          if (data.token) {
+            localStorage.setItem('wx_token', data.token);
+          }
+
           showToast('Login successful! Redirecting...', 'success');
 
           // Check if there was a redirect URL

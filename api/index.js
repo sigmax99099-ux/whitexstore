@@ -1,4 +1,6 @@
 import url from 'url';
+import { checkRateLimit, applySecurityHeaders } from '../lib/security.js';
+import { getClientIp, extractToken } from '../lib/auth.js';
 
 // Auth
 import authRegister from '../server/auth/register.js';
@@ -109,6 +111,7 @@ const routes = {
 
   // Admin
   '/api/admin/login': adminLogin,
+  '/api/admin/logout': authLogout,
   '/api/admin/me': adminMe,
   '/api/admin/stats': adminStats,
   '/api/admin/products': adminProducts,
@@ -215,6 +218,63 @@ export default async function handler(req, res) {
   pathname = pathname.split('?')[0].replace(/\/+/g, '/');
   if (pathname.length > 1 && pathname.endsWith('/')) {
     pathname = pathname.slice(0, -1);
+  }
+
+  // 1. Enforce HTTP security response headers
+  applySecurityHeaders(res);
+
+  // 2. Multi-tier sliding window rate limiting
+  const clientIp = getClientIp(req);
+  let maxRequests = 120;
+  let windowMs = 60 * 1000;
+  let lockMs = 0;
+
+  if (pathname === '/api/admin/login') {
+    maxRequests = 5;
+    windowMs = 15 * 60 * 1000;
+    lockMs = 15 * 60 * 1000;
+  } else if (pathname === '/api/auth/login' || pathname === '/api/auth/register') {
+    maxRequests = 10;
+    windowMs = 60 * 1000;
+    lockMs = 2 * 60 * 1000;
+  } else if (pathname === '/api/auth/forgot-password' || pathname === '/api/auth/reset-password') {
+    maxRequests = 5;
+    windowMs = 10 * 60 * 1000;
+    lockMs = 10 * 60 * 1000;
+  } else if (pathname === '/api/redeem/validate') {
+    maxRequests = 10;
+    windowMs = 60 * 1000;
+  } else if (pathname === '/api/orders/submit' || pathname === '/api/wallet/submit') {
+    maxRequests = 15;
+    windowMs = 60 * 1000;
+  }
+
+  const rateCheck = checkRateLimit(`${clientIp}_${pathname}`, maxRequests, windowMs, lockMs);
+  res.setHeader('X-RateLimit-Limit', maxRequests);
+  res.setHeader('X-RateLimit-Remaining', rateCheck.remaining);
+  res.setHeader('X-RateLimit-Reset', rateCheck.resetInSeconds);
+
+  if (!rateCheck.allowed) {
+    res.setHeader('Retry-After', rateCheck.resetInSeconds);
+    return res.status(429).json({
+      success: false,
+      message: rateCheck.locked
+        ? `Security lockout active. Too many requests. Please wait ${rateCheck.resetInSeconds}s before retrying.`
+        : 'Too many requests. Please slow down and try again shortly.',
+      retry_after_seconds: rateCheck.resetInSeconds
+    });
+  }
+
+  // 3. Early Admin Authentication Gatekeeper (protects all /api/admin/* endpoints from unauthorized probing)
+  if (pathname.startsWith('/api/admin/') && pathname !== '/api/admin/login' && pathname !== '/api/admin/logout') {
+    const adminToken = extractToken(req, 'admin_token');
+    if (!adminToken) {
+      return res.status(401).json({
+        success: false,
+        authenticated: false,
+        message: 'Access denied. Administrator token required.'
+      });
+    }
   }
 
   // Health check

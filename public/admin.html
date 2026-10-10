@@ -307,6 +307,28 @@
         min-width: 620px !important;
       }
     }
+
+    /* SECURITY: Conceal all administrative elements until session is verified */
+    body:not(.admin-authenticated) #admin-top-nav,
+    body:not(.admin-authenticated) .admin-layout,
+    body:not(.admin-authenticated) #admin-drawer-backdrop {
+      display: none !important;
+      visibility: hidden !important;
+      pointer-events: none !important;
+    }
+
+    .admin-lockout-alert {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid #ef4444;
+      color: #fca5a5;
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      font-size: 0.85rem;
+      margin-bottom: 1.25rem;
+      text-align: left;
+      line-height: 1.4;
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -318,6 +340,8 @@
       <img src="/assets/images/white-x-logo.png" alt="White X Logo" style="margin: 0 auto 1rem; width: 48px; height: 48px; font-size: 1.8rem; object-fit: contain; filter: drop-shadow(0 0 14px rgba(255,0,85,0.7));">
       <h2 style="color: #fff; margin-bottom: 0.35rem;">ADMIN PORTAL</h2>
       <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 1.5rem;">White X Store System Administration</p>
+
+      <div id="admin-lockout-notice" class="admin-lockout-alert" role="alert"></div>
 
       <form id="admin-login-form">
         <div class="form-group" style="text-align: left;">
@@ -2368,13 +2392,49 @@
 
   <script src="/assets/js/app.js?v=20261007"></script>
   <script>
-    // Bulletproof fetch wrapper: automatically passes credentials and Authorization Bearer header
+    // Console Security Tamper Warning
+    try {
+      console.log('%c🛑 STOP! ADMIN COMMAND CENTER 🛑', 'color: #ff0055; font-size: 26px; font-weight: 900; text-shadow: 0 0 10px rgba(255,0,85,0.7);');
+      console.log('%c⚠️ RESTRICTED ADMINISTRATIVE ZONE. All sessions, actions, and client IPs are recorded and monitored. Automated credential stuffing and malicious scripts are automatically locked out.', 'color: #38bdf8; font-size: 13px; font-weight: bold;');
+    } catch(e) {}
+
+    // Inactivity Session Tracker (30-minute auto-logout)
+    let adminInactivityTimer = null;
+    const ADMIN_INACTIVITY_LIMIT_MS = 30 * 60 * 1000;
+
+    function resetAdminInactivity() {
+      if (!document.body.classList.contains('admin-authenticated')) return;
+      if (adminInactivityTimer) clearTimeout(adminInactivityTimer);
+      adminInactivityTimer = setTimeout(() => {
+        handleAdminSessionTimeout();
+      }, ADMIN_INACTIVITY_LIMIT_MS);
+    }
+
+    function startAdminInactivityTracker() {
+      ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(evt => {
+        window.addEventListener(evt, resetAdminInactivity, { passive: true });
+      });
+      resetAdminInactivity();
+    }
+
+    async function handleAdminSessionTimeout() {
+      localStorage.removeItem('admin_token');
+      document.body.classList.remove('admin-authenticated');
+      document.getElementById('admin-login-overlay').style.display = 'flex';
+      showToast('Admin session expired due to 30 minutes of inactivity. Please log in again.', 'warning');
+      try {
+        await fetch('/api/admin/logout', { method: 'POST', credentials: 'include' });
+      } catch (err) {}
+    }
+
+    // Bulletproof fetch wrapper: passes credentials, Authorization Bearer, and handles session expiry
     const _originalFetch = window.fetch;
-    window.fetch = function(input, init) {
+    window.fetch = async function(input, init) {
       init = init || {};
       init.credentials = init.credentials || 'include';
       const token = localStorage.getItem('admin_token');
       const urlStr = typeof input === 'string' ? input : (input && input.url ? input.url : '');
+      
       if (token && urlStr.includes('/api/admin/')) {
         init.headers = init.headers || {};
         if (init.headers instanceof Headers) {
@@ -2387,11 +2447,24 @@
           }
         }
       }
-      return _originalFetch.call(this, input, init);
+
+      const response = await _originalFetch.call(this, input, init);
+
+      // Auto-intercept 401 Unauthorized on protected admin APIs (except initial /me or /login)
+      if (response.status === 401 && urlStr.includes('/api/admin/') && !urlStr.includes('/login') && !urlStr.includes('/me')) {
+        document.body.classList.remove('admin-authenticated');
+        document.getElementById('admin-login-overlay').style.display = 'flex';
+        localStorage.removeItem('admin_token');
+        showToast('Admin session unauthorized or expired. Please re-authenticate.', 'error');
+      }
+
+      return response;
     };
 
     let globalProducts = [];
     let globalPlans = [];
+    let adminFailedAttempts = 0;
+    let adminLockoutTimer = null;
 
     document.addEventListener('DOMContentLoaded', async () => {
       initAdminAuth();
@@ -2399,24 +2472,82 @@
       initProductImagePreview();
     });
 
+    function setLockoutNotice(message, isLocked = false) {
+      const notice = document.getElementById('admin-lockout-notice');
+      if (!notice) return;
+      if (!message) {
+        notice.style.display = 'none';
+        notice.textContent = '';
+        return;
+      }
+      notice.innerHTML = message;
+      notice.style.display = 'block';
+      if (isLocked) {
+        notice.style.borderColor = '#ef4444';
+        notice.style.color = '#fca5a5';
+      }
+    }
+
+    function startClientLockout(seconds) {
+      const btn = document.getElementById('btn-admin-login-submit');
+      const userInput = document.getElementById('admin-user');
+      const passInput = document.getElementById('admin-pass');
+      
+      if (adminLockoutTimer) clearInterval(adminLockoutTimer);
+      let remaining = seconds;
+
+      btn.disabled = true;
+      userInput.disabled = true;
+      passInput.disabled = true;
+
+      const updateLockoutUI = () => {
+        setLockoutNotice(`🔒 <strong>Security Lockout:</strong> Too many failed attempts. Login is disabled for <strong>${remaining}s</strong> to protect the system.`, true);
+        btn.textContent = `Locked (${remaining}s)`;
+      };
+
+      updateLockoutUI();
+      adminLockoutTimer = setInterval(() => {
+        remaining -= 1;
+        if (remaining <= 0) {
+          clearInterval(adminLockoutTimer);
+          adminLockoutTimer = null;
+          btn.disabled = false;
+          userInput.disabled = false;
+          passInput.disabled = false;
+          btn.textContent = 'Access Admin Console ⚡';
+          setLockoutNotice('');
+        } else {
+          updateLockoutUI();
+        }
+      }, 1000);
+    }
+
     async function initAdminAuth() {
       try {
         const res = await fetch('/api/admin/me', { credentials: 'include' });
         const data = await res.json();
 
-        if (data.authenticated && data.admin) {
+        if (res.ok && data.authenticated && data.admin) {
+          document.body.classList.add('admin-authenticated');
           document.getElementById('admin-login-overlay').style.display = 'none';
           document.getElementById('admin-name-display').textContent = data.admin.username;
+          startAdminInactivityTracker();
           loadDashboardData();
         } else {
+          document.body.classList.remove('admin-authenticated');
           document.getElementById('admin-login-overlay').style.display = 'flex';
+          localStorage.removeItem('admin_token');
         }
       } catch (err) {
+        document.body.classList.remove('admin-authenticated');
         document.getElementById('admin-login-overlay').style.display = 'flex';
+        localStorage.removeItem('admin_token');
       }
 
       document.getElementById('admin-login-form').addEventListener('submit', async (e) => {
         e.preventDefault();
+        if (adminLockoutTimer) return;
+
         const username = document.getElementById('admin-user').value.trim();
         const password = document.getElementById('admin-pass').value;
         const btn = document.getElementById('btn-admin-login-submit');
@@ -2433,20 +2564,40 @@
           });
 
           const data = await res.json();
+
+          if (res.status === 429) {
+            const waitSec = data.retry_after_seconds || 60;
+            startClientLockout(waitSec);
+            showToast(data.message || 'Security lockout active. Please wait.', 'error');
+            return;
+          }
+
           if (!res.ok || !data.success) {
-            showToast(data.message || 'Invalid admin credentials.', 'error');
+            adminFailedAttempts += 1;
+            if (adminFailedAttempts >= 5) {
+              startClientLockout(60);
+              showToast('5 consecutive failed attempts. Locked for 60 seconds.', 'error');
+              return;
+            }
+            const remainingAttempts = 5 - adminFailedAttempts;
+            showToast(data.message || `Invalid admin credentials. (${remainingAttempts} attempts remaining before lockout)`, 'error');
             btn.disabled = false;
             btn.textContent = 'Access Admin Console ⚡';
             return;
           }
+
+          adminFailedAttempts = 0;
+          setLockoutNotice('');
 
           if (data.token) {
             localStorage.setItem('admin_token', data.token);
           }
 
           showToast('Welcome, Administrator!', 'success');
+          document.body.classList.add('admin-authenticated');
           document.getElementById('admin-login-overlay').style.display = 'none';
           document.getElementById('admin-name-display').textContent = data.admin.username;
+          startAdminInactivityTracker();
           loadDashboardData();
 
         } catch (err) {
@@ -2459,7 +2610,10 @@
 
     async function handleAdminLogout() {
       localStorage.removeItem('admin_token');
-      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+      document.body.classList.remove('admin-authenticated');
+      try {
+        await fetch('/api/admin/logout', { method: 'POST', credentials: 'include' });
+      } catch(e) {}
       window.location.reload();
     }
 

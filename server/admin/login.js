@@ -1,5 +1,6 @@
 import { query } from '../../lib/db.js';
-import { comparePassword, hashPassword, signAdminToken, setAuthCookie } from '../../lib/auth.js';
+import { comparePassword, hashPassword, signAdminToken, setAuthCookie, getClientIp } from '../../lib/auth.js';
+import { recordFailedAuth, clearFailedAuth } from '../../lib/security.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -54,7 +55,15 @@ export default async function handler(req, res) {
     }
 
     if (adminRes.rows.length === 0) {
-      return res.status(401).json({ success: false, message: 'Invalid admin credentials' });
+      const ip = getClientIp(req);
+      const failCheck = recordFailedAuth(`${ip}_${cleanUser}`);
+      return res.status(failCheck.locked ? 429 : 401).json({
+        success: false,
+        message: failCheck.locked
+          ? `Console locked due to too many failed login attempts. Please wait ${failCheck.resetInSeconds}s.`
+          : `Invalid admin credentials. (${failCheck.remaining} attempts remaining before temporary lockout)`,
+        retry_after_seconds: failCheck.resetInSeconds
+      });
     }
 
     let admin = adminRes.rows[0];
@@ -72,8 +81,19 @@ export default async function handler(req, res) {
     }
 
     if (!isMatch) {
-      return res.status(401).json({ success: false, message: 'Invalid admin credentials' });
+      const ip = getClientIp(req);
+      const failCheck = recordFailedAuth(`${ip}_${cleanUser}`);
+      return res.status(failCheck.locked ? 429 : 401).json({
+        success: false,
+        message: failCheck.locked
+          ? `Console locked due to too many failed login attempts. Please wait ${failCheck.resetInSeconds}s.`
+          : `Invalid admin credentials. (${failCheck.remaining} attempts remaining before temporary lockout)`,
+        retry_after_seconds: failCheck.resetInSeconds
+      });
     }
+
+    const ip = getClientIp(req);
+    clearFailedAuth(`${ip}_${cleanUser}`);
 
     const token = signAdminToken(admin);
     setAuthCookie(res, token, 'admin_token', 2 * 24 * 3600 * 1000);

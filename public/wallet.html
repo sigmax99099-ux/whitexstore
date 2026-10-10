@@ -11,6 +11,12 @@
 <link rel="stylesheet" href="/assets/css/style.css">
   <link rel="icon" type="image/png" href="/assets/images/white-x-logo.png">
   <link rel="shortcut icon" href="/favicon.ico"><text y=%22.9em%22 font-size=%2290%22 font-family=%22Rajdhani%22 font-weight=%22900%22 fill=%22%2300e5ff%22>X</text></svg>">
+  <style>
+    /* Security gate: conceal client wallet content until auth is validated */
+    body:not(.user-authenticated) main {
+      display: none !important;
+    }
+  </style>
 </head>
 <body>
   <div id="vanta-3d-bg" aria-hidden="true"></div>
@@ -247,6 +253,8 @@
         window.location.href = '/login.html?redirect=/wallet.html';
         return;
       }
+
+      document.body.classList.add('user-authenticated');
 
       updateBalanceCards(authData.user.wallet_balance);
       await loadPaymentMethods();

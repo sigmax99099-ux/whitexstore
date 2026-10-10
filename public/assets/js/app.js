@@ -1,7 +1,46 @@
-/**
- * WHITE X STORE — CLIENT APPLICATION LOGIC
- * Manages Auth State, Theme Switcher, Currency Conversion, Toasts, 3D Tilt, Intro, and Widgets
- */
+// Client Security Console Warning
+try {
+  console.log('%c🛡️ WHITE X STORE SECURITY PROTOCOL', 'color: #ff2a85; font-size: 18px; font-weight: 800;');
+  console.log('%cClient session protected. Never share authentication tokens or execute untrusted scripts in this console.', 'color: #94a3b8; font-size: 12px;');
+} catch (e) {}
+
+// Bulletproof client fetch interceptor: injects Authorization Bearer and handles unauthorized redirects
+if (!window._wxFetchWrapped) {
+  window._wxFetchWrapped = true;
+  const _clientOriginalFetch = window.fetch;
+  window.fetch = async function(input, init) {
+    init = init || {};
+    init.credentials = init.credentials || 'include';
+    const userToken = localStorage.getItem('wx_token');
+    const urlStr = typeof input === 'string' ? input : (input && input.url ? input.url : '');
+
+    if (userToken && urlStr.includes('/api/') && !urlStr.includes('/api/admin/')) {
+      init.headers = init.headers || {};
+      if (init.headers instanceof Headers) {
+        if (!init.headers.has('Authorization')) init.headers.set('Authorization', 'Bearer ' + userToken);
+      } else if (Array.isArray(init.headers)) {
+        init.headers.push(['Authorization', 'Bearer ' + userToken]);
+      } else {
+        if (!init.headers['Authorization'] && !init.headers['authorization']) {
+          init.headers['Authorization'] = 'Bearer ' + userToken;
+        }
+      }
+    }
+
+    const response = await _clientOriginalFetch.call(this, input, init);
+
+    // If unauthorized on protected client pages, clear token and redirect to login
+    if (response.status === 401 && (location.pathname.endsWith('/dashboard.html') || location.pathname.endsWith('/wallet.html'))) {
+      localStorage.removeItem('wx_token');
+      if (urlStr.includes('/api/auth/me') || urlStr.includes('/api/orders/') || urlStr.includes('/api/wallet/')) {
+        const redirect = encodeURIComponent(window.location.pathname + window.location.search);
+        window.location.href = `/login.html?redirect=${redirect}`;
+      }
+    }
+
+    return response;
+  };
+}
 
 const Store = {
   theme: localStorage.getItem('wx_theme') || 'dark',
@@ -260,6 +299,8 @@ async function checkAuth() {
       const data = await res.json();
       if (data.authenticated && data.user) {
         Store.user = data.user;
+        document.body.classList.add('user-authenticated');
+        document.body.classList.add('auth-checked');
         renderLoggedInNav(data.user);
         window.dispatchEvent(new CustomEvent('userLoaded', { detail: { user: data.user } }));
         return;
@@ -267,8 +308,14 @@ async function checkAuth() {
     }
 
     Store.user = null;
+    document.body.classList.remove('user-authenticated');
+    document.body.classList.add('auth-checked');
+    localStorage.removeItem('wx_token');
     renderGuestNav();
   } catch (err) {
+    Store.user = null;
+    document.body.classList.remove('user-authenticated');
+    document.body.classList.add('auth-checked');
     renderGuestNav();
   }
 }
@@ -310,6 +357,9 @@ function renderGuestNav() {
 
 async function handleLogout() {
   try {
+    localStorage.removeItem('wx_token');
+    Store.user = null;
+    document.body.classList.remove('user-authenticated');
     await fetch('/api/auth/logout', { method: 'POST' });
     showToast('Logged out successfully', 'info');
     setTimeout(() => {

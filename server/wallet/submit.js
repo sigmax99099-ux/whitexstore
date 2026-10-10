@@ -78,7 +78,8 @@ export default async function handler(req, res) {
       }
     }
 
-    const description = `Topup via ${method.method_name} (${numAmount} ${currency}${transaction_ref ? ` - Ref: ${transaction_ref}` : ''})`;
+    const safeRef = transaction_ref ? String(transaction_ref).slice(0, 100).replace(/[<>{}\\]/g, '').trim() : '';
+    const description = `Topup via ${method.method_name} (${numAmount} ${currency}${safeRef ? ` - Ref: ${safeRef}` : ''})`;
 
     // Insert wallet transaction with status 'pending'
     const insertRes = await query(
