@@ -220,35 +220,51 @@ a:hover {
 }
 
 .intro-logo-img {
-  width: 140px;
-  height: 140px;
+  width: 150px;
+  height: 150px;
   object-fit: contain;
   display: block;
-  filter: drop-shadow(0 0 25px rgba(255, 0, 85, 0.95)) drop-shadow(0 0 55px rgba(255, 42, 133, 0.75));
-  animation: introLogoPulse 2s infinite alternate cubic-bezier(0.45, 0.05, 0.55, 0.95);
-  margin-bottom: 0.85rem;
+  /* Unique High-Visibility Multi-Spectral Glow: Diamond White Rim + Electric Crimson + Hot Pink + Cosmic Violet */
+  filter: 
+    drop-shadow(0 0 2px rgba(255, 255, 255, 0.95))
+    drop-shadow(0 0 12px #ff0055)
+    drop-shadow(0 0 28px #ff2a85)
+    drop-shadow(0 0 55px rgba(168, 85, 247, 0.8));
+  animation: introUniqueGlow 2.2s infinite alternate ease-in-out;
+  margin-bottom: 1rem;
 }
 
-@keyframes introLogoPulse {
+@keyframes introUniqueGlow {
   0% {
-    transform: scale(0.95) translateY(0);
-    filter: drop-shadow(0 0 20px rgba(255, 0, 85, 0.8)) drop-shadow(0 0 45px rgba(255, 42, 133, 0.5));
+    transform: scale(0.96) translateY(0);
+    filter: 
+      drop-shadow(0 0 2px rgba(255, 255, 255, 0.9))
+      drop-shadow(0 0 10px #ff0055)
+      drop-shadow(0 0 24px #ff2a85)
+      drop-shadow(0 0 45px rgba(168, 85, 247, 0.65));
   }
   100% {
-    transform: scale(1.06) translateY(-4px);
-    filter: drop-shadow(0 0 35px rgba(255, 0, 85, 1)) drop-shadow(0 0 75px rgba(255, 42, 133, 0.85)) drop-shadow(0 0 110px rgba(147, 51, 234, 0.65));
+    transform: scale(1.06) translateY(-5px);
+    filter: 
+      drop-shadow(0 0 3px rgba(255, 255, 255, 1))
+      drop-shadow(0 0 18px #ff0055)
+      drop-shadow(0 0 38px #ff2a85)
+      drop-shadow(0 0 75px rgba(255, 42, 133, 0.9))
+      drop-shadow(0 0 110px rgba(168, 85, 247, 0.8));
   }
 }
 
 .intro-brand {
   font-family: var(--font-heading);
-  font-size: 1.6rem;
+  font-size: 1.7rem;
   font-weight: 800;
-  letter-spacing: 5px;
-  color: #fdf2f8;
+  letter-spacing: 6px;
+  background: linear-gradient(180deg, #ffffff 0%, #fdf2f8 60%, #ffc0d9 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
   margin-top: 0;
   text-transform: uppercase;
-  text-shadow: 0 0 16px rgba(255, 42, 133, 0.6);
+  text-shadow: 0 0 20px rgba(255, 42, 133, 0.8);
 }
 
 .intro-bar-wrap {
@@ -3289,28 +3305,77 @@ a:hover {
 
 
 /* ==============================================================
-   WHITE X CUSTOM EMBLEM & LOGO STYLING
+   WHITE X CUSTOM EMBLEM & LOGO STYLING (UNIQUE COLOR & GLOW SYSTEM)
    ============================================================== */
 .brand-logo-img {
-  width: 46px;
-  height: 46px;
+  width: 48px;
+  height: 48px;
   object-fit: contain;
   display: block;
-  filter: drop-shadow(0 0 12px rgba(255, 0, 85, 0.75));
+  /* Ultra-Visible Unique Multi-Spectral Glow: Razor-Sharp White Rim + Neon Crimson + Hot Magenta + Cyber Violet */
+  filter: 
+    drop-shadow(0 0 1.5px rgba(255, 255, 255, 0.95))
+    drop-shadow(0 0 8px #ff0055)
+    drop-shadow(0 0 18px #ff2a85)
+    drop-shadow(0 0 32px rgba(168, 85, 247, 0.7));
   transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), filter 0.28s cubic-bezier(0.16, 1, 0.3, 1);
   will-change: transform, filter;
+  animation: logoSubtlePulse 3s infinite alternate ease-in-out;
+}
+
+@keyframes logoSubtlePulse {
+  0% {
+    filter: 
+      drop-shadow(0 0 1.5px rgba(255, 255, 255, 0.9))
+      drop-shadow(0 0 8px #ff0055)
+      drop-shadow(0 0 16px #ff2a85)
+      drop-shadow(0 0 28px rgba(168, 85, 247, 0.6));
+  }
+  100% {
+    filter: 
+      drop-shadow(0 0 2px rgba(255, 255, 255, 1))
+      drop-shadow(0 0 12px #ff0055)
+      drop-shadow(0 0 24px #ff2a85)
+      drop-shadow(0 0 42px rgba(255, 42, 133, 0.85))
+      drop-shadow(0 0 60px rgba(168, 85, 247, 0.75));
+  }
 }
 
 .nav-brand {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.85rem;
   text-decoration: none;
+  position: relative;
 }
 
 .nav-brand:hover .brand-logo-img {
-  transform: scale(1.12) rotate(-3deg);
-  filter: drop-shadow(0 0 20px rgba(255, 0, 85, 1)) drop-shadow(0 0 35px rgba(255, 42, 133, 0.75));
+  transform: scale(1.14) rotate(-3deg);
+  filter: 
+    drop-shadow(0 0 2.5px rgba(255, 255, 255, 1))
+    drop-shadow(0 0 15px #ff0055)
+    drop-shadow(0 0 30px #ff2a85)
+    drop-shadow(0 0 55px rgba(255, 0, 85, 0.95))
+    drop-shadow(0 0 80px rgba(168, 85, 247, 0.85));
+}
+
+.brand-text {
+  font-family: var(--font-heading);
+  font-size: 1.45rem;
+  font-weight: 900;
+  letter-spacing: 0.8px;
+  color: #ffffff;
+  text-shadow: 0 0 12px rgba(255, 255, 255, 0.35);
+}
+
+.brand-text span {
+  background: linear-gradient(135deg, #ffffff 0%, #ff0055 35%, #ff2a85 70%, #ff007f 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  text-shadow: none !important;
+  filter: drop-shadow(0 0 8px #ff0055) drop-shadow(0 0 20px #ff2a85) !important;
+  font-weight: 900 !important;
+  font-size: 1.55rem !important;
 }
 
 @media (max-width: 768px) {
