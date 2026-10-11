@@ -44,8 +44,8 @@ if (!window._wxFetchWrapped) {
 
 const Store = {
   theme: localStorage.getItem('wx_theme') || 'dark',
-  currency: localStorage.getItem('wx_currency') || 'USD',
-  rates: { USD: 1, NPR: 134.50, INR: 84.00 },
+  currency: localStorage.getItem('wx_currency') || 'NPR',
+  rates: { USD: 1, NPR: 134.50, INR: 84.00, PKR: 278.00, BDT: 119.50 },
   user: null,
   isCaptchaPassed: false,
   siteSettings: {
@@ -57,6 +57,7 @@ const Store = {
 
 // Apply initial theme immediately before DOM to avoid flicker
 document.documentElement.setAttribute('data-theme', Store.theme);
+if (document.body) document.body.setAttribute('data-theme', Store.theme);
 
 // Initialize Application
 document.addEventListener('DOMContentLoaded', async () => {
@@ -71,73 +72,64 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 /* ==============================================================
-   DAY / NIGHT THEME TOGGLE (SUN / MOON)
+   DAY / NIGHT THEME TOGGLE (3D SUN / MOON WITH HIGH-CONTRAST)
    ============================================================== */
 function initThemeToggle() {
   document.documentElement.setAttribute('data-theme', Store.theme);
-  document.body.setAttribute('data-theme', Store.theme);
+  if (document.body) document.body.setAttribute('data-theme', Store.theme);
 
-  // If a theme toggle button already exists, hook it up. Otherwise inject into navbar
-  let btn = document.getElementById('theme-toggle-btn');
-  if (!btn) {
-    const navActions = document.querySelector('.nav-actions');
-    if (navActions) {
-      btn = document.createElement('button');
-      btn.id = 'theme-toggle-btn';
-      btn.className = 'btn-theme-toggle';
-      btn.setAttribute('aria-label', 'Toggle Day/Night Theme');
-      btn.title = 'Switch Day/Night Theme';
-      navActions.insertBefore(btn, navActions.firstChild);
-    }
-  }
-
-  if (btn) {
+  // Hook up any existing theme toggle buttons
+  document.querySelectorAll('.btn-theme-toggle').forEach(btn => {
     updateThemeToggleUI(btn);
-    btn.addEventListener('click', () => {
-      toggleTheme();
-    });
-  }
+    if (!btn._hasThemeClick) {
+      btn._hasThemeClick = true;
+      btn.addEventListener('click', toggleTheme);
+    }
+  });
+
+  // Also hook up drawer theme buttons
+  document.querySelectorAll('.drawer-theme-btn').forEach(btn => {
+    const t = btn.getAttribute('data-theme-val');
+    btn.classList.toggle('active', t === Store.theme);
+  });
 }
 
-function toggleTheme() {
-  Store.theme = Store.theme === 'dark' ? 'light' : 'dark';
+function setThemeMode(newTheme) {
+  if (newTheme !== 'dark' && newTheme !== 'light') return;
+  Store.theme = newTheme;
   localStorage.setItem('wx_theme', Store.theme);
   document.documentElement.setAttribute('data-theme', Store.theme);
-  document.body.setAttribute('data-theme', Store.theme);
+  if (document.body) document.body.setAttribute('data-theme', Store.theme);
 
-  const btn = document.getElementById('theme-toggle-btn');
-  if (btn) updateThemeToggleUI(btn);
+  document.querySelectorAll('.btn-theme-toggle').forEach(btn => updateThemeToggleUI(btn));
+  document.querySelectorAll('.drawer-theme-btn').forEach(btn => {
+    const t = btn.getAttribute('data-theme-val');
+    btn.classList.toggle('active', t === Store.theme);
+  });
 
   window.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme: Store.theme } }));
 }
 
+function toggleTheme() {
+  const next = Store.theme === 'dark' ? 'light' : 'dark';
+  setThemeMode(next);
+}
+
 function updateThemeToggleUI(btn) {
+  if (!btn) return;
   if (Store.theme === 'light') {
-    btn.innerHTML = `
-      <svg class="theme-icon-svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-      </svg>
-    `;
-    btn.title = 'Switch to Night Mode';
-    btn.setAttribute('aria-label', 'Switch to Night Mode');
+    btn.innerHTML = `<span class="theme-icon-3d">🌙</span>`;
+    btn.title = 'Switch to Night Mode (Dark)';
+    btn.setAttribute('aria-label', 'Switch to Night Mode (Dark)');
   } else {
-    btn.innerHTML = `
-      <svg class="theme-icon-svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="5"></circle>
-        <line x1="12" y1="1" x2="12" y2="3"></line>
-        <line x1="12" y1="21" x2="12" y2="23"></line>
-        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-        <line x1="1" y1="12" x2="3" y2="12"></line>
-        <line x1="21" y1="12" x2="23" y2="12"></line>
-        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-      </svg>
-    `;
-    btn.title = 'Switch to Day Mode';
-    btn.setAttribute('aria-label', 'Switch to Day Mode');
+    btn.innerHTML = `<span class="theme-icon-3d">☀️</span>`;
+    btn.title = 'Switch to Day Mode (Light)';
+    btn.setAttribute('aria-label', 'Switch to Day Mode (Light)');
   }
 }
+
+window.toggleTheme = toggleTheme;
+window.setThemeMode = setThemeMode;
 
 /* ==============================================================
    INTRO SCREEN
@@ -164,18 +156,21 @@ function initIntroScreen() {
 /* ==============================================================
    CURRENCY SWITCHER & CONVERSION
    ============================================================== */
+function getCurrencySymbol(curr = Store.currency) {
+  if (curr === 'USD') return '$';
+  if (curr === 'INR') return '₹';
+  if (curr === 'BDT') return '৳';
+  return 'Rs.';
+}
+
 function initCurrencySelector() {
-  const buttons = document.querySelectorAll('.currency-btn');
+  const buttons = document.querySelectorAll('.currency-btn, .drawer-cur-btn');
   buttons.forEach(btn => {
-    const cur = btn.getAttribute('data-currency');
-    if (cur === Store.currency) {
-      btn.classList.add('active');
-    } else {
-      btn.classList.remove('active');
-    }
+    const cur = btn.getAttribute('data-currency') || btn.getAttribute('data-cur');
+    btn.classList.toggle('active', cur === Store.currency);
 
     btn.addEventListener('click', () => {
-      setCurrency(cur);
+      if (cur) setCurrency(cur);
     });
   });
 }
@@ -185,11 +180,12 @@ function setCurrency(newCurrency) {
   localStorage.setItem('wx_currency', newCurrency);
 
   // Update UI buttons
-  document.querySelectorAll('.currency-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.getAttribute('data-currency') === newCurrency);
+  document.querySelectorAll('.currency-btn, .drawer-cur-btn').forEach(btn => {
+    const cur = btn.getAttribute('data-currency') || btn.getAttribute('data-cur');
+    btn.classList.toggle('active', cur === newCurrency);
   });
 
-  // Update Header Currency Pill
+  // Update Header & Drawer Currency Pills
   updateCurrencyPillUI();
 
   // Re-render prices dynamically
@@ -202,14 +198,19 @@ function setCurrency(newCurrency) {
 function formatWalletBalance(balanceNpr, currency = Store.currency) {
   const npr = parseFloat(balanceNpr) || 0;
   const nprRate = Store.rates.NPR || 134.50;
-  const inrRate = Store.rates.INR || 84.00;
   const usd = npr / nprRate;
 
   if (currency === 'NPR') {
     return `NPR ${Math.round(npr).toLocaleString()}`;
   } else if (currency === 'INR') {
-    const inr = usd * inrRate;
+    const inr = usd * (Store.rates.INR || 84.00);
     return `₹${Math.round(inr).toLocaleString()}`;
+  } else if (currency === 'PKR') {
+    const pkr = usd * (Store.rates.PKR || 278.00);
+    return `Rs. ${Math.round(pkr).toLocaleString()}`;
+  } else if (currency === 'BDT') {
+    const bdt = usd * (Store.rates.BDT || 119.50);
+    return `৳${Math.round(bdt).toLocaleString()}`;
   } else {
     return `$${usd.toFixed(2)}`;
   }
@@ -218,15 +219,32 @@ function formatWalletBalance(balanceNpr, currency = Store.currency) {
 function updateCurrencyPillUI() {
   const trigger = document.getElementById('currency-pill-trigger-text');
   if (trigger) {
-    const symbol = Store.currency === 'USD' ? '$' : (Store.currency === 'INR' ? '₹' : 'Rs.');
+    const symbol = getCurrencySymbol(Store.currency);
     trigger.textContent = `${symbol} ${Store.currency}`;
   }
   document.querySelectorAll('.currency-pill-opt').forEach(opt => {
     opt.classList.toggle('active', opt.getAttribute('data-cur') === Store.currency);
   });
+  document.querySelectorAll('.drawer-cur-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-cur') === Store.currency);
+  });
+
   if (Store.user) {
+    const formatted = formatWalletBalance(Store.user.wallet_balance, Store.currency);
     const balEl = document.getElementById('hdr-wallet-bal');
-    if (balEl) balEl.textContent = formatWalletBalance(Store.user.wallet_balance, Store.currency);
+    if (balEl) balEl.textContent = formatted;
+
+    const drawerBal = document.getElementById('drawer-wallet-val');
+    if (drawerBal) drawerBal.textContent = formatted;
+
+    const statBal = document.getElementById('stat-row-balance');
+    if (statBal) statBal.textContent = formatted;
+
+    const dashBal = document.getElementById('dash-wallet-bal');
+    if (dashBal) dashBal.textContent = formatted;
+
+    const overBal = document.getElementById('overview-wallet-bal');
+    if (overBal) overBal.textContent = formatted;
   }
 }
 
@@ -239,6 +257,10 @@ function formatPrice(usdAmount, currency = Store.currency) {
     return `NPR ${Math.round(converted).toLocaleString()}`;
   } else if (currency === 'INR') {
     return `₹${Math.round(converted).toLocaleString()}`;
+  } else if (currency === 'PKR') {
+    return `Rs. ${Math.round(converted).toLocaleString()}`;
+  } else if (currency === 'BDT') {
+    return `৳${Math.round(converted).toLocaleString()}`;
   } else {
     return `$${converted.toFixed(2)}`;
   }
@@ -250,8 +272,13 @@ function updateAllPricesOnPage() {
     el.textContent = formatPrice(usd);
   });
   if (Store.user) {
+    const formatted = formatWalletBalance(Store.user.wallet_balance, Store.currency);
     const balEl = document.getElementById('hdr-wallet-bal');
-    if (balEl) balEl.textContent = formatWalletBalance(Store.user.wallet_balance, Store.currency);
+    if (balEl) balEl.textContent = formatted;
+    const drawerBal = document.getElementById('drawer-wallet-val');
+    if (drawerBal) drawerBal.textContent = formatted;
+    const statBal = document.getElementById('stat-row-balance');
+    if (statBal) statBal.textContent = formatted;
   }
 }
 
@@ -406,36 +433,46 @@ function renderLoggedInNav(user) {
 
   const initials = getUserInitials(user.name);
   const walletFormatted = formatWalletBalance(user.wallet_balance, Store.currency);
+  const symbol = getCurrencySymbol(Store.currency);
 
   container.innerHTML = `
     <div class="nav-pill-group">
-      <!-- Currency Dropdown Pill (Figure 2 Style: $ USD v in amber/gold border) -->
+      <!-- Currency Dropdown Pill -->
       <div class="currency-pill-dropdown" id="nav-currency-pill-wrap">
         <button type="button" class="currency-pill-trigger" id="currency-pill-trigger-btn" aria-label="Change Currency" title="Select Currency">
-          <span id="currency-pill-trigger-text">${Store.currency === 'USD' ? '$' : (Store.currency === 'INR' ? '₹' : 'Rs.')} ${Store.currency}</span>
+          <span class="pill-cur-icon">💱</span>
+          <span id="currency-pill-trigger-text">${symbol} ${Store.currency}</span>
           <span style="font-size: 0.7rem; transition: transform 0.2s;">▾</span>
         </button>
         <div class="currency-pill-menu" id="currency-pill-menu">
-          <button type="button" class="currency-pill-opt ${Store.currency === 'USD' ? 'active' : ''}" data-cur="USD">
-            <span>$ USD</span> <span style="font-size: 0.72rem; opacity: 0.7;">Dollar</span>
-          </button>
           <button type="button" class="currency-pill-opt ${Store.currency === 'NPR' ? 'active' : ''}" data-cur="NPR">
-            <span>Rs. NPR</span> <span style="font-size: 0.72rem; opacity: 0.7;">Rupee</span>
+            <span>Rs. NPR</span> <span class="cur-sub">Nepal</span>
           </button>
           <button type="button" class="currency-pill-opt ${Store.currency === 'INR' ? 'active' : ''}" data-cur="INR">
-            <span>₹ INR</span> <span style="font-size: 0.72rem; opacity: 0.7;">Rupee</span>
+            <span>₹ INR</span> <span class="cur-sub">India</span>
+          </button>
+          <button type="button" class="currency-pill-opt ${Store.currency === 'USD' ? 'active' : ''}" data-cur="USD">
+            <span>$ USD</span> <span class="cur-sub">Dollar</span>
+          </button>
+          <button type="button" class="currency-pill-opt ${Store.currency === 'PKR' ? 'active' : ''}" data-cur="PKR">
+            <span>Rs. PKR</span> <span class="cur-sub">Pakistan</span>
           </button>
         </div>
       </div>
 
-      <!-- Live Wallet Balance Pill (Figure 2 Style: Cyan $ 0.00 / NPR) -->
+      <!-- Day / Night 3D Theme Toggle Icon Button -->
+      <button type="button" class="btn-theme-toggle" id="theme-toggle-btn" onclick="toggleTheme()" title="${Store.theme === 'light' ? 'Switch to Night Mode (Dark)' : 'Switch to Day Mode (Light)'}" aria-label="Toggle Day/Night Mode">
+        <span class="theme-icon-3d">${Store.theme === 'light' ? '🌙' : '☀️'}</span>
+      </button>
+
+      <!-- Live Wallet Balance Pill (Screenshot 2 Style: 💳 Rs0.00) -->
       <a href="/wallet.html" class="wallet-pill-btn" id="nav-wallet-pill" title="Topup / View Wallet Balance">
-        <span class="wallet-pill-icon">⚡</span>
+        <span class="wallet-pill-icon">💳</span>
         <span id="hdr-wallet-bal">${walletFormatted}</span>
       </a>
 
-      <!-- User Avatar Badge (Figure 2 Style: AP with Green Online Dot) -->
-      <a href="javascript:void(0)" onclick="openProfileModal()" class="user-avatar-badge-btn" id="nav-avatar-btn" title="Edit Profile (${escapeHtml(user.name)})">
+      <!-- User Avatar Circle (Screenshot 2 Style: gradient circle with initial W) -->
+      <a href="${location.pathname.includes('dashboard') ? 'javascript:void(0)' : '/dashboard.html'}" onclick="${location.pathname.includes('dashboard') ? "switchDashTab('profile')" : ''}" class="user-avatar-badge-btn" id="nav-avatar-btn" title="My Profile (${escapeHtml(user.name)})">
         <span>${escapeHtml(initials)}</span>
         <span class="user-avatar-online-dot"></span>
       </a>
@@ -450,26 +487,37 @@ function renderGuestNav() {
   const container = document.getElementById('nav-auth-container');
   if (!container) return;
 
+  const symbol = getCurrencySymbol(Store.currency);
+
   container.innerHTML = `
     <div class="nav-pill-group">
       <!-- Currency Dropdown Pill -->
       <div class="currency-pill-dropdown" id="nav-currency-pill-wrap">
         <button type="button" class="currency-pill-trigger" id="currency-pill-trigger-btn" aria-label="Change Currency" title="Select Currency">
-          <span id="currency-pill-trigger-text">${Store.currency === 'USD' ? '$' : (Store.currency === 'INR' ? '₹' : 'Rs.')} ${Store.currency}</span>
+          <span class="pill-cur-icon">💱</span>
+          <span id="currency-pill-trigger-text">${symbol} ${Store.currency}</span>
           <span style="font-size: 0.7rem; transition: transform 0.2s;">▾</span>
         </button>
         <div class="currency-pill-menu" id="currency-pill-menu">
-          <button type="button" class="currency-pill-opt ${Store.currency === 'USD' ? 'active' : ''}" data-cur="USD">
-            <span>$ USD</span> <span style="font-size: 0.72rem; opacity: 0.7;">Dollar</span>
-          </button>
           <button type="button" class="currency-pill-opt ${Store.currency === 'NPR' ? 'active' : ''}" data-cur="NPR">
-            <span>Rs. NPR</span> <span style="font-size: 0.72rem; opacity: 0.7;">Rupee</span>
+            <span>Rs. NPR</span> <span class="cur-sub">Nepal</span>
           </button>
           <button type="button" class="currency-pill-opt ${Store.currency === 'INR' ? 'active' : ''}" data-cur="INR">
-            <span>₹ INR</span> <span style="font-size: 0.72rem; opacity: 0.7;">Rupee</span>
+            <span>₹ INR</span> <span class="cur-sub">India</span>
+          </button>
+          <button type="button" class="currency-pill-opt ${Store.currency === 'USD' ? 'active' : ''}" data-cur="USD">
+            <span>$ USD</span> <span class="cur-sub">Dollar</span>
+          </button>
+          <button type="button" class="currency-pill-opt ${Store.currency === 'PKR' ? 'active' : ''}" data-cur="PKR">
+            <span>Rs. PKR</span> <span class="cur-sub">Pakistan</span>
           </button>
         </div>
       </div>
+
+      <!-- Day / Night 3D Theme Toggle Icon Button -->
+      <button type="button" class="btn-theme-toggle" id="theme-toggle-btn" onclick="toggleTheme()" title="${Store.theme === 'light' ? 'Switch to Night Mode (Dark)' : 'Switch to Day Mode (Light)'}" aria-label="Toggle Day/Night Mode">
+        <span class="theme-icon-3d">${Store.theme === 'light' ? '🌙' : '☀️'}</span>
+      </button>
 
       <div style="display: flex; align-items: center; gap: 0.5rem;">
         <a href="/login.html" class="btn btn-outline btn-sm">Login</a>
@@ -700,15 +748,25 @@ function mountDrawerAndBars() {
   sidebar.setAttribute('aria-label', 'Navigation Sidebar');
 
   sidebar.innerHTML = `
-    <!-- Top Header (Figure 1: 7S WORLD + HIDE Button) -->
+    <!-- Top Header (Screenshot 3 Style: Close + Store Name + Wallet Pill + Avatar) -->
     <div class="drawer-header">
-      <a href="/index.html" class="drawer-brand" onclick="closeDrawer()">
-        <img src="/assets/images/white-x-logo.png" alt="White X Logo" class="drawer-brand-img">
-        <span class="drawer-brand-name">WHITE <span>X</span> STORE</span>
-      </a>
-      <button type="button" class="drawer-close-btn" id="drawer-close-top-btn" title="Hide Sidebar">
-        <span>✕</span> <span>HIDE</span>
-      </button>
+      <div style="display: flex; align-items: center; gap: 0.6rem;">
+        <button type="button" class="drawer-close-btn" id="drawer-close-top-btn" title="Close Drawer" style="background:transparent; border:none; color:var(--text-main); font-size:1.2rem; cursor:pointer; padding:2px 6px;">✕</button>
+        <a href="/index.html" class="drawer-brand" onclick="closeDrawer()" style="display:flex; align-items:center; gap:0.45rem; text-decoration:none;">
+          <img src="/assets/images/white-x-logo.png" alt="White X Logo" class="drawer-brand-img" style="width:26px; height:26px; object-fit:contain;">
+          <span class="drawer-brand-name" style="font-family:var(--font-heading); font-weight:800; font-size:1.02rem; letter-spacing:0.5px;">WHITE <span style="color:#00f0ff;">X</span> STORE</span>
+        </a>
+      </div>
+      <div style="display: flex; align-items: center; gap: 0.4rem;">
+        <a href="/wallet.html" class="wallet-pill-btn drawer-hdr-wallet" id="drawer-hdr-wallet-bal" onclick="closeDrawer()" title="Wallet Balance">
+          <span class="wallet-pill-icon">💳</span>
+          <span id="drawer-wallet-val">NPR 0</span>
+        </a>
+        <div class="user-avatar-badge-btn drawer-hdr-avatar" id="drawer-hdr-avatar-initials" onclick="openProfileModal()" title="Profile">
+          <span>WX</span>
+          <span class="user-avatar-online-dot"></span>
+        </div>
+      </div>
     </div>
 
     <!-- Scrollable Drawer Body -->
@@ -727,38 +785,38 @@ function mountDrawerAndBars() {
         <div class="drawer-user-email" id="drawer-user-email">guest@whitexstore.com</div>
         <div class="drawer-level-wrap">
           <div class="drawer-level-header">
-            <span class="drawer-level-badge">⚡ LEVEL 1</span>
-            <span class="drawer-xp-text" id="drawer-xp-text">0/500 XP</span>
-          </div>
-          <div class="drawer-level-bar">
-            <div class="drawer-level-progress" id="drawer-xp-progress" style="width: 20%;"></div>
+            <span class="drawer-level-badge">⚡ VIP STATUS</span>
+            <span class="drawer-xp-text" id="drawer-xp-text">ACTIVE</span>
           </div>
         </div>
       </div>
 
-      <!-- Navigation Menu (Figure 1) -->
+      <!-- Navigation Menu (Screenshot 3 Structure) -->
       <ul class="drawer-nav-list">
         <li class="drawer-nav-item">
-          <a href="/products.html" class="drawer-nav-link" id="drawer-link-store" onclick="closeDrawer()">
-            <span class="drawer-nav-left"><span class="drawer-nav-icon">🛍️</span> Store</span>
-            <span class="drawer-nav-badge" id="drawer-count-store">--</span>
+          <a href="/dashboard.html" class="drawer-nav-link" id="drawer-link-dash" onclick="closeDrawer()">
+            <span class="drawer-nav-left"><span class="drawer-nav-icon">🏠</span> Dashboard</span>
           </a>
         </li>
         <li class="drawer-nav-item">
-          <a href="/dashboard.html#referrals" class="drawer-nav-link" id="drawer-link-refer" onclick="closeDrawer()">
-            <span class="drawer-nav-left"><span class="drawer-nav-icon">🎁</span> Refer & Earn</span>
-            <span class="drawer-nav-badge free" style="background:rgba(52,211,153,0.18); border-color:#34d399; color:#34d399;">BONUS</span>
+          <a href="/wallet.html" class="drawer-nav-link" onclick="closeDrawer()">
+            <span class="drawer-nav-left"><span class="drawer-nav-icon">⊕</span> Add Funds</span>
           </a>
         </li>
         <li class="drawer-nav-item">
           <a href="/dashboard.html#keys" class="drawer-nav-link" id="drawer-link-licenses" onclick="closeDrawer()">
-            <span class="drawer-nav-left"><span class="drawer-nav-icon">🔑</span> My License Keys & Files</span>
+            <span class="drawer-nav-left"><span class="drawer-nav-icon">🔑</span> My Keys & Files</span>
             <span class="drawer-nav-badge" id="drawer-count-licenses">0</span>
           </a>
         </li>
         <li class="drawer-nav-item">
+          <button type="button" onclick="openProfileModal()" class="drawer-nav-link">
+            <span class="drawer-nav-left"><span class="drawer-nav-icon">👤</span> Profile</span>
+          </button>
+        </li>
+        <li class="drawer-nav-item">
           <button type="button" class="drawer-nav-link" id="drawer-history-accordion-btn">
-            <span class="drawer-nav-left"><span class="drawer-nav-icon">🕒</span> History</span>
+            <span class="drawer-nav-left"><span class="drawer-nav-icon">🕒</span> Active Subscriptions & History</span>
             <div style="display:flex; align-items:center; gap:6px;">
               <span class="drawer-nav-badge" id="drawer-count-history">0</span>
               <span id="drawer-history-caret" style="font-size:0.75rem; transition:transform 0.25s;">▾</span>
@@ -776,8 +834,14 @@ function mountDrawerAndBars() {
           </div>
         </li>
         <li class="drawer-nav-item">
-          <a href="/wallet.html" class="drawer-nav-link" onclick="closeDrawer()">
-            <span class="drawer-nav-left"><span class="drawer-nav-icon">💳</span> Add Credit</span>
+          <a href="/dashboard.html#referrals" class="drawer-nav-link" id="drawer-link-refer" onclick="closeDrawer()">
+            <span class="drawer-nav-left"><span class="drawer-nav-icon">🎁</span> Refer & Earn</span>
+            <span class="drawer-nav-badge free" style="background:rgba(52,211,153,0.18); border-color:#34d399; color:#34d399;">BONUS</span>
+          </a>
+        </li>
+        <li class="drawer-nav-item">
+          <a href="https://wa.me/9779800000000" target="_blank" rel="noopener noreferrer" class="drawer-nav-link whatsapp-link">
+            <span class="drawer-nav-left"><span class="drawer-nav-icon">🎧</span> Customer Support</span>
           </a>
         </li>
         <li class="drawer-nav-item">
@@ -788,19 +852,34 @@ function mountDrawerAndBars() {
             <span class="drawer-nav-badge" style="background:rgba(255,0,85,0.18); border-color:#ff0055; color:#ff0055;">ALERTS</span>
           </button>
         </li>
-        <li class="drawer-nav-item">
-          <button type="button" onclick="openProfileModal()" class="drawer-nav-link">
-            <span class="drawer-nav-left"><span class="drawer-nav-icon">✏️</span> Edit Profile</span>
-          </button>
-        </li>
       </ul>
+
+      <!-- Currency Change Row (Screenshot 3 Style) -->
+      <div class="drawer-currency-row">
+        <span class="drawer-row-lbl">💱 Currency</span>
+        <div style="display:flex; gap:5px; flex-wrap:wrap;">
+          <button type="button" class="drawer-cur-btn ${Store.currency === 'NPR' ? 'active' : ''}" data-cur="NPR" onclick="setCurrency('NPR')">NPR</button>
+          <button type="button" class="drawer-cur-btn ${Store.currency === 'INR' ? 'active' : ''}" data-cur="INR" onclick="setCurrency('INR')">INR</button>
+          <button type="button" class="drawer-cur-btn ${Store.currency === 'USD' ? 'active' : ''}" data-cur="USD" onclick="setCurrency('USD')">USD</button>
+          <button type="button" class="drawer-cur-btn ${Store.currency === 'PKR' ? 'active' : ''}" data-cur="PKR" onclick="setCurrency('PKR')">PKR</button>
+        </div>
+      </div>
+
+      <!-- Day / Night Theme Switcher Row -->
+      <div class="drawer-theme-row">
+        <span class="drawer-row-lbl">🎨 Theme</span>
+        <div style="display:flex; gap:6px;">
+          <button type="button" class="drawer-theme-btn ${Store.theme === 'light' ? 'active' : ''}" data-theme-val="light" onclick="setThemeMode('light')">☀️ Day</button>
+          <button type="button" class="drawer-theme-btn ${Store.theme === 'dark' ? 'active' : ''}" data-theme-val="dark" onclick="setThemeMode('dark')">🌙 Night</button>
+        </div>
+      </div>
 
       <!-- Logout Button (Figure 1: Red Outlined Button) -->
       <button type="button" class="drawer-logout-btn" id="drawer-logout-btn" onclick="handleLogout()">
         <span>↪</span> <span>LOG OUT</span>
       </button>
 
-      <!-- Social Links Strip (Figure 1: WhatsApp, Discord, Telegram) -->
+      <!-- Social Links Strip (WhatsApp, Discord, Telegram) -->
       <div class="drawer-social-strip">
         <a href="https://chat.whatsapp.com" target="_blank" rel="noopener noreferrer" class="drawer-social-link" id="drawer-social-wa">
           <span class="drawer-social-left"><span style="color:#25d366; font-size:1.1rem;">💬</span> WHATSAPP GROUP</span>
@@ -816,7 +895,7 @@ function mountDrawerAndBars() {
         </a>
       </div>
 
-      <!-- Bottom Hide Sidebar Button (Figure 1) -->
+      <!-- Bottom Hide Sidebar Button -->
       <button type="button" class="drawer-bottom-hide-btn" id="drawer-bottom-hide-btn" title="Hide Sidebar">
         <span>←</span> <span>HIDE SIDEBAR</span>
       </button>
@@ -1123,6 +1202,12 @@ function updateDrawerWithUser(user) {
     }
     if (emailEl) emailEl.textContent = user.email;
     if (logoutBtn) logoutBtn.style.display = 'flex';
+
+    // Populate Drawer Header Wallet & Avatar (Screenshot 3)
+    const drwBal = document.getElementById('drawer-wallet-val');
+    if (drwBal) drwBal.textContent = formatWalletBalance(user.wallet_balance, Store.currency);
+    const drwAvatar = document.querySelector('#drawer-hdr-avatar-initials span');
+    if (drwAvatar) drwAvatar.textContent = initials;
   } else {
     if (initialsEl) initialsEl.textContent = 'WX';
     if (nameEl) nameEl.textContent = 'Guest Player';
@@ -1133,6 +1218,11 @@ function updateDrawerWithUser(user) {
     }
     if (emailEl) emailEl.textContent = 'Login to view license keys';
     if (logoutBtn) logoutBtn.style.display = 'none';
+
+    const drwBal = document.getElementById('drawer-wallet-val');
+    if (drwBal) drwBal.textContent = formatWalletBalance(0, Store.currency);
+    const drwAvatar = document.querySelector('#drawer-hdr-avatar-initials span');
+    if (drwAvatar) drwAvatar.textContent = 'WX';
   }
 
   updateDrawerBadgeCounts();
@@ -1816,6 +1906,45 @@ function render7SProductCardHtml(p) {
   `;
 }
 
+function togglePassVisibility(inputId, btnEl) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  if (input.type === 'password') {
+    input.type = 'text';
+    if (btnEl) btnEl.textContent = '🙈';
+  } else {
+    input.type = 'password';
+    if (btnEl) btnEl.textContent = '👁';
+  }
+}
+
+async function handleQuickPasswordUpdate(e) {
+  if (e) e.preventDefault();
+  const input = document.getElementById('dash-quick-new-pass');
+  if (!input) return;
+  const newPass = input.value;
+  if (!newPass || newPass.length < 6) {
+    showToast('New password must be at least 6 characters', 'error');
+    return;
+  }
+
+  openProfileModal();
+  const modalNew = document.getElementById('modal-new-pass-input');
+  if (modalNew) modalNew.value = newPass;
+  const modalCurr = document.getElementById('modal-current-pass-input');
+  if (modalCurr) modalCurr.focus();
+  showToast('Please enter your current password to confirm update', 'info');
+}
+
+function triggerLoaderDownloadOrKeys() {
+  if (typeof switchDashTab === 'function') {
+    switchDashTab('keys');
+  }
+  if (typeof triggerLoaderDownload === 'function') {
+    triggerLoaderDownload();
+  }
+}
+
 window.renderHeroSlider = renderHeroSlider;
 window.heroSliderNext = heroSliderNext;
 window.heroSliderPrev = heroSliderPrev;
@@ -1837,4 +1966,8 @@ window.formatWalletBalance = formatWalletBalance;
 window.updateDrawerBadgeCounts = updateDrawerBadgeCounts;
 window.openNotificationsModal = openNotificationsModal;
 window.closeNotificationsModal = closeNotificationsModal;
+window.togglePassVisibility = togglePassVisibility;
+window.handleQuickPasswordUpdate = handleQuickPasswordUpdate;
+window.triggerLoaderDownloadOrKeys = triggerLoaderDownloadOrKeys;
+
 

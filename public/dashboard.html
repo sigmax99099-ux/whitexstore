@@ -38,11 +38,6 @@
       </ul>
 
       <div class="nav-actions">
-        <!-- Theme Toggle Button -->
-        <button type="button" class="btn-theme-toggle" id="theme-toggle-btn" title="Toggle Day/Night Mode" aria-label="Toggle Theme">
-          🌙
-        </button>
-
         <div id="nav-auth-container"></div>
       </div>
     </div>
@@ -52,46 +47,95 @@
   <main class="section">
     <div class="container">
       
-      <!-- User Profile & Balance Header (Figure 1 & 2 Cyber Style) -->
-      <div class="product-card" style="padding: 1.6rem 2rem; margin-bottom: 1.5rem; position: relative; overflow: hidden; background: radial-gradient(ellipse at 85% 20%, rgba(0, 240, 255, 0.08) 0%, rgba(9, 14, 26, 0.98) 75%), #050812; border: 1.5px solid rgba(0, 240, 255, 0.35); box-shadow: 0 10px 30px rgba(0,0,0,0.6);">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
-          <div style="display: flex; align-items: center; gap: 1.15rem;">
-            <div class="drawer-avatar-ring" style="width: 58px; height: 58px; font-size: 1.3rem; margin: 0; flex-shrink: 0; cursor: pointer;" onclick="openProfileModal()" title="Edit Profile">
-              <span id="dash-avatar-initials">WX</span>
-              <span class="drawer-avatar-online"></span>
-            </div>
-            <div>
-              <div style="display: flex; align-items: center; gap: 0.65rem; margin-bottom: 0.25rem; flex-wrap: wrap;">
-                <h1 id="dash-user-name" style="font-size: 1.65rem; color: #fff; margin: 0; font-family: var(--font-heading);">User Profile</h1>
-                <span id="dash-user-tier" class="badge badge-undetected">Customer</span>
-                <button type="button" onclick="openProfileModal()" class="btn btn-outline btn-sm" style="padding: 0.2rem 0.6rem; font-size: 0.72rem; border-color: rgba(0, 240, 255, 0.4); color: #00f0ff;" title="Edit Profile">
-                  ✏️ Edit Profile
-                </button>
-              </div>
-              <div style="color: var(--text-muted); font-size: 0.84rem;">
-                Email: <span id="dash-user-email" style="color: var(--text-main);">...</span> • 
-                Phone: <span id="dash-user-phone" style="color: var(--text-main);">...</span>
-              </div>
-            </div>
+      <!-- REFRESHED DASHBOARD PROFILE & STATS HERO SECTION (MATCHING SCREENSHOT 1) -->
+      <div class="dash-profile-hero-wrap">
+        <!-- 1. Centered Circular Avatar & Email Hero Card -->
+        <div class="dash-hero-profile-card">
+          <div class="dash-avatar-circle-3d" onclick="openProfileModal()" title="Click to Edit Profile">
+            <span id="dash-avatar-initials">W</span>
+            <span class="avatar-online-pulse"></span>
           </div>
-
-          <div style="display: flex; align-items: center; gap: 0.85rem; flex-wrap: wrap;">
-            <div style="background: #080c18; border: 1.5px solid rgba(0, 240, 255, 0.3); border-radius: var(--radius-md); padding: 0.65rem 1.25rem; text-align: right; box-shadow: 0 0 15px rgba(0,240,255,0.1);">
-              <div style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">Wallet Balance</div>
-              <div id="dash-wallet-bal" style="font-family: var(--font-heading); font-size: 1.5rem; color: #00f0ff; font-weight: 800; line-height: 1.1;">
-                NPR 0.00
-              </div>
-            </div>
-
-            <button type="button" onclick="switchDashTab('referrals')" class="btn btn-outline btn-sm" style="border-color: rgba(52, 211, 153, 0.45); color: #34d399; background: rgba(52, 211, 153, 0.08); font-weight: 600;">
-              🎁 Invite & Earn
+          <h2 class="dash-profile-email-title" id="dash-user-email">whitex@gmail.com</h2>
+          <div class="dash-member-since-text" id="dash-member-since">Member since 12 Oct 2026</div>
+          <div style="display: flex; justify-content: center; gap: 0.65rem; margin-top: 0.95rem; flex-wrap: wrap;">
+            <button type="button" class="dash-logout-pill-btn" onclick="handleLogout()">
+              <span>↪</span> <span>Log out</span>
             </button>
-
-            <button type="button" onclick="switchDashTab('deposit')" class="btn btn-primary btn-sm btn-glow">
-              + Topup Balance
+            <button type="button" class="dash-edit-profile-pill-btn" onclick="openProfileModal()">
+              <span>✏️</span> <span>Edit Profile</span>
             </button>
           </div>
         </div>
+
+        <!-- 2. Account Details & Stats List Card (Matching Screenshot 1) -->
+        <div class="dash-stats-details-card">
+          <div class="dash-stat-row">
+            <div class="dash-stat-label">
+              <span class="dash-stat-icon-3d">✉</span>
+              <span>Email</span>
+            </div>
+            <div class="dash-stat-value" id="stat-row-email">whitex@gmail.com</div>
+          </div>
+          <div class="dash-stat-row">
+            <div class="dash-stat-label">
+              <span class="dash-stat-icon-3d">💳</span>
+              <span>Balance</span>
+            </div>
+            <div class="dash-stat-value val-green" id="stat-row-balance">Rs0.00</div>
+          </div>
+          <div class="dash-stat-row">
+            <div class="dash-stat-label">
+              <span class="dash-stat-icon-3d">🛒</span>
+              <span>Purchases</span>
+            </div>
+            <div class="dash-stat-value" id="stat-row-purchases">0</div>
+          </div>
+          <div class="dash-stat-row">
+            <div class="dash-stat-label">
+              <span class="dash-stat-icon-3d">📈</span>
+              <span>Total spent</span>
+            </div>
+            <div class="dash-stat-value val-green" id="stat-row-spent">Rs0.00</div>
+          </div>
+        </div>
+
+        <!-- 3. Change Password Card (Matching Screenshot 1) -->
+        <div class="dash-change-pass-card">
+          <div class="dash-pass-title">
+            <span class="dash-stat-icon-3d">🔒</span>
+            <span>Change Password</span>
+          </div>
+          <p class="dash-pass-desc">Keep your account secure with a strong password.</p>
+          <form id="dash-quick-pass-form" onsubmit="handleQuickPasswordUpdate(event)" class="dash-quick-pass-form">
+            <div class="dash-pass-input-wrap">
+              <input type="password" id="dash-quick-new-pass" placeholder="New password" required minlength="6" class="form-input dash-pass-input">
+              <button type="button" class="dash-pass-toggle-eye" onclick="togglePassVisibility('dash-quick-new-pass', this)" title="Show/Hide Password">👁</button>
+            </div>
+            <button type="submit" id="dash-quick-pass-btn" class="btn btn-outline btn-sm dash-pass-submit-btn">Update</button>
+          </form>
+        </div>
+
+        <!-- 4. 3D Action Buttons Row (Matching Screenshot 1) -->
+        <div class="dash-3d-actions-row">
+          <button type="button" class="dash-action-3d-btn" onclick="switchDashTab('history')">
+            <span class="dash-action-icon-3d">🛒</span>
+            <span>Purchase History</span>
+          </button>
+          <button type="button" class="dash-action-3d-btn" onclick="switchDashTab('deposit')">
+            <span class="dash-action-icon-3d">💳</span>
+            <span>Deposit History</span>
+          </button>
+          <button type="button" class="dash-action-3d-btn" onclick="triggerLoaderDownloadOrKeys()">
+            <span class="dash-action-icon-3d">📥</span>
+            <span>Download All</span>
+          </button>
+        </div>
+
+        <!-- Hidden legacy hooks for script backward compatibility -->
+        <div style="display:none;" id="dash-user-name"></div>
+        <div style="display:none;" id="dash-user-tier"></div>
+        <div style="display:none;" id="dash-user-phone"></div>
+        <div style="display:none;" id="dash-wallet-bal"></div>
       </div>
 
       <!-- Category-wise Separated Dashboard Tabs Bar -->
@@ -789,19 +833,45 @@
 
     function renderUserInfo(user) {
       window.currentDashUser = user;
-      document.getElementById('dash-user-name').textContent = user.name;
-      document.getElementById('dash-user-email').textContent = user.email;
-      document.getElementById('dash-user-phone').textContent = user.phone || 'N/A';
-      document.getElementById('dash-wallet-bal').textContent = `NPR ${parseFloat(user.wallet_balance || 0).toLocaleString()}`;
+      const userNameEl = document.getElementById('dash-user-name');
+      if (userNameEl) userNameEl.textContent = user.name;
+      const userEmailEl = document.getElementById('dash-user-email');
+      if (userEmailEl) userEmailEl.textContent = user.email;
+      const userPhoneEl = document.getElementById('dash-user-phone');
+      if (userPhoneEl) userPhoneEl.textContent = user.phone || 'N/A';
+
+      const statEmail = document.getElementById('stat-row-email');
+      if (statEmail) statEmail.textContent = user.email;
+
+      const formattedBal = (typeof formatWalletBalance === 'function') 
+        ? formatWalletBalance(user.wallet_balance, window.Store ? Store.currency : 'NPR')
+        : `NPR ${parseFloat(user.wallet_balance || 0).toLocaleString()}`;
+
+      const dashWalletBal = document.getElementById('dash-wallet-bal');
+      if (dashWalletBal) dashWalletBal.textContent = formattedBal;
+      const statBal = document.getElementById('stat-row-balance');
+      if (statBal) statBal.textContent = formattedBal;
 
       // Overview Quick Card Balance
       const overviewBal = document.getElementById('overview-wallet-bal');
-      if (overviewBal) overviewBal.textContent = `NPR ${parseFloat(user.wallet_balance || 0).toLocaleString()}`;
+      if (overviewBal) overviewBal.textContent = formattedBal;
 
-      // Initials badge (Figure 1 & 2)
+      // Member since date
+      const memberSinceEl = document.getElementById('dash-member-since');
+      if (memberSinceEl) {
+        if (user.created_at) {
+          const d = new Date(user.created_at);
+          const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+          memberSinceEl.textContent = `Member since ${d.getDate()} ${monthNames[d.getMonth()]} ${d.getFullYear()}`;
+        } else {
+          memberSinceEl.textContent = 'VIP Verified Member';
+        }
+      }
+
+      // Initials badge (Screenshot 1: Initial letter W or VIP)
       const initials = (typeof getUserInitials === 'function') ? getUserInitials(user.name) : 'WX';
       const avatarEl = document.getElementById('dash-avatar-initials');
-      if (avatarEl) avatarEl.textContent = initials;
+      if (avatarEl) avatarEl.textContent = initials.substring(0, 1) || 'W';
 
       // Tab Deposit & Wallet balances breakdown
       const balNpr = parseFloat(user.wallet_balance || 0);
@@ -1132,6 +1202,23 @@
         const orders = data.orders || [];
         const keysContainer = document.getElementById('keys-container');
         const ordersTbody = document.getElementById('orders-table-body');
+
+        // Populate Screenshot 1 stats rows: purchases count & total spent
+        const purchasesEl = document.getElementById('stat-row-purchases');
+        if (purchasesEl) purchasesEl.textContent = orders.length;
+
+        let totalSpentNpr = 0;
+        orders.forEach(o => {
+          if (o.status === 'completed' || o.payment_status === 'paid' || (o.license_keys && o.license_keys.length > 0)) {
+            totalSpentNpr += parseFloat(o.total_amount_npr || o.amount_npr || o.total_amount || 0);
+          }
+        });
+        const spentEl = document.getElementById('stat-row-spent');
+        if (spentEl) {
+          spentEl.textContent = (typeof formatWalletBalance === 'function')
+            ? formatWalletBalance(totalSpentNpr, window.Store ? Store.currency : 'NPR')
+            : `NPR ${Math.round(totalSpentNpr).toLocaleString()}`;
+        }
 
         // Track pending order IDs for polling
         pendingOrderIds.clear();

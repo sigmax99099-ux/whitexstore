@@ -23,7 +23,8 @@ export default async function handler(req, res) {
         reseller_discount: Number(user.reseller_discount) || 0,
         wallet_balance: Number(user.wallet_balance) || 0,
         status: user.status,
-        referral_code: user.referral_code || null
+        referral_code: user.referral_code || null,
+        created_at: user.created_at || null
       }
     });
   } catch (err) {
