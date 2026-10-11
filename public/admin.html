@@ -1571,45 +1571,202 @@ X-API-Key: wx_live_YOUR_KEY</pre>
         </div>
       </section>
 
-      <!-- TAB: SUPPLIER SETTINGS -->
+      <!-- TAB: SUPPLIER SETTINGS & MULTI-API TEST SYSTEM -->
       <section id="tab-supplier-settings" class="admin-tab-content">
-        <h2 style="color: #fff; margin-bottom: 1.5rem;">// SUPPLIER SETTINGS</h2>
-        
-        <div class="admin-card" style="max-width: 780px;">
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
-            <div class="form-group">
-              <label style="display: flex; align-items: center; gap: 0.75rem; font-size: 1rem; cursor: pointer;">
-                <input type="checkbox" id="supplier-auto-delivery" checked style="width: 20px; height: 20px;">
-                <span style="font-weight: 600;">Enable Auto-Delivery</span>
-              </label>
-              <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 0.35rem; margin-left: 2.5rem;">
-                Automatically generate and deliver license keys after successful payment
-              </div>
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="supplier-low-balance">Low Balance Threshold ($)</label>
-              <input type="number" id="supplier-low-balance" class="form-input" step="0.01" min="0" value="10.00" placeholder="10.00">
-              <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: 0.35rem;">
-                Alert admin when supplier wallet balance falls below this amount
-              </div>
-            </div>
+        <!-- Header Bar -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <h2 style="color: #fff; margin: 0 0 0.35rem 0;">// SUPPLIER MULTI-API AUTOMATION & BALANCE SETTINGS</h2>
+            <p style="color: var(--text-dim); margin: 0; font-size: 0.88rem;">
+              Manage live connection status, real-time wallet balances, and auto-delivery safety thresholds across all supplier license systems.
+            </p>
           </div>
-
-          <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
-            <button type="button" class="btn btn-primary btn-sm" onclick="testSupplierConnection()">🔗 Test Connection</button>
-            <button type="button" class="btn btn-outline btn-sm" onclick="refreshSupplierBalance()">🔄 Refresh Balance</button>
+          <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+            <button type="button" class="btn btn-primary btn-sm btn-glow" id="btn-test-all-suppliers" onclick="testAllSuppliersConnection()">
+              ⚡ Test All Connections
+            </button>
+            <button type="button" class="btn btn-outline btn-sm" id="btn-refresh-all-balances" onclick="refreshAllSupplierBalances()">
+              🔄 Refresh All Balances
+            </button>
+            <button type="button" class="btn btn-outline btn-sm" onclick="document.querySelector('[data-tab=\'tab-supplier-apis\']')?.click()">
+              🌐 Manage APIs
+            </button>
           </div>
-
-          <div id="supplier-connection-result" style="display: none; padding: 1rem; background: #0d0d15; border-radius: var(--radius-md); border: 1px solid var(--bg-card-border); font-family: monospace; font-size: 0.8rem; max-height: 400px; overflow: auto;"></div>
         </div>
 
-        <div class="admin-card" style="max-width: 780px; margin-top: 1.5rem;">
-          <h3 style="color: var(--primary); margin-bottom: 1rem;">Live Wallet Balance</h3>
-          <div id="supplier-balance-display" style="font-size: 2.5rem; font-weight: 800; color: #34d399; font-family: var(--font-heading);">
-            $236.86
+        <!-- 1. MULTI-SUPPLIER METRIC DASHBOARD -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; margin-bottom: 1.75rem;">
+          <!-- Metric 1: Combined Wallet Balance -->
+          <div class="card" style="background: linear-gradient(135deg, rgba(52, 211, 153, 0.08) 0%, rgba(13, 18, 30, 0.95) 100%); border: 1px solid rgba(52, 211, 153, 0.35); border-radius: var(--radius-lg); padding: 1.25rem 1.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+              <span style="font-size: 0.78rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.5px;">TOTAL SUPPLIER BALANCE</span>
+              <span id="supplier-balance-warning-pill" class="badge" style="display: none; background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #f87171; font-size: 0.7rem;">LOW BALANCE</span>
+            </div>
+            <div id="supplier-balance-display" style="font-size: 2.25rem; font-weight: 800; color: #34d399; font-family: var(--font-heading); line-height: 1.1; margin-bottom: 0.4rem;">
+              $222.20
+            </div>
+            <div style="font-size: 0.8rem; color: var(--text-dim);">
+              Across <strong id="supplier-active-count" style="color: #fff;">2</strong> Connected Gateways
+            </div>
           </div>
-          <div id="supplier-balance-status" style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--text-muted);">
-            Last checked: <span id="supplier-last-check">Never</span>
+
+          <!-- Metric 2: Gateway Health -->
+          <div class="card" style="background: linear-gradient(135deg, rgba(56, 189, 248, 0.08) 0%, rgba(13, 18, 30, 0.95) 100%); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: var(--radius-lg); padding: 1.25rem 1.5rem;">
+            <div style="font-size: 0.78rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.5px; margin-bottom: 0.5rem;">
+              API GATEWAY HEALTH
+            </div>
+            <div id="supplier-health-status" style="font-size: 1.75rem; font-weight: 800; color: #38bdf8; font-family: var(--font-heading); line-height: 1.2; margin-bottom: 0.4rem;">
+              Active & Healthy 🟢
+            </div>
+            <div style="font-size: 0.8rem; color: var(--text-dim);">
+              Average Latency: <strong id="supplier-avg-ping" style="color: #38bdf8;">~120ms</strong>
+            </div>
+          </div>
+
+          <!-- Metric 3: Auto-Delivery Status -->
+          <div class="card" style="background: rgba(13, 18, 30, 0.95); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: var(--radius-lg); padding: 1.25rem 1.5rem;">
+            <div style="font-size: 0.78rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.5px; margin-bottom: 0.5rem;">
+              AUTO-DELIVERY DISPATCH
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.4rem;">
+              <span id="supplier-autodelivery-pill" class="badge" style="background: rgba(52, 211, 153, 0.15); border: 1px solid #34d399; color: #34d399; font-size: 0.9rem; font-weight: 800; padding: 4px 10px;">
+                ACTIVE ⚡
+              </span>
+            </div>
+            <div style="font-size: 0.8rem; color: var(--text-dim);">
+              Instant key creation upon client payment
+            </div>
+          </div>
+
+          <!-- Metric 4: Low Balance Alert -->
+          <div class="card" style="background: rgba(13, 18, 30, 0.95); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: var(--radius-lg); padding: 1.25rem 1.5rem;">
+            <div style="font-size: 0.78rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.5px; margin-bottom: 0.5rem;">
+              LOW BALANCE THRESHOLD
+            </div>
+            <div id="supplier-threshold-display" style="font-size: 1.85rem; font-weight: 800; color: #fbbf24; font-family: var(--font-heading); line-height: 1.2; margin-bottom: 0.4rem;">
+              $10.00
+            </div>
+            <div style="font-size: 0.8rem; color: var(--text-dim);">
+              Last Checked: <span id="supplier-last-check" style="color: #e2e8f0;">Just now</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. ALL SUPPLIER APIS & LIVE BALANCE LIST CARD -->
+        <div class="card" style="background: rgba(13, 18, 30, 0.95); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 1.75rem; box-shadow: 0 10px 30px rgba(0,0,0,0.4);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+              <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.25rem;">
+                <span style="font-size: 1.3rem;">📋</span>
+                <h3 style="margin: 0; color: #fff; font-size: 1.15rem; font-weight: 700;">
+                  ALL SUPPLIER GATEWAYS — CONNECTION & BALANCE MATRIX
+                </h3>
+              </div>
+              <p style="margin: 0; font-size: 0.85rem; color: var(--text-dim);">
+                Real-time connection status, live wallet balances, and test controls for every registered supplier API provider.
+              </p>
+            </div>
+            <div style="display: flex; gap: 0.75rem; align-items: center;">
+              <input type="text" id="supplier-list-search" class="form-input" placeholder="🔍 Search supplier name, type, or URL..." oninput="filterSupplierList(this.value)" style="padding: 0.45rem 0.8rem; font-size: 0.85rem; min-width: 260px;">
+            </div>
+          </div>
+
+          <div class="table-responsive" style="border: 1px solid rgba(255,255,255,0.08); border-radius: 8px;">
+            <table class="table-custom">
+              <thead>
+                <tr>
+                  <th style="min-width: 170px;">Supplier Gateway</th>
+                  <th style="min-width: 120px;">API System</th>
+                  <th style="min-width: 200px;">Endpoint / Key</th>
+                  <th style="min-width: 150px; text-align: center;">Connection Status</th>
+                  <th style="min-width: 140px; text-align: right;">Live Balance (USD)</th>
+                  <th style="min-width: 130px; text-align: center;">Last Checked</th>
+                  <th style="min-width: 190px; text-align: center;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="supplier-balance-list-tbody">
+                <tr><td colspan="7" style="text-align: center; padding: 2.5rem; color: var(--text-dim);">Loading supplier systems & balances...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 3. LIVE TEST SETTING & DIAGNOSTICS CONSOLE -->
+        <div class="card" style="background: rgba(13, 18, 30, 0.95); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 1.75rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
+            <div style="display: flex; align-items: center; gap: 0.6rem;">
+              <span style="font-size: 1.25rem;">📟</span>
+              <h3 style="margin: 0; color: #fff; font-size: 1.1rem; font-weight: 700;">
+                LIVE SUPPLIER TEST DIAGNOSTICS & SYSTEM LOGS
+              </h3>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+              <button type="button" class="btn btn-outline btn-xs" onclick="clearSupplierDiagnostics()">Clear Console</button>
+            </div>
+          </div>
+
+          <div id="supplier-connection-result" style="padding: 1.25rem; background: #070a10; border-radius: 8px; border: 1px solid rgba(56, 189, 248, 0.25); font-family: monospace; font-size: 0.85rem; max-height: 420px; overflow-y: auto; color: #e2e8f0; line-height: 1.6;">
+            <div style="color: var(--text-dim);">Click <strong>"⚡ Test All Connections"</strong> or <strong>"🔗 Test"</strong> on any supplier above to inspect live latency, account handshake, and permitted products catalog.</div>
+          </div>
+        </div>
+
+        <!-- 4. CORE AUTOMATION & KEYLICENSE SETTINGS CARD -->
+        <div class="card" style="background: rgba(13, 18, 30, 0.95); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: var(--radius-lg); padding: 1.5rem;">
+          <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1.25rem;">
+            <span style="font-size: 1.25rem;">⚙️</span>
+            <h3 style="margin: 0; color: #fff; font-size: 1.1rem; font-weight: 700;">
+              CORE AUTOMATION & KEYLICENSE API CONFIGURATION
+            </h3>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
+            <!-- Auto Delivery Switch -->
+            <div class="form-group">
+              <label style="display: flex; align-items: center; gap: 0.75rem; font-size: 1rem; cursor: pointer; color: #fff;">
+                <input type="checkbox" id="supplier-auto-delivery" checked style="width: 20px; height: 20px; accent-color: var(--primary);">
+                <span style="font-weight: 700;">Enable Automatic Key Delivery Engine</span>
+              </label>
+              <div style="font-size: 0.78rem; color: var(--text-dim); margin-top: 0.4rem; margin-left: 2.2rem;">
+                When active, verified store orders will instantly contact the mapped supplier API to generate and deliver keys 24/7 without manual admin approval.
+              </div>
+            </div>
+
+            <!-- Low Balance Threshold -->
+            <div class="form-group">
+              <label class="form-label" for="supplier-low-balance" style="font-weight: 700; color: #fff;">
+                LOW BALANCE ALERT THRESHOLD ($ USD) *
+              </label>
+              <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <span style="font-size: 1.1rem; font-weight: 700; color: #fbbf24;">$</span>
+                <input type="number" id="supplier-low-balance" class="form-input" step="0.01" min="0" value="10.00" placeholder="10.00" style="max-width: 140px; font-weight: 700; font-size: 1rem;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="saveSupplierThreshold()">Save Threshold</button>
+              </div>
+              <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 0.4rem;">
+                Sends high-priority alert to Discord when any supplier balance drops below this amount.
+              </div>
+            </div>
+          </div>
+
+          <!-- KeyLicense Direct Token Box -->
+          <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 1.25rem; margin-top: 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+              <div style="font-weight: 700; color: #fff; font-size: 0.95rem; display: flex; align-items: center; gap: 0.5rem;">
+                <span>🏷️</span>
+                <span>KEYLICENSE GLOBAL API TOKEN CONFIGURATION</span>
+              </div>
+              <span id="kl-token-status-pill" class="badge" style="background: rgba(255,255,255,0.08); color: var(--text-dim); font-size: 0.75rem;">
+                Not Configured
+              </span>
+            </div>
+            <p style="font-size: 0.82rem; color: var(--text-dim); margin: 0 0 0.85rem 0;">
+              Enter your KeyLicense (<code>https://keylicense.shop</code>) vendor API token to enable multi-supplier license key generation and balance inquiries.
+            </p>
+            <div style="display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center;">
+              <input type="password" id="supplier-kl-token" class="form-input" placeholder="e.g. kl_live_your_secret_token_here..." style="flex: 2; min-width: 250px; font-family: monospace;">
+              <button type="button" class="btn btn-outline btn-sm" onclick="toggleKlTokenVisibility()" id="btn-toggle-kl-token">👁️ Show</button>
+              <button type="button" class="btn btn-primary btn-sm btn-glow" onclick="saveSupplierKlToken()">Save KL Token 💾</button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="testKeyLicenseDirect()">⚡ Test KL Connection</button>
+            </div>
           </div>
         </div>
       </section>
@@ -5712,9 +5869,11 @@ X-API-Key: wx_live_YOUR_KEY</pre>
               </span>
             </td>
             <td>
-              <div style="display: flex; gap: 0.4rem;">
-                <button class="btn btn-outline btn-sm" onclick="editSupplierApi(${api.id})">Edit</button>
-                <button class="btn btn-outline btn-sm" onclick="deleteSupplierApi(${api.id})" style="color:var(--danger)">Delete</button>
+              <div style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
+                <button type="button" class="btn btn-outline btn-xs" onclick="testSupplierFromApisTab(${api.id})" title="Test API Connection">⚡ Test</button>
+                <button type="button" class="btn btn-outline btn-xs" onclick="checkSupplierBalanceFromApisTab(${api.id})" title="Check Live Balance">💰 Balance</button>
+                <button type="button" class="btn btn-outline btn-xs" onclick="editSupplierApi(${api.id})">Edit</button>
+                <button type="button" class="btn btn-outline btn-xs" onclick="deleteSupplierApi(${api.id})" style="color:var(--danger)">Delete</button>
               </div>
             </td>
           </tr>
@@ -10083,123 +10242,647 @@ X-API-Key: wx_live_YOUR_KEY</pre>
     }
 
     /* ==============================================================
-       SUPPLIER SETTINGS
+       SUPPLIER SETTINGS & MULTI-API BALANCE & TEST SYSTEM
        ============================================================== */
+    let cachedSupplierList = [];
+    let cachedSupplierSettings = { low_balance_threshold: 10.00, auto_delivery_enabled: true };
+
     async function loadSupplierSettings() {
+      const tbody = document.getElementById('supplier-balance-list-tbody');
+      if (tbody && cachedSupplierList.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 2.5rem; color: var(--text-dim);"><div class="spinner" style="display:inline-block; margin-right:8px;"></div> Loading supplier systems & balances...</td></tr>`;
+      }
+
       try {
-        // Load settings
-        const settingsRes = await fetch('/api/admin/supplier-settings', { credentials: "include" });
-        const settingsData = await settingsRes.json();
+        const res = await fetch('/api/admin/supplier-settings', { credentials: 'include' });
+        const data = await res.json();
         
-        if (settingsData.success && settingsData.settings) {
-          const s = settingsData.settings;
-          document.getElementById('supplier-auto-delivery').checked = s.auto_delivery_enabled;
-          document.getElementById('supplier-low-balance').value = s.low_balance_threshold;
-          
-          if (s.last_known_balance !== null && s.last_known_balance !== undefined) {
-            document.getElementById('supplier-balance-display').textContent = `$${parseFloat(s.last_known_balance).toFixed(2)}`;
-            document.getElementById('supplier-balance-display').style.color = parseFloat(s.last_known_balance) <= s.low_balance_threshold ? '#ef4444' : '#34d399';
+        if (data.success) {
+          if (data.settings) {
+            cachedSupplierSettings = data.settings;
+            const s = data.settings;
+            const autoDeliveryCheck = document.getElementById('supplier-auto-delivery');
+            if (autoDeliveryCheck) autoDeliveryCheck.checked = Boolean(s.auto_delivery_enabled);
+            
+            const lowBalInput = document.getElementById('supplier-low-balance');
+            if (lowBalInput) lowBalInput.value = parseFloat(s.low_balance_threshold || 10).toFixed(2);
+            
+            const threshDisplay = document.getElementById('supplier-threshold-display');
+            if (threshDisplay) threshDisplay.textContent = `$${parseFloat(s.low_balance_threshold || 10).toFixed(2)}`;
+
+            const autoPill = document.getElementById('supplier-autodelivery-pill');
+            if (autoPill) {
+              if (s.auto_delivery_enabled) {
+                autoPill.textContent = 'ACTIVE ⚡';
+                autoPill.style.background = 'rgba(52, 211, 153, 0.15)';
+                autoPill.style.borderColor = '#34d399';
+                autoPill.style.color = '#34d399';
+              } else {
+                autoPill.textContent = 'PAUSED ⏸️';
+                autoPill.style.background = 'rgba(239, 68, 68, 0.15)';
+                autoPill.style.borderColor = '#ef4444';
+                autoPill.style.color = '#f87171';
+              }
+            }
+
+            if (s.last_balance_check) {
+              const lastCheckEl = document.getElementById('supplier-last-check');
+              if (lastCheckEl) lastCheckEl.textContent = new Date(s.last_balance_check).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            }
           }
-          
-          if (s.last_balance_check) {
-            document.getElementById('supplier-last-check').textContent = new Date(s.last_balance_check).toLocaleString();
+
+          // KeyLicense Token Status Pill
+          const klPill = document.getElementById('kl-token-status-pill');
+          if (klPill) {
+            if (data.kl_token_configured) {
+              klPill.textContent = 'Configured 🟢';
+              klPill.style.background = 'rgba(52, 211, 153, 0.15)';
+              klPill.style.color = '#34d399';
+              klPill.style.border = '1px solid rgba(52, 211, 153, 0.3)';
+            } else {
+              klPill.textContent = 'Not Configured ⚪';
+              klPill.style.background = 'rgba(255, 255, 255, 0.08)';
+              klPill.style.color = 'var(--text-dim)';
+              klPill.style.border = 'none';
+            }
           }
+
+          cachedSupplierList = data.suppliers || [];
+          renderSupplierBalanceList();
+          updateSupplierSummaryMetrics();
+        } else {
+          if (tbody) tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--danger); padding: 2rem;">Error: ${escapeHtml(data.message || 'Failed to load supplier settings')}</td></tr>`;
         }
       } catch (err) {
-        console.error('Load supplier settings error:', err);
+        console.error('loadSupplierSettings error:', err);
+        if (tbody) tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--danger); padding: 2rem;">Failed to connect to supplier settings server.</td></tr>`;
       }
     }
 
-    async function testSupplierConnection() {
-      const resultDiv = document.getElementById('supplier-connection-result');
-      resultDiv.style.display = 'block';
-      resultDiv.textContent = 'Testing connection...';
-      resultDiv.style.color = 'var(--primary)';
-      
-      try {
-        const res = await fetch('/api/admin/supplier-settings', {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'test_connection' })
-        });
-        
-        const data = await res.json();
-        
-        if (data.success && data.account) {
-          const acc = data.account;
-          resultDiv.innerHTML = `
-            <div style="color: #34d399;">✅ Connection Successful!</div>
-            <div style="margin-top: 0.5rem; font-size: 0.75rem;">
-              <div>Account ID: ${acc.id}</div>
-              <div>Username: ${acc.username}</div>
-              <div>Balance: $${acc.balance}</div>
-              <div>API Access: ${acc.api_access ? 'Enabled' : 'Disabled'}</div>
-              <div>Products: ${data.permitted_products?.length || 0}</div>
+    function updateSupplierSummaryMetrics() {
+      let totalBal = 0;
+      let activeCount = cachedSupplierList.length;
+      let totalLatency = 0;
+      let latencyCount = 0;
+      let hasFailed = false;
+
+      cachedSupplierList.forEach(s => {
+        const bal = parseFloat(s.last_known_balance);
+        if (!isNaN(bal)) totalBal += bal;
+        if (s.latency_ms) {
+          totalLatency += s.latency_ms;
+          latencyCount++;
+        }
+        if (s.last_test_status === 'failed') hasFailed = true;
+      });
+
+      // Update Combined Balance Display
+      const balDisplay = document.getElementById('supplier-balance-display');
+      const warnPill = document.getElementById('supplier-balance-warning-pill');
+      const threshold = parseFloat(cachedSupplierSettings.low_balance_threshold) || 10.0;
+
+      if (balDisplay) {
+        balDisplay.textContent = `$${totalBal.toFixed(2)}`;
+        if (totalBal <= threshold) {
+          balDisplay.style.color = '#ef4444';
+          if (warnPill) warnPill.style.display = 'inline-block';
+        } else {
+          balDisplay.style.color = '#34d399';
+          if (warnPill) warnPill.style.display = 'none';
+        }
+      }
+
+      const countEl = document.getElementById('supplier-active-count');
+      if (countEl) countEl.textContent = activeCount;
+
+      const healthEl = document.getElementById('supplier-health-status');
+      if (healthEl) {
+        if (hasFailed) {
+          healthEl.textContent = 'Degraded ⚠️';
+          healthEl.style.color = '#fbbf24';
+        } else if (activeCount > 0) {
+          healthEl.textContent = 'Active & Healthy 🟢';
+          healthEl.style.color = '#38bdf8';
+        } else {
+          healthEl.textContent = 'No Gateways ⚪';
+          healthEl.style.color = 'var(--text-dim)';
+        }
+      }
+
+      const pingEl = document.getElementById('supplier-avg-ping');
+      if (pingEl) {
+        if (latencyCount > 0) {
+          pingEl.textContent = `~${Math.round(totalLatency / latencyCount)}ms`;
+        } else {
+          pingEl.textContent = '~120ms (Est)';
+        }
+      }
+    }
+
+    function filterSupplierList(term) {
+      renderSupplierBalanceList(term);
+    }
+
+    function renderSupplierBalanceList(searchTerm = '') {
+      const tbody = document.getElementById('supplier-balance-list-tbody');
+      if (!tbody) return;
+
+      const term = String(searchTerm || (document.getElementById('supplier-list-search')?.value || '')).trim().toLowerCase();
+      const filtered = cachedSupplierList.filter(s => {
+        if (!term) return true;
+        return (s.name && s.name.toLowerCase().includes(term)) ||
+               (s.api_type && s.api_type.toLowerCase().includes(term)) ||
+               (s.api_url && s.api_url.toLowerCase().includes(term));
+      });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 2.5rem; color: var(--text-dim);">${term ? 'No suppliers matching filter.' : 'No supplier gateways configured.'}</td></tr>`;
+        return;
+      }
+
+      const threshold = parseFloat(cachedSupplierSettings.low_balance_threshold) || 10.0;
+
+      tbody.innerHTML = filtered.map(s => {
+        // System Badge Style
+        let typeBadge = `<span class="badge" style="background: rgba(255,255,255,0.08); color: #fff;">${escapeHtml(s.api_type || 'rest')}</span>`;
+        const typeLower = (s.api_type || '').toLowerCase();
+        if (typeLower === 'authzen') {
+          typeBadge = `<span class="badge" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(168, 85, 247, 0.2)); color: #f472b6; border: 1px solid rgba(244, 114, 182, 0.4); font-weight: 700;">AuthZen API</span>`;
+        } else if (typeLower === 'keylicense') {
+          typeBadge = `<span class="badge" style="background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(59, 130, 246, 0.2)); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); font-weight: 700;">KeyLicense API</span>`;
+        }
+
+        // Connection status badge
+        let statusBadge = `<span class="badge" style="background: rgba(255,255,255,0.08); color: var(--text-dim);">Ready to Test</span>`;
+        if (s.last_test_status === 'testing') {
+          statusBadge = `<span class="badge" style="background: rgba(56,189,248,0.15); color: #38bdf8; border: 1px solid #38bdf8;"><div class="spinner" style="width:10px;height:10px;display:inline-block;margin-right:4px;"></div> Pinging...</span>`;
+        } else if (s.last_test_status === 'connected') {
+          statusBadge = `<span class="badge" style="background: rgba(52,211,153,0.15); color: #34d399; border: 1px solid #34d399;">Connected (200 OK) · ${s.latency_ms || 120}ms</span>`;
+        } else if (s.last_test_status === 'failed') {
+          statusBadge = `<span class="badge" style="background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid #ef4444;" title="${escapeHtml(s.last_error || 'Error')}">Failed · ${escapeHtml((s.last_error || 'Error').substring(0, 18))}</span>`;
+        } else if (s.last_test_status === 'unconfigured') {
+          statusBadge = `<span class="badge" style="background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid #fbbf24;">No Token</span>`;
+        }
+
+        // Balance display
+        const balVal = s.last_known_balance !== null && s.last_known_balance !== undefined ? parseFloat(s.last_known_balance) : null;
+        let balDisplay = `<span style="color: var(--text-dim);">-</span>`;
+        if (balVal !== null) {
+          const isLow = balVal <= threshold;
+          balDisplay = `
+            <div style="font-weight: 800; font-family: monospace; font-size: 1.05rem; color: ${isLow ? '#ef4444' : '#34d399'};">
+              $${balVal.toFixed(2)}
+              ${isLow ? '<span title="Low balance warning!" style="font-size:0.75rem; vertical-align:middle;">⚠️</span>' : ''}
             </div>
-            <details style="margin-top: 1rem;">
-              <summary style="cursor: pointer; color: var(--primary);">View Full Product List</summary>
-              <pre style="margin-top: 0.5rem; font-size: 0.7rem; max-height: 300px; overflow: auto;">${JSON.stringify(data.permitted_products, null, 2)}</pre>
-            </details>
           `;
-          resultDiv.style.color = '#34d399';
-          
-          // Update balance display
-          if (acc.balance !== undefined) {
-            document.getElementById('supplier-balance-display').textContent = `$${acc.balance}`;
-            document.getElementById('supplier-balance-display').style.color = acc.balance <= 10 ? '#ef4444' : '#34d399';
-            document.getElementById('supplier-last-check').textContent = new Date().toLocaleString();
-          }
-        } else {
-          resultDiv.innerHTML = `<div style="color: #ef4444;">❌ Connection Failed: ${data.message || 'Unknown error'}</div>`;
-          resultDiv.style.color = '#ef4444';
         }
-      } catch (err) {
-        resultDiv.innerHTML = `<div style="color: #ef4444;">❌ Error: ${err.message}</div>`;
-        resultDiv.style.color = '#ef4444';
+
+        // Last checked
+        let lastChecked = 'Never';
+        if (s.last_checked_at) {
+          try {
+            lastChecked = new Date(s.last_checked_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          } catch (e) {
+            lastChecked = 'Recent';
+          }
+        }
+
+        return `
+          <tr id="supplier-row-${s.id}">
+            <td>
+              <div style="font-weight: 700; color: #fff; font-size: 0.95rem;">${escapeHtml(s.name)}</div>
+              <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 2px;">
+                ID: #${s.id} ${s.status === 'active' ? '<span style="color:#34d399;">● Active</span>' : '<span style="color:#ef4444;">● Inactive</span>'}
+              </div>
+            </td>
+            <td>${typeBadge}</td>
+            <td>
+              <div style="font-family: monospace; font-size: 0.78rem; color: #cbd5e1; word-break: break-all; max-width: 260px;">
+                ${escapeHtml(s.api_url)}
+              </div>
+              <div style="font-family: monospace; font-size: 0.72rem; color: var(--text-dim); margin-top: 2px;">
+                Key: <code>${escapeHtml(s.api_key_masked || (s.api_key ? s.api_key.substring(0, 8) + '...' : 'none'))}</code>
+              </div>
+            </td>
+            <td style="text-align: center;">${statusBadge}</td>
+            <td style="text-align: right;">${balDisplay}</td>
+            <td style="text-align: center; font-size: 0.8rem; color: var(--text-muted);">${lastChecked}</td>
+            <td style="text-align: center;">
+              <div style="display: flex; gap: 0.4rem; justify-content: center; flex-wrap: wrap;">
+                <button type="button" class="btn btn-outline btn-xs" id="btn-test-s-${s.id}" onclick="testSpecificSupplier(${s.id})" title="Send live API handshake">
+                  🔗 Test
+                </button>
+                <button type="button" class="btn btn-outline btn-xs" id="btn-bal-s-${s.id}" onclick="checkSpecificSupplierBalance(${s.id})" title="Query live wallet balance">
+                  💰 Balance
+                </button>
+                <button type="button" class="btn btn-outline btn-xs" onclick="viewSupplierDiagnostics(${s.id})" title="View diagnostics log">
+                  📋 Log
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Diagnostics Console Helpers
+    function appendSupplierConsoleLog(html) {
+      const consoleEl = document.getElementById('supplier-connection-result');
+      if (!consoleEl) return;
+      const timestamp = new Date().toLocaleTimeString();
+      const entry = document.createElement('div');
+      entry.style.marginTop = '0.75rem';
+      entry.style.paddingTop = '0.75rem';
+      entry.style.borderTop = '1px solid rgba(255,255,255,0.08)';
+      entry.innerHTML = `<span style="color: var(--text-dim); font-size: 0.75rem;">[${timestamp}]</span> ${html}`;
+      consoleEl.appendChild(entry);
+      consoleEl.scrollTop = consoleEl.scrollHeight;
+    }
+
+    function clearSupplierDiagnostics() {
+      const consoleEl = document.getElementById('supplier-connection-result');
+      if (consoleEl) {
+        consoleEl.innerHTML = `<div style="color: var(--text-dim);">Console cleared. Click <strong>"⚡ Test All Connections"</strong> or <strong>"🔗 Test"</strong> on any supplier above to inspect live latency, account handshake, and permitted products catalog.</div>`;
       }
     }
 
-    async function refreshSupplierBalance() {
-      const btn = event.target;
-      btn.disabled = true;
-      btn.textContent = 'Refreshing...';
-      
+    // Test ALL Suppliers in Parallel
+    async function testAllSuppliersConnection() {
+      const btn = document.getElementById('btn-test-all-suppliers');
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '⚡ Testing All...';
+      }
+
+      cachedSupplierList.forEach(s => { s.last_test_status = 'testing'; });
+      renderSupplierBalanceList();
+
+      appendSupplierConsoleLog(`<span style="color: #38bdf8;">🔄 Initiating parallel test connection & handshake for ${cachedSupplierList.length} suppliers...</span>`);
+
       try {
         const res = await fetch('/api/admin/supplier-settings', {
           method: 'POST',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'refresh_balance' })
+          body: JSON.stringify({ action: 'test_connection', supplier_id: 'all' })
         });
-        
+
         const data = await res.json();
-        
-        if (data.success && data.balance !== undefined) {
-          document.getElementById('supplier-balance-display').textContent = `$${data.balance}`;
-          document.getElementById('supplier-balance-display').style.color = data.balance <= 10 ? '#ef4444' : '#34d399';
-          document.getElementById('supplier-last-check').textContent = new Date().toLocaleString();
-          showToast(`Balance refreshed: $${data.balance}`, 'success');
+        if (data.success && Array.isArray(data.results)) {
+          let successCount = 0;
+          let summaryDetails = [];
+
+          data.results.forEach(r => {
+            const found = cachedSupplierList.find(s => s.id === r.id);
+            if (found) {
+              found.last_test_status = r.ok ? 'connected' : (r.status === 'unconfigured' ? 'unconfigured' : 'failed');
+              found.latency_ms = r.latency_ms;
+              if (r.balance !== null && r.balance !== undefined) found.last_known_balance = r.balance;
+              found.last_checked_at = r.tested_at || new Date().toISOString();
+              found.last_error = r.error;
+              found.diagnostic_data = r;
+            }
+
+            if (r.ok) {
+              successCount++;
+              summaryDetails.push(`
+                <div style="margin-top: 0.4rem; padding: 0.5rem; background: rgba(52,211,153,0.06); border-radius: 4px; border-left: 3px solid #34d399;">
+                  <strong style="color:#34d399;">✅ ${escapeHtml(r.name)}</strong> (${r.api_type})
+                  <div style="font-size:0.75rem; color:#cbd5e1; margin-top:2px;">
+                    HTTP Status: <span style="color:#34d399;">${r.http_status || 200} OK</span> | Latency: <strong>${r.latency_ms}ms</strong> | Balance: <strong style="color:#34d399;">$${parseFloat(r.balance || 0).toFixed(2)}</strong>
+                    ${r.username ? ` | User: <code>${escapeHtml(r.username)}</code> (ID: ${r.account_id})` : ''}
+                    ${r.products_count ? ` | Products: <strong>${r.products_count} catalog items</strong>` : ''}
+                  </div>
+                </div>
+              `);
+            } else {
+              summaryDetails.push(`
+                <div style="margin-top: 0.4rem; padding: 0.5rem; background: rgba(239,68,68,0.06); border-radius: 4px; border-left: 3px solid #ef4444;">
+                  <strong style="color:#ef4444;">❌ ${escapeHtml(r.name)}</strong> (${r.api_type})
+                  <div style="font-size:0.75rem; color:#fca5a5; margin-top:2px;">
+                    Error: ${escapeHtml(r.error || 'Connection handshake failed')} | Latency: ${r.latency_ms}ms
+                  </div>
+                </div>
+              `);
+            }
+          });
+
+          renderSupplierBalanceList();
+          updateSupplierSummaryMetrics();
+
+          const totalTested = data.results.length;
+          appendSupplierConsoleLog(`
+            <div>
+              <strong style="color: ${successCount === totalTested ? '#34d399' : '#fbbf24'}; font-size: 0.95rem;">
+                Batch Test Completed: ${successCount}/${totalTested} Gateways Connected
+              </strong>
+              ${summaryDetails.join('')}
+            </div>
+          `);
+
+          showToast(`Tested ${totalTested} suppliers: ${successCount} connected`, successCount === totalTested ? 'success' : 'info');
         } else {
-          showToast(data.message || 'Failed to refresh balance', 'error');
+          appendSupplierConsoleLog(`<span style="color: #ef4444;">❌ Batch test error: ${escapeHtml(data.message || 'Unknown server response')}</span>`);
+          showToast(data.message || 'Failed to complete test', 'error');
         }
       } catch (err) {
-        showToast('Error refreshing balance: ' + err.message, 'error');
+        appendSupplierConsoleLog(`<span style="color: #ef4444;">❌ Network exception: ${escapeHtml(err.message)}</span>`);
+        showToast('Error during connection test: ' + err.message, 'error');
       } finally {
-        btn.disabled = false;
-        btn.textContent = '🔄 Refresh Balance';
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '⚡ Test All Connections';
+        }
       }
     }
 
-    // Save supplier settings
-    document.getElementById('supplier-auto-delivery')?.addEventListener('change', async (e) => {
-      await saveSupplierSetting('auto_delivery_enabled', e.target.checked);
-    });
-    
-    document.getElementById('supplier-low-balance')?.addEventListener('change', async (e) => {
-      await saveSupplierSetting('low_balance_threshold', parseFloat(e.target.value) || 0);
-    });
+    // Test a SINGLE Supplier
+    async function testSpecificSupplier(supplierId) {
+      const btn = document.getElementById(`btn-test-s-${supplierId}`);
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Pinging...';
+      }
 
+      const target = cachedSupplierList.find(s => s.id === supplierId);
+      if (target) {
+        target.last_test_status = 'testing';
+        renderSupplierBalanceList();
+      }
+
+      appendSupplierConsoleLog(`<span style="color: #38bdf8;">🔗 Sending handshake request to Supplier #${supplierId} (${target ? target.name : ''})...</span>`);
+
+      try {
+        const res = await fetch('/api/admin/supplier-settings', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'test_connection', supplier_id: supplierId })
+        });
+
+        const data = await res.json();
+        const r = data.result || {};
+
+        if (data.success && r.ok) {
+          if (target) {
+            target.last_test_status = 'connected';
+            target.latency_ms = r.latency_ms;
+            if (r.balance !== null && r.balance !== undefined) target.last_known_balance = r.balance;
+            target.last_checked_at = r.tested_at || new Date().toISOString();
+            target.diagnostic_data = r;
+          }
+
+          appendSupplierConsoleLog(`
+            <div style="color: #34d399; font-weight: 700;">
+              ✅ ${escapeHtml(r.name || 'Supplier')} — Connection & Authentication OK (HTTP ${r.http_status || 200})
+            </div>
+            <div style="margin-top: 0.35rem; font-size: 0.78rem; color: #cbd5e1; background: rgba(0,0,0,0.3); padding: 0.5rem; border-radius: 4px;">
+              <div>• Gateway URL: <code>${escapeHtml(r.api_url)}</code></div>
+              <div>• Latency: <strong>${r.latency_ms}ms</strong></div>
+              <div>• Wallet Balance: <strong style="color:#34d399;">$${parseFloat(r.balance || 0).toFixed(2)} USD</strong></div>
+              ${r.username ? `<div>• Account: <strong>${escapeHtml(r.username)}</strong> (ID: ${r.account_id})</div>` : ''}
+              ${r.products_count ? `<div>• Permitted Products: <strong>${r.products_count} available items</strong></div>` : ''}
+            </div>
+            ${Array.isArray(r.products_sample) && r.products_sample.length > 0 ? `
+              <details style="margin-top: 0.4rem;">
+                <summary style="cursor: pointer; color: #38bdf8; font-size: 0.75rem;">View Sample Catalog (${r.products_sample.length} items)</summary>
+                <pre style="margin-top: 0.3rem; font-size: 0.7rem; background: #000; padding: 0.5rem; border-radius: 4px; overflow: auto; max-height: 150px;">${escapeHtml(JSON.stringify(r.products_sample, null, 2))}</pre>
+              </details>
+            ` : ''}
+          `);
+
+          showToast(`Connected to ${r.name}: Balance $${parseFloat(r.balance || 0).toFixed(2)}`, 'success');
+        } else {
+          if (target) {
+            target.last_test_status = r.status === 'unconfigured' ? 'unconfigured' : 'failed';
+            target.last_error = r.error || data.message || 'Connection failed';
+            target.latency_ms = r.latency_ms || 0;
+            target.diagnostic_data = r;
+          }
+
+          appendSupplierConsoleLog(`
+            <div style="color: #ef4444; font-weight: 700;">
+              ❌ ${escapeHtml(target ? target.name : 'Supplier')} — Handshake Failed
+            </div>
+            <div style="margin-top: 0.35rem; font-size: 0.78rem; color: #fca5a5; background: rgba(239,68,68,0.08); padding: 0.5rem; border-radius: 4px;">
+              <div>• Error: ${escapeHtml(r.error || data.message || 'Connection failed')}</div>
+              <div>• Latency: ${r.latency_ms || 0}ms</div>
+              <div>• Recommended Action: Verify API Key/Token and Endpoint in Supplier APIs tab.</div>
+            </div>
+          `);
+
+          showToast(`Connection failed: ${r.error || data.message || 'Unknown error'}`, 'error');
+        }
+
+        renderSupplierBalanceList();
+        updateSupplierSummaryMetrics();
+      } catch (err) {
+        if (target) {
+          target.last_test_status = 'failed';
+          target.last_error = err.message;
+        }
+        renderSupplierBalanceList();
+        appendSupplierConsoleLog(`<span style="color: #ef4444;">❌ Exception testing supplier #${supplierId}: ${escapeHtml(err.message)}</span>`);
+        showToast('Error testing supplier: ' + err.message, 'error');
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = '🔗 Test';
+        }
+      }
+    }
+
+    // Refresh ALL Balances
+    async function refreshAllSupplierBalances() {
+      const btn = document.getElementById('btn-refresh-all-balances');
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = '🔄 Refreshing...';
+      }
+
+      appendSupplierConsoleLog(`<span style="color: #fbbf24;">💰 Querying live balances across all supplier accounts...</span>`);
+
+      try {
+        const res = await fetch('/api/admin/supplier-settings', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'refresh_balance', supplier_id: 'all' })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          if (Array.isArray(data.suppliers)) {
+            data.suppliers.forEach(r => {
+              const target = cachedSupplierList.find(s => s.id === r.id);
+              if (target) {
+                if (r.balance !== null && r.balance !== undefined) target.last_known_balance = r.balance;
+                target.last_checked_at = r.tested_at || new Date().toISOString();
+              }
+            });
+          }
+
+          renderSupplierBalanceList();
+          updateSupplierSummaryMetrics();
+
+          const lastCheckEl = document.getElementById('supplier-last-check');
+          if (lastCheckEl) lastCheckEl.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+          appendSupplierConsoleLog(`<span style="color: #34d399;">✅ All balances refreshed! Total combined balance: <strong>$${parseFloat(data.total_balance || 0).toFixed(2)} USD</strong></span>`);
+          showToast(`Balances refreshed! Total: $${parseFloat(data.total_balance || 0).toFixed(2)}`, 'success');
+        } else {
+          showToast(data.message || 'Failed to refresh balances', 'error');
+        }
+      } catch (err) {
+        showToast('Error refreshing balances: ' + err.message, 'error');
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = '🔄 Refresh All Balances';
+        }
+      }
+    }
+
+    // Check Balance for a SINGLE Supplier
+    async function checkSpecificSupplierBalance(supplierId) {
+      const btn = document.getElementById(`btn-bal-s-${supplierId}`);
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = '...';
+      }
+
+      const target = cachedSupplierList.find(s => s.id === supplierId);
+      appendSupplierConsoleLog(`<span style="color: #fbbf24;">💰 Checking balance for ${target ? target.name : `Supplier #${supplierId}`}...</span>`);
+
+      try {
+        const res = await fetch('/api/admin/supplier-settings', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'refresh_balance', supplier_id: supplierId })
+        });
+
+        const data = await res.json();
+        if (data.success && data.result) {
+          const r = data.result;
+          if (target) {
+            if (r.balance !== null && r.balance !== undefined) target.last_known_balance = r.balance;
+            target.last_checked_at = r.tested_at || new Date().toISOString();
+            if (r.ok) target.last_test_status = 'connected';
+          }
+
+          renderSupplierBalanceList();
+          updateSupplierSummaryMetrics();
+
+          appendSupplierConsoleLog(`<span style="color: #34d399;">✅ ${escapeHtml(r.name)} balance is <strong>$${parseFloat(r.balance || 0).toFixed(2)} USD</strong> (${r.latency_ms}ms)</span>`);
+          showToast(`${r.name} balance: $${parseFloat(r.balance || 0).toFixed(2)}`, 'success');
+        } else {
+          showToast(data.message || 'Failed to query balance', 'error');
+        }
+      } catch (err) {
+        showToast('Error querying balance: ' + err.message, 'error');
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = '💰 Balance';
+        }
+      }
+    }
+
+    // View Detailed Diagnostics Log for a Supplier
+    function viewSupplierDiagnostics(supplierId) {
+      const target = cachedSupplierList.find(s => s.id === supplierId);
+      if (!target) return;
+
+      appendSupplierConsoleLog(`
+        <div style="color: #38bdf8; font-weight: 700;">
+          📋 DIAGNOSTICS INSPECTION: ${escapeHtml(target.name)} [ID #${target.id}]
+        </div>
+        <pre style="margin-top: 0.35rem; font-size: 0.72rem; background: #000; padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); overflow-x: auto; max-height: 250px;">${escapeHtml(JSON.stringify(target.diagnostic_data || target, null, 2))}</pre>
+      `);
+
+      const consoleEl = document.getElementById('supplier-connection-result');
+      if (consoleEl) {
+        consoleEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
+
+    // Save Low Balance Threshold
+    async function saveSupplierThreshold() {
+      const input = document.getElementById('supplier-low-balance');
+      const val = parseFloat(input?.value);
+      if (isNaN(val) || val < 0) {
+        showToast('Please enter a valid positive threshold amount', 'error');
+        return;
+      }
+
+      await saveSupplierSetting('low_balance_threshold', val);
+      const threshDisplay = document.getElementById('supplier-threshold-display');
+      if (threshDisplay) threshDisplay.textContent = `$${val.toFixed(2)}`;
+      cachedSupplierSettings.low_balance_threshold = val;
+      updateSupplierSummaryMetrics();
+      renderSupplierBalanceList();
+    }
+
+    // Direct KeyLicense API Token management
+    function toggleKlTokenVisibility() {
+      const input = document.getElementById('supplier-kl-token');
+      const btn = document.getElementById('btn-toggle-kl-token');
+      if (!input || !btn) return;
+      if (input.type === 'password') {
+        input.type = 'text';
+        btn.textContent = '🔒 Hide';
+      } else {
+        input.type = 'password';
+        btn.textContent = '👁️ Show';
+      }
+    }
+
+    async function saveSupplierKlToken() {
+      const input = document.getElementById('supplier-kl-token');
+      const token = (input?.value || '').trim();
+      if (!token) {
+        showToast('Please enter a KeyLicense token before saving', 'error');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/admin/supplier-settings', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'save_kl_token', kl_token: token })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('KeyLicense API Token saved successfully!', 'success');
+          input.value = '';
+          const klPill = document.getElementById('kl-token-status-pill');
+          if (klPill) {
+            klPill.textContent = 'Configured 🟢';
+            klPill.style.background = 'rgba(52, 211, 153, 0.15)';
+            klPill.style.color = '#34d399';
+            klPill.style.border = '1px solid rgba(52, 211, 153, 0.3)';
+          }
+          await loadSupplierSettings();
+        } else {
+          showToast(data.message || 'Failed to save KL token', 'error');
+        }
+      } catch (err) {
+        showToast('Error saving KL token: ' + err.message, 'error');
+      }
+    }
+
+    async function testKeyLicenseDirect() {
+      const klSupplier = cachedSupplierList.find(s => (s.api_type || '').toLowerCase() === 'keylicense');
+      if (klSupplier) {
+        await testSpecificSupplier(klSupplier.id);
+      } else {
+        showToast('No KeyLicense supplier gateway found in database. Add one in Supplier APIs.', 'info');
+      }
+    }
+
+    // Save individual boolean or threshold settings
     async function saveSupplierSetting(key, value) {
       try {
         const res = await fetch('/api/admin/supplier-settings', {
@@ -10210,14 +10893,72 @@ X-API-Key: wx_live_YOUR_KEY</pre>
         });
         const data = await res.json();
         if (data.success) {
-          showToast(`${key} updated`, 'success');
+          showToast(`Supplier setting updated`, 'success');
         } else {
-          showToast(data.message || 'Failed to update', 'error');
-          loadSupplierSettings(); // Reset UI
+          showToast(data.message || 'Failed to update setting', 'error');
         }
       } catch (err) {
         showToast('Error: ' + err.message, 'error');
-        loadSupplierSettings();
+      }
+    }
+
+    // Auto-delivery switch event listener
+    document.getElementById('supplier-auto-delivery')?.addEventListener('change', async (e) => {
+      await saveSupplierSetting('auto_delivery_enabled', e.target.checked);
+      const autoPill = document.getElementById('supplier-autodelivery-pill');
+      if (autoPill) {
+        if (e.target.checked) {
+          autoPill.textContent = 'ACTIVE ⚡';
+          autoPill.style.background = 'rgba(52, 211, 153, 0.15)';
+          autoPill.style.borderColor = '#34d399';
+          autoPill.style.color = '#34d399';
+        } else {
+          autoPill.textContent = 'PAUSED ⏸️';
+          autoPill.style.background = 'rgba(239, 68, 68, 0.15)';
+          autoPill.style.borderColor = '#ef4444';
+          autoPill.style.color = '#f87171';
+        }
+      }
+    });
+
+    // Bridge functions from "Supplier APIs" tab to easily test/balance check from either tab
+    async function testSupplierFromApisTab(supplierId) {
+      showToast(`Testing supplier #${supplierId}...`, 'info');
+      try {
+        const res = await fetch('/api/admin/supplier-settings', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'test_connection', supplier_id: supplierId })
+        });
+        const data = await res.json();
+        if (data.success && data.result?.ok) {
+          showToast(`Connected! Latency: ${data.result.latency_ms}ms · Balance: $${parseFloat(data.result.balance || 0).toFixed(2)}`, 'success');
+        } else {
+          showToast(`Failed: ${data.result?.error || data.message || 'Error'}`, 'error');
+        }
+      } catch (err) {
+        showToast(`Error: ${err.message}`, 'error');
+      }
+    }
+
+    async function checkSupplierBalanceFromApisTab(supplierId) {
+      showToast(`Checking balance for supplier #${supplierId}...`, 'info');
+      try {
+        const res = await fetch('/api/admin/supplier-settings', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'refresh_balance', supplier_id: supplierId })
+        });
+        const data = await res.json();
+        if (data.success && data.result) {
+          showToast(`Balance: $${parseFloat(data.result.balance || 0).toFixed(2)} USD`, 'success');
+        } else {
+          showToast(`Failed: ${data.message || 'Error'}`, 'error');
+        }
+      } catch (err) {
+        showToast(`Error: ${err.message}`, 'error');
       }
     }
 
