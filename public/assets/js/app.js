@@ -164,7 +164,7 @@ function getCurrencySymbol(curr = Store.currency) {
 }
 
 function initCurrencySelector() {
-  const buttons = document.querySelectorAll('.currency-btn, .drawer-cur-btn');
+  const buttons = document.querySelectorAll('.currency-btn, .drawer-cur-btn, .cur-tab-btn');
   buttons.forEach(btn => {
     const cur = btn.getAttribute('data-currency') || btn.getAttribute('data-cur');
     btn.classList.toggle('active', cur === Store.currency);
@@ -180,7 +180,7 @@ function setCurrency(newCurrency) {
   localStorage.setItem('wx_currency', newCurrency);
 
   // Update UI buttons
-  document.querySelectorAll('.currency-btn, .drawer-cur-btn').forEach(btn => {
+  document.querySelectorAll('.currency-btn, .drawer-cur-btn, .cur-tab-btn').forEach(btn => {
     const cur = btn.getAttribute('data-currency') || btn.getAttribute('data-cur');
     btn.classList.toggle('active', cur === newCurrency);
   });
@@ -217,6 +217,11 @@ function formatWalletBalance(balanceNpr, currency = Store.currency) {
 }
 
 function updateCurrencyPillUI() {
+  document.querySelectorAll('.cur-tab-btn, .drawer-cur-btn').forEach(btn => {
+    const cur = btn.getAttribute('data-cur');
+    btn.classList.toggle('active', cur === Store.currency);
+  });
+
   const trigger = document.getElementById('currency-pill-trigger-text');
   if (trigger) {
     const symbol = getCurrencySymbol(Store.currency);
@@ -224,9 +229,6 @@ function updateCurrencyPillUI() {
   }
   document.querySelectorAll('.currency-pill-opt').forEach(opt => {
     opt.classList.toggle('active', opt.getAttribute('data-cur') === Store.currency);
-  });
-  document.querySelectorAll('.drawer-cur-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.getAttribute('data-cur') === Store.currency);
   });
 
   if (Store.user) {
@@ -433,31 +435,14 @@ function renderLoggedInNav(user) {
 
   const initials = getUserInitials(user.name);
   const walletFormatted = formatWalletBalance(user.wallet_balance, Store.currency);
-  const symbol = getCurrencySymbol(Store.currency);
 
   container.innerHTML = `
     <div class="nav-pill-group">
-      <!-- Currency Dropdown Pill -->
-      <div class="currency-pill-dropdown" id="nav-currency-pill-wrap">
-        <button type="button" class="currency-pill-trigger" id="currency-pill-trigger-btn" aria-label="Change Currency" title="Select Currency">
-          <span class="pill-cur-icon">💱</span>
-          <span id="currency-pill-trigger-text">${symbol} ${Store.currency}</span>
-          <span style="font-size: 0.7rem; transition: transform 0.2s;">▾</span>
-        </button>
-        <div class="currency-pill-menu" id="currency-pill-menu">
-          <button type="button" class="currency-pill-opt ${Store.currency === 'NPR' ? 'active' : ''}" data-cur="NPR">
-            <span>Rs. NPR</span> <span class="cur-sub">Nepal</span>
-          </button>
-          <button type="button" class="currency-pill-opt ${Store.currency === 'INR' ? 'active' : ''}" data-cur="INR">
-            <span>₹ INR</span> <span class="cur-sub">India</span>
-          </button>
-          <button type="button" class="currency-pill-opt ${Store.currency === 'USD' ? 'active' : ''}" data-cur="USD">
-            <span>$ USD</span> <span class="cur-sub">Dollar</span>
-          </button>
-          <button type="button" class="currency-pill-opt ${Store.currency === 'PKR' ? 'active' : ''}" data-cur="PKR">
-            <span>Rs. PKR</span> <span class="cur-sub">Pakistan</span>
-          </button>
-        </div>
+      <!-- Simple 3-Currency Changer (NPR | INR | USD) -->
+      <div class="nav-simple-cur-toggle" id="nav-simple-cur-toggle" role="group" aria-label="Select Currency">
+        <button type="button" class="cur-tab-btn ${Store.currency === 'NPR' ? 'active' : ''}" data-cur="NPR" onclick="setCurrency('NPR')">NPR</button>
+        <button type="button" class="cur-tab-btn ${Store.currency === 'INR' ? 'active' : ''}" data-cur="INR" onclick="setCurrency('INR')">INR</button>
+        <button type="button" class="cur-tab-btn ${Store.currency === 'USD' ? 'active' : ''}" data-cur="USD" onclick="setCurrency('USD')">USD</button>
       </div>
 
       <!-- Day / Night 3D Theme Toggle Icon Button -->
@@ -479,7 +464,6 @@ function renderLoggedInNav(user) {
     </div>
   `;
 
-  setupCurrencyPillEvents();
   updateDrawerWithUser(user);
 }
 
@@ -487,31 +471,13 @@ function renderGuestNav() {
   const container = document.getElementById('nav-auth-container');
   if (!container) return;
 
-  const symbol = getCurrencySymbol(Store.currency);
-
   container.innerHTML = `
     <div class="nav-pill-group">
-      <!-- Currency Dropdown Pill -->
-      <div class="currency-pill-dropdown" id="nav-currency-pill-wrap">
-        <button type="button" class="currency-pill-trigger" id="currency-pill-trigger-btn" aria-label="Change Currency" title="Select Currency">
-          <span class="pill-cur-icon">💱</span>
-          <span id="currency-pill-trigger-text">${symbol} ${Store.currency}</span>
-          <span style="font-size: 0.7rem; transition: transform 0.2s;">▾</span>
-        </button>
-        <div class="currency-pill-menu" id="currency-pill-menu">
-          <button type="button" class="currency-pill-opt ${Store.currency === 'NPR' ? 'active' : ''}" data-cur="NPR">
-            <span>Rs. NPR</span> <span class="cur-sub">Nepal</span>
-          </button>
-          <button type="button" class="currency-pill-opt ${Store.currency === 'INR' ? 'active' : ''}" data-cur="INR">
-            <span>₹ INR</span> <span class="cur-sub">India</span>
-          </button>
-          <button type="button" class="currency-pill-opt ${Store.currency === 'USD' ? 'active' : ''}" data-cur="USD">
-            <span>$ USD</span> <span class="cur-sub">Dollar</span>
-          </button>
-          <button type="button" class="currency-pill-opt ${Store.currency === 'PKR' ? 'active' : ''}" data-cur="PKR">
-            <span>Rs. PKR</span> <span class="cur-sub">Pakistan</span>
-          </button>
-        </div>
+      <!-- Simple 3-Currency Changer (NPR | INR | USD) -->
+      <div class="nav-simple-cur-toggle" id="nav-simple-cur-toggle" role="group" aria-label="Select Currency">
+        <button type="button" class="cur-tab-btn ${Store.currency === 'NPR' ? 'active' : ''}" data-cur="NPR" onclick="setCurrency('NPR')">NPR</button>
+        <button type="button" class="cur-tab-btn ${Store.currency === 'INR' ? 'active' : ''}" data-cur="INR" onclick="setCurrency('INR')">INR</button>
+        <button type="button" class="cur-tab-btn ${Store.currency === 'USD' ? 'active' : ''}" data-cur="USD" onclick="setCurrency('USD')">USD</button>
       </div>
 
       <!-- Day / Night 3D Theme Toggle Icon Button -->
@@ -526,7 +492,6 @@ function renderGuestNav() {
     </div>
   `;
 
-  setupCurrencyPillEvents();
   updateDrawerWithUser(null);
 }
 
@@ -854,14 +819,13 @@ function mountDrawerAndBars() {
         </li>
       </ul>
 
-      <!-- Currency Change Row (Screenshot 3 Style) -->
+      <!-- Currency Change Row (Simple NPR, INR, USD) -->
       <div class="drawer-currency-row">
         <span class="drawer-row-lbl">💱 Currency</span>
-        <div style="display:flex; gap:5px; flex-wrap:wrap;">
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
           <button type="button" class="drawer-cur-btn ${Store.currency === 'NPR' ? 'active' : ''}" data-cur="NPR" onclick="setCurrency('NPR')">NPR</button>
           <button type="button" class="drawer-cur-btn ${Store.currency === 'INR' ? 'active' : ''}" data-cur="INR" onclick="setCurrency('INR')">INR</button>
           <button type="button" class="drawer-cur-btn ${Store.currency === 'USD' ? 'active' : ''}" data-cur="USD" onclick="setCurrency('USD')">USD</button>
-          <button type="button" class="drawer-cur-btn ${Store.currency === 'PKR' ? 'active' : ''}" data-cur="PKR" onclick="setCurrency('PKR')">PKR</button>
         </div>
       </div>
 

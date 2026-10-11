@@ -47,95 +47,186 @@
   <main class="section">
     <div class="container">
       
-      <!-- REFRESHED DASHBOARD PROFILE & STATS HERO SECTION (MATCHING SCREENSHOT 1) -->
-      <div class="dash-profile-hero-wrap">
-        <!-- 1. Centered Circular Avatar & Email Hero Card -->
-        <div class="dash-hero-profile-card">
-          <div class="dash-avatar-circle-3d" onclick="openProfileModal()" title="Click to Edit Profile">
-            <span id="dash-avatar-initials">W</span>
-            <span class="avatar-online-pulse"></span>
+      <!-- AMAZING VIP GAMER PROFILE HUD DECK -->
+      <div class="dash-profile-hero-wrap vip-hud-deck">
+        
+        <!-- 1. VIP Hologram Profile Header Card -->
+        <div class="dash-hero-profile-card vip-profile-main-card">
+          <div class="vip-avatar-col">
+            <div class="dash-avatar-circle-3d vip-avatar-portal" onclick="openProfileModal()" title="Click to Edit Profile">
+              <div class="vip-portal-ring"></div>
+              <div class="vip-portal-ring-outer"></div>
+              <div class="vip-avatar-core">
+                <span id="dash-avatar-initials">W</span>
+              </div>
+              <div class="vip-online-pulse" title="Online & Secured"></div>
+            </div>
+            <div class="vip-rank-pill">
+              <span class="vip-crown">👑</span>
+              <span id="dash-user-tier" class="vip-tier-text">VIP ELITE OPERATOR</span>
+            </div>
           </div>
-          <h2 class="dash-profile-email-title" id="dash-user-email">whitex@gmail.com</h2>
-          <div class="dash-member-since-text" id="dash-member-since">Member since 12 Oct 2026</div>
-          <div style="display: flex; justify-content: center; gap: 0.65rem; margin-top: 0.95rem; flex-wrap: wrap;">
-            <button type="button" class="dash-logout-pill-btn" onclick="handleLogout()">
-              <span>↪</span> <span>Log out</span>
-            </button>
-            <button type="button" class="dash-edit-profile-pill-btn" onclick="openProfileModal()">
-              <span>✏️</span> <span>Edit Profile</span>
-            </button>
+
+          <div class="vip-info-col">
+            <div class="vip-name-row">
+              <h2 class="vip-user-name" id="dash-user-name">White X Gamer</h2>
+              <span class="vip-verified-badge" title="Verified Customer">✓ VERIFIED</span>
+            </div>
+            
+            <div class="vip-meta-row">
+              <div class="vip-meta-item">
+                <span class="vip-meta-icon">✉</span>
+                <span id="dash-user-email">whitex@gmail.com</span>
+              </div>
+              <div class="vip-meta-item vip-uid-badge" onclick="copyDashUid()" title="Click to copy UID">
+                <span class="vip-meta-icon">🆔</span>
+                <span id="dash-user-uid">UID: #WX-0001</span>
+                <span class="copy-chip" style="font-size:0.75rem;">📋</span>
+              </div>
+              <div class="vip-meta-item">
+                <span class="vip-meta-icon">🗓️</span>
+                <span id="dash-member-since">Member since 12 Oct 2026</span>
+              </div>
+            </div>
+
+            <!-- Quick Profile CTAs -->
+            <div class="vip-profile-actions">
+              <button type="button" class="vip-action-btn primary" onclick="openProfileModal()">
+                <span>✏️</span> <span>Edit Profile</span>
+              </button>
+              <button type="button" class="vip-action-btn secondary" onclick="switchDashTab('deposit')">
+                <span>💳</span> <span>Add Credit</span>
+              </button>
+              <button type="button" class="vip-action-btn outline" onclick="handleLogout()">
+                <span>↪</span> <span>Log Out</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Right Side: Cyber Password Security Mini Card -->
+          <div class="dash-change-pass-card vip-security-mini-card">
+            <div class="vip-sec-title">
+              <span>🔒 Quick Password Shield</span>
+            </div>
+            <p class="vip-sec-desc">Keep your client account secure with a strong password.</p>
+            <form id="dash-quick-pass-form" onsubmit="handleQuickPasswordUpdate(event)" class="vip-sec-form">
+              <div class="dash-pass-input-wrap">
+                <input type="password" id="dash-quick-new-pass" placeholder="New strong password" required minlength="6" class="form-input vip-pass-input">
+                <button type="button" class="dash-pass-toggle-eye" onclick="togglePassVisibility('dash-quick-new-pass', this)" title="Show/Hide Password">👁</button>
+              </div>
+              <button type="submit" id="dash-quick-pass-btn" class="vip-pass-btn">Update</button>
+            </form>
           </div>
         </div>
 
-        <!-- 2. Account Details & Stats List Card (Matching Screenshot 1) -->
-        <div class="dash-stats-details-card">
-          <div class="dash-stat-row">
-            <div class="dash-stat-label">
-              <span class="dash-stat-icon-3d">✉</span>
-              <span>Email</span>
+        <!-- 2. The 4-Card 3D Cyber Stat HUD Grid -->
+        <div class="dash-stats-details-card vip-stat-hud-grid">
+          
+          <!-- Stat 1: Vault Balance -->
+          <div class="hud-stat-card glow-cyan">
+            <div class="hud-card-header">
+              <div class="hud-stat-icon-wrap cyan">
+                <span>💳</span>
+              </div>
+              <span class="hud-stat-tag">LIVE VAULT</span>
             </div>
-            <div class="dash-stat-value" id="stat-row-email">whitex@gmail.com</div>
-          </div>
-          <div class="dash-stat-row">
-            <div class="dash-stat-label">
-              <span class="dash-stat-icon-3d">💳</span>
-              <span>Balance</span>
+            <div class="hud-stat-title">Wallet Balance</div>
+            <div class="hud-stat-value glow-cyan-text" id="stat-row-balance">Rs0.00</div>
+            <div class="hud-card-footer">
+              <a href="/wallet.html" class="hud-mini-btn">
+                <span>+ Add Funds</span> <span>⚡</span>
+              </a>
+              <span class="hud-footer-hint">eSewa / UPI / USDT</span>
             </div>
-            <div class="dash-stat-value val-green" id="stat-row-balance">Rs0.00</div>
+            <!-- Compatibility Hook -->
+            <div style="display:none;" id="dash-wallet-bal"></div>
           </div>
-          <div class="dash-stat-row">
-            <div class="dash-stat-label">
-              <span class="dash-stat-icon-3d">🛒</span>
-              <span>Purchases</span>
+
+          <!-- Stat 2: Active Keys & Files -->
+          <div class="hud-stat-card glow-emerald">
+            <div class="hud-card-header">
+              <div class="hud-stat-icon-wrap emerald">
+                <span>🔑</span>
+              </div>
+              <span class="hud-stat-tag active">HWID ACTIVE</span>
             </div>
-            <div class="dash-stat-value" id="stat-row-purchases">0</div>
-          </div>
-          <div class="dash-stat-row">
-            <div class="dash-stat-label">
-              <span class="dash-stat-icon-3d">📈</span>
-              <span>Total spent</span>
+            <div class="hud-stat-title">My License Keys</div>
+            <div class="hud-stat-value glow-emerald-text" id="vip-keys-display">
+              <span id="stat-row-keys-count">0</span> Active
             </div>
-            <div class="dash-stat-value val-green" id="stat-row-spent">Rs0.00</div>
+            <div class="hud-card-footer">
+              <button type="button" class="hud-mini-btn" onclick="switchDashTab('keys')">
+                <span>View Keys</span> <span>➔</span>
+              </button>
+              <span class="hud-footer-hint">HWID Anti-Ban Active</span>
+            </div>
           </div>
+
+          <!-- Stat 3: Purchases & Total Spent -->
+          <div class="hud-stat-card glow-purple">
+            <div class="hud-card-header">
+              <div class="hud-stat-icon-wrap purple">
+                <span>🛒</span>
+              </div>
+              <span class="hud-stat-tag">ORDER HISTORY</span>
+            </div>
+            <div class="hud-stat-title">Total Spent & Orders</div>
+            <div class="hud-stat-value" id="stat-row-spent">Rs0.00</div>
+            <div class="hud-card-footer">
+              <button type="button" class="hud-mini-btn" onclick="switchDashTab('history')">
+                <span><span id="stat-row-purchases">0</span> Purchases</span> <span>➔</span>
+              </button>
+              <span class="hud-footer-hint">100% Instant Delivery</span>
+            </div>
+          </div>
+
+          <!-- Stat 4: Bypass Status & Official Loader -->
+          <div class="hud-stat-card glow-blue">
+            <div class="hud-card-header">
+              <div class="hud-stat-icon-wrap blue">
+                <span>🛡️</span>
+              </div>
+              <span class="hud-stat-tag safe">UNDETECTED</span>
+            </div>
+            <div class="hud-stat-title">Kernel Cheat Loader</div>
+            <div class="hud-stat-value glow-blue-text" style="font-size: 1.25rem;">Loader v4.8.2 Ready</div>
+            <div class="hud-card-footer">
+              <button type="button" class="hud-mini-btn primary-glow" onclick="triggerLoaderDownloadOrKeys()">
+                <span>Download .exe</span> <span>📥</span>
+              </button>
+              <span class="hud-footer-hint">Ring-0 Bypass</span>
+            </div>
+          </div>
+
         </div>
 
-        <!-- 3. Change Password Card (Matching Screenshot 1) -->
-        <div class="dash-change-pass-card">
-          <div class="dash-pass-title">
-            <span class="dash-stat-icon-3d">🔒</span>
-            <span>Change Password</span>
-          </div>
-          <p class="dash-pass-desc">Keep your account secure with a strong password.</p>
-          <form id="dash-quick-pass-form" onsubmit="handleQuickPasswordUpdate(event)" class="dash-quick-pass-form">
-            <div class="dash-pass-input-wrap">
-              <input type="password" id="dash-quick-new-pass" placeholder="New password" required minlength="6" class="form-input dash-pass-input">
-              <button type="button" class="dash-pass-toggle-eye" onclick="togglePassVisibility('dash-quick-new-pass', this)" title="Show/Hide Password">👁</button>
-            </div>
-            <button type="submit" id="dash-quick-pass-btn" class="btn btn-outline btn-sm dash-pass-submit-btn">Update</button>
-          </form>
-        </div>
-
-        <!-- 4. 3D Action Buttons Row (Matching Screenshot 1) -->
-        <div class="dash-3d-actions-row">
-          <button type="button" class="dash-action-3d-btn" onclick="switchDashTab('history')">
-            <span class="dash-action-icon-3d">🛒</span>
-            <span>Purchase History</span>
+        <!-- 3. Tactile 3D Action Command Row -->
+        <div class="dash-3d-actions-row vip-tactile-action-row">
+          <button type="button" class="dash-action-3d-btn vip-tactile-btn" onclick="switchDashTab('keys')">
+            <span class="tactile-icon">🔑</span>
+            <span class="tactile-label">My Keys & Files</span>
           </button>
-          <button type="button" class="dash-action-3d-btn" onclick="switchDashTab('deposit')">
-            <span class="dash-action-icon-3d">💳</span>
-            <span>Deposit History</span>
+          <button type="button" class="dash-action-3d-btn vip-tactile-btn" onclick="switchDashTab('history')">
+            <span class="tactile-icon">🛍️</span>
+            <span class="tactile-label">Purchase History</span>
           </button>
-          <button type="button" class="dash-action-3d-btn" onclick="triggerLoaderDownloadOrKeys()">
-            <span class="dash-action-icon-3d">📥</span>
-            <span>Download All</span>
+          <button type="button" class="dash-action-3d-btn vip-tactile-btn" onclick="switchDashTab('deposit')">
+            <span class="tactile-icon">💳</span>
+            <span class="tactile-label">Deposit History</span>
+          </button>
+          <button type="button" class="dash-action-3d-btn vip-tactile-btn" onclick="switchDashTab('referrals')">
+            <span class="tactile-icon">🎁</span>
+            <span class="tactile-label">Refer & Earn (Bonus)</span>
+          </button>
+          <button type="button" class="dash-action-3d-btn vip-tactile-btn highlight" onclick="triggerLoaderDownloadOrKeys()">
+            <span class="tactile-icon">📥</span>
+            <span class="tactile-label">Download Cheat Loader</span>
           </button>
         </div>
 
-        <!-- Hidden legacy hooks for script backward compatibility -->
-        <div style="display:none;" id="dash-user-name"></div>
-        <div style="display:none;" id="dash-user-tier"></div>
+        <!-- Compatibility Hooks for legacy scripts -->
+        <div style="display:none;" id="stat-row-email"></div>
         <div style="display:none;" id="dash-user-phone"></div>
-        <div style="display:none;" id="dash-wallet-bal"></div>
       </div>
 
       <!-- Category-wise Separated Dashboard Tabs Bar -->
@@ -210,40 +301,40 @@
         </div>
 
         <!-- System Security & Cheat Undetected Live Status Indicator -->
-        <div class="product-card" style="padding: 1.5rem; margin-bottom: 1.6rem; background: radial-gradient(ellipse at 85% 20%, rgba(16, 185, 129, 0.06) 0%, rgba(8, 13, 24, 0.95) 75%), #050812; border: 1.5px solid rgba(16, 185, 129, 0.28);">
+        <div class="product-card" style="padding: 1.5rem; margin-bottom: 1.6rem; border: 1.5px solid rgba(16, 185, 129, 0.28);">
           <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
             <div style="display: flex; align-items: center; gap: 0.6rem;">
               <span style="font-size: 1.3rem;">🛡️</span>
-              <h4 style="color: #fff; margin: 0; font-size: 1.1rem;">// LIVE ANTI-CHEAT BYPASS STATUS</h4>
+              <h4 style="margin: 0; font-size: 1.1rem; color: var(--text-main);">// LIVE ANTI-CHEAT BYPASS STATUS</h4>
             </div>
             <span class="badge badge-undetected" style="font-size: 0.78rem; padding: 4px 10px;">ALL ENGINES OPERATIONAL 🟢</span>
           </div>
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.85rem;">
-            <div style="background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center;">
-              <span style="font-size: 0.82rem; font-weight: 700; color: #cbd5e1;">Riot Vanguard</span>
+            <div class="card-inner-box" style="background: var(--bg-card-inner, rgba(255,255,255,0.03)); border: 1px solid var(--bg-card-border); border-radius: 8px; padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 0.82rem; font-weight: 700; color: var(--text-main);">Riot Vanguard</span>
               <span style="color: #34d399; font-weight: 800; font-size: 0.78rem;">UNDETECTED 🟢</span>
             </div>
-            <div style="background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center;">
-              <span style="font-size: 0.82rem; font-weight: 700; color: #cbd5e1;">Easy Anti-Cheat</span>
+            <div class="card-inner-box" style="background: var(--bg-card-inner, rgba(255,255,255,0.03)); border: 1px solid var(--bg-card-border); border-radius: 8px; padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 0.82rem; font-weight: 700; color: var(--text-main);">Easy Anti-Cheat</span>
               <span style="color: #34d399; font-weight: 800; font-size: 0.78rem;">UNDETECTED 🟢</span>
             </div>
-            <div style="background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center;">
-              <span style="font-size: 0.82rem; font-weight: 700; color: #cbd5e1;">BattlEye</span>
+            <div class="card-inner-box" style="background: var(--bg-card-inner, rgba(255,255,255,0.03)); border: 1px solid var(--bg-card-border); border-radius: 8px; padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 0.82rem; font-weight: 700; color: var(--text-main);">BattlEye</span>
               <span style="color: #34d399; font-weight: 800; font-size: 0.78rem;">UNDETECTED 🟢</span>
             </div>
-            <div style="background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center;">
-              <span style="font-size: 0.82rem; font-weight: 700; color: #cbd5e1;">Mobile BR Mods</span>
+            <div class="card-inner-box" style="background: var(--bg-card-inner, rgba(255,255,255,0.03)); border: 1px solid var(--bg-card-border); border-radius: 8px; padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 0.82rem; font-weight: 700; color: var(--text-main);">Mobile BR Mods</span>
               <span style="color: #34d399; font-weight: 800; font-size: 0.78rem;">UNDETECTED 🟢</span>
             </div>
           </div>
         </div>
 
         <!-- Quick Download Loader Banner in Overview -->
-        <div style="background: radial-gradient(ellipse at 85% 40%, rgba(0, 139, 163, 0.18) 0%, rgba(4, 18, 26, 0.95) 60%), #030c12; border: 1.5px solid rgba(0, 195, 255, 0.32); border-radius: var(--radius-lg); padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; box-shadow: 0 8px 25px rgba(0,0,0,0.7);">
+        <div class="card-inner-box" style="background: var(--bg-card, #030c12); border: 1.5px solid rgba(0, 195, 255, 0.32); border-radius: var(--radius-lg); padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; box-shadow: 0 8px 25px rgba(0,0,0,0.5);">
           <div style="display: flex; align-items: center; gap: 1rem;">
             <div style="font-size: 2rem;">💾</div>
             <div>
-              <h4 style="color: #fff; margin-bottom: 0.2rem;">Official White X Cheat Loader (v4.8.2)</h4>
+              <h4 style="color: var(--text-main); margin-bottom: 0.2rem;">Official White X Cheat Loader (v4.8.2)</h4>
               <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0;">
                 Universal bypass loader with automated key validation, HWID spoofing, and driver injection.
               </p>
@@ -258,11 +349,11 @@
       <!-- TAB 2: MY KEYS & DOWNLOAD FILES (KEY AND FILE ONE DEDICATED SECTION) -->
       <div id="tab-pane-keys" class="tab-pane-content" style="display:none;">
         <!-- Quick Download Loader Banner -->
-        <div style="background: radial-gradient(ellipse at 85% 40%, rgba(0, 139, 163, 0.18) 0%, rgba(4, 18, 26, 0.95) 60%), #030c12; border: 1.5px solid rgba(0, 195, 255, 0.32); border-radius: var(--radius-lg); padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; box-shadow: 0 8px 25px rgba(0,0,0,0.7), inset 0 0 15px rgba(0,139,163,0.1);">
+        <div class="card-inner-box" style="background: var(--bg-card, #030c12); border: 1.5px solid rgba(0, 195, 255, 0.32); border-radius: var(--radius-lg); padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; box-shadow: 0 8px 25px rgba(0,0,0,0.5);">
           <div style="display: flex; align-items: center; gap: 1rem;">
             <div style="font-size: 2rem;">💾</div>
             <div>
-              <h4 style="color: #fff; margin-bottom: 0.2rem;">Official White X Cheat Loader (v4.8.2)</h4>
+              <h4 style="color: var(--text-main); margin-bottom: 0.2rem;">Official White X Cheat Loader (v4.8.2)</h4>
               <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0;">
                 Universal bypass loader with automated key validation, HWID spoofing, and driver injection.
               </p>
@@ -276,7 +367,7 @@
         <div class="product-card" style="padding: 2rem; margin-bottom: 2rem;">
           <div class="section-head" style="margin-bottom: 1.25rem;">
             <div>
-              <h3 style="color: #fff;">// MY ACTIVE LICENSE KEYS & DOWNLOAD FILES</h3>
+              <h3 style="color: var(--text-main);">// MY ACTIVE LICENSE KEYS & DOWNLOAD FILES</h3>
               <p style="font-size: 0.88rem; color: var(--text-muted);">All your purchased cheat keys and download files in one place. Auto-refreshes pending orders every 10s.</p>
             </div>
             <a href="/products.html" class="btn btn-primary btn-sm">+ Buy New Key</a>
@@ -293,9 +384,9 @@
       <!-- TAB 3: DEPOSIT & WALLET -->
       <div id="tab-pane-deposit" class="tab-pane-content" style="display:none;">
         <div class="product-card" style="padding: 2rem; margin-bottom: 2rem;">
-          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem; margin-bottom: 1.5rem; padding-bottom: 1.25rem; border-bottom: 1px solid rgba(255,255,255,0.08);">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem; margin-bottom: 1.5rem; padding-bottom: 1.25rem; border-bottom: 1px solid var(--bg-card-border);">
             <div>
-              <h3 style="color: #fff; margin-bottom: 0.35rem;">// WALLET BALANCE & INSTANT DEPOSIT</h3>
+              <h3 style="color: var(--text-main); margin-bottom: 0.35rem;">// WALLET BALANCE & INSTANT DEPOSIT</h3>
               <p style="font-size: 0.88rem; color: var(--text-muted); margin: 0;">Add funds via digital wallets, UPI, or crypto to enjoy 1-click purchases.</p>
             </div>
             <a href="/wallet.html" class="btn btn-primary btn-glow">
@@ -305,19 +396,19 @@
 
           <!-- Quick Balance Stats -->
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; margin-bottom: 2rem;">
-            <div style="background: #080c18; border: 1.5px solid rgba(0, 240, 255, 0.3); border-radius: var(--radius-md); padding: 1.25rem;">
+            <div class="card-inner-box" style="background: var(--bg-card, #080c18); border: 1.5px solid rgba(0, 240, 255, 0.3); border-radius: var(--radius-md); padding: 1.25rem;">
               <div style="font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">NPR Balance</div>
               <div id="deposit-bal-npr" style="font-family: var(--font-heading); font-size: 1.6rem; color: #00f0ff; font-weight: 800; margin-top: 0.25rem;">
                 NPR 0.00
               </div>
             </div>
-            <div style="background: #080c18; border: 1.5px solid rgba(255, 170, 0, 0.3); border-radius: var(--radius-md); padding: 1.25rem;">
+            <div class="card-inner-box" style="background: var(--bg-card, #080c18); border: 1.5px solid rgba(255, 170, 0, 0.3); border-radius: var(--radius-md); padding: 1.25rem;">
               <div style="font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">USD Equivalent</div>
               <div id="deposit-bal-usd" style="font-family: var(--font-heading); font-size: 1.6rem; color: #ffb703; font-weight: 800; margin-top: 0.25rem;">
                 $0.00
               </div>
             </div>
-            <div style="background: #080c18; border: 1.5px solid rgba(52, 211, 153, 0.3); border-radius: var(--radius-md); padding: 1.25rem;">
+            <div class="card-inner-box" style="background: var(--bg-card, #080c18); border: 1.5px solid rgba(52, 211, 153, 0.3); border-radius: var(--radius-md); padding: 1.25rem;">
               <div style="font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">INR Equivalent</div>
               <div id="deposit-bal-inr" style="font-family: var(--font-heading); font-size: 1.6rem; color: #34d399; font-weight: 800; margin-top: 0.25rem;">
                 ₹0.00
@@ -326,21 +417,21 @@
           </div>
 
           <!-- Deposit Gateways Preview -->
-          <h4 style="color:#fff; font-size:0.95rem; margin-bottom:0.75rem;">// INSTANT SUPPORTED GATEWAYS</h4>
+          <h4 style="color:var(--text-main); font-size:0.95rem; margin-bottom:0.75rem;">// INSTANT SUPPORTED GATEWAYS</h4>
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
-            <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); border-radius:10px; padding:1.25rem; text-align:center;">
+            <div class="card-inner-box" style="background:var(--bg-card-inner, rgba(255,255,255,0.02)); border:1px solid var(--bg-card-border); border-radius:10px; padding:1.25rem; text-align:center;">
               <div style="font-size:1.8rem; margin-bottom:0.4rem;">🟢</div>
-              <div style="font-weight:700; color:#fff;">eSewa / Khalti</div>
+              <div style="font-weight:700; color:var(--text-main);">eSewa / Khalti</div>
               <div style="font-size:0.75rem; color:#94a3b8; margin-top:0.2rem;">Nepal QR / Mobile Wallet</div>
             </div>
-            <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); border-radius:10px; padding:1.25rem; text-align:center;">
+            <div class="card-inner-box" style="background:var(--bg-card-inner, rgba(255,255,255,0.02)); border:1px solid var(--bg-card-border); border-radius:10px; padding:1.25rem; text-align:center;">
               <div style="font-size:1.8rem; margin-bottom:0.4rem;">🇮🇳</div>
-              <div style="font-weight:700; color:#fff;">UPI / GPay / PhonePe</div>
+              <div style="font-weight:700; color:var(--text-main);">UPI / GPay / PhonePe</div>
               <div style="font-size:0.75rem; color:#94a3b8; margin-top:0.2rem;">Direct UPI Transfer</div>
             </div>
-            <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); border-radius:10px; padding:1.25rem; text-align:center;">
+            <div class="card-inner-box" style="background:var(--bg-card-inner, rgba(255,255,255,0.02)); border:1px solid var(--bg-card-border); border-radius:10px; padding:1.25rem; text-align:center;">
               <div style="font-size:1.8rem; margin-bottom:0.4rem;">🪙</div>
-              <div style="font-weight:700; color:#fff;">USDT / Binance</div>
+              <div style="font-weight:700; color:var(--text-main);">USDT / Binance</div>
               <div style="font-size:0.75rem; color:#94a3b8; margin-top:0.2rem;">Crypto TRC20 / BEP20</div>
             </div>
           </div>
@@ -359,7 +450,7 @@
         <div class="product-card" style="padding: 2rem; margin-bottom: 2rem; border-color: rgba(0, 240, 255, 0.35); background: radial-gradient(ellipse at 90% 15%, rgba(0, 240, 255, 0.08) 0%, rgba(8, 12, 24, 0.98) 75%), #050812;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.08);">
             <div>
-              <h3 style="color: #fff; margin-bottom: 0.25rem;">// USER & RESELLER PROFILE SETTINGS</h3>
+              <h3 style="color: var(--text-main); margin-bottom: 0.25rem;">// USER & RESELLER PROFILE SETTINGS</h3>
               <p style="font-size: 0.88rem; color: var(--text-muted); margin: 0;">Update your account alias, contact phone number, and password.</p>
             </div>
             <button type="button" onclick="openProfileModal()" class="btn btn-outline btn-sm">
@@ -417,7 +508,7 @@
           <div>
             <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.35rem;">
               <span style="font-size: 1.5rem;">⚡</span>
-              <h3 style="color: #fff; margin: 0; font-size: 1.35rem;">// RESELLER API & DEVELOPER PORTAL</h3>
+              <h3 style="color: var(--text-main); margin: 0; font-size: 1.35rem;">// RESELLER API & DEVELOPER PORTAL</h3>
               <span id="res-portal-status-badge" class="badge" style="background: rgba(52, 211, 153, 0.15); border: 1px solid #34d399; color: #34d399; font-weight: 700;">
                 ACTIVE & CONNECTED 🟢
               </span>
@@ -570,7 +661,7 @@
         <!-- 4. Code Snippet Tabs -->
         <div style="background: #02040a; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.5rem;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
-            <div style="font-size: 0.85rem; color: #fff; font-weight: 700;">💻 Integration Code Examples & Bot Guide</div>
+            <div style="font-size: 0.85rem; color: var(--text-main); font-weight: 700;">💻 Integration Code Examples & Bot Guide</div>
             <div style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
               <button type="button" class="btn btn-sm res-code-tab" onclick="switchResellerCodeTab('curl')" id="tab-btn-curl" style="padding: 3px 8px; font-size: 0.75rem; background: var(--primary); color: #fff;">cURL</button>
               <button type="button" class="btn btn-sm res-code-tab" onclick="switchResellerCodeTab('python')" id="tab-btn-python" style="padding: 3px 8px; font-size: 0.75rem;">Python</button>
@@ -583,7 +674,7 @@
         </div>
 
         <!-- 5. Recent API Key Generations Table -->
-        <h4 style="color: #fff; font-size: 0.95rem; margin-bottom: 0.75rem;">// YOUR API KEY GENERATION HISTORY</h4>
+        <h4 style="color: var(--text-main); font-size: 0.95rem; margin-bottom: 0.75rem;">// YOUR API KEY GENERATION HISTORY</h4>
         <div class="table-responsive">
           <table class="table-custom">
             <thead>
@@ -619,7 +710,7 @@
                 <span id="ref-reward-tag" class="badge" style="background: rgba(255, 0, 85, 0.2); border: 1.5px solid #ff0055; color: #ff0055; font-weight: 800; letter-spacing: 1px; font-size: 0.76rem; margin-bottom: 0.5rem; display: inline-block;">
                   🔥 DOUBLE WALLET CASH OFFER ACTIVE
                 </span>
-                <h2 style="font-family: var(--font-heading); color: #fff; font-size: 1.55rem; margin: 0 0 0.4rem 0; font-weight: 800;">
+                <h2 style="font-family: var(--font-heading); color: var(--text-main); font-size: 1.55rem; margin: 0 0 0.4rem 0; font-weight: 800;">
                   GIVE NPR 50, GET NPR 50 FREE WALLET BALANCE!
                 </h2>
                 <p style="font-size: 0.88rem; color: #cbd5e1; margin: 0; max-width: 680px; line-height: 1.5;">
@@ -697,7 +788,7 @@
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.75rem;">
           <div style="background: rgba(13, 13, 21, 0.75); border: 1px solid var(--bg-card-border); border-radius: var(--radius-md); padding: 1rem 1.25rem;">
             <div style="font-size: 0.74rem; color: var(--text-dim); text-transform: uppercase;">This Month's Limit</div>
-            <div id="stat-ref-month" style="font-family: var(--font-heading); font-size: 1.45rem; color: #fff; font-weight: 800; margin-top: 0.25rem;">
+            <div id="stat-ref-month" style="font-family: var(--font-heading); font-size: 1.45rem; color: var(--text-main); font-weight: 800; margin-top: 0.25rem;">
               1 Person / Month
             </div>
             <div id="stat-ref-remaining" style="font-size: 0.73rem; color: #34d399; margin-top: 0.2rem;">
@@ -727,7 +818,7 @@
         </div>
 
         <!-- Referral History Table -->
-        <h4 style="color: #fff; font-size: 0.95rem; margin-bottom: 0.75rem;">// YOUR REFERRED FRIENDS</h4>
+        <h4 style="color: var(--text-main); font-size: 0.95rem; margin-bottom: 0.75rem;">// YOUR REFERRED FRIENDS</h4>
         <div class="table-responsive">
           <table class="table-custom">
             <thead>
@@ -756,7 +847,7 @@
         <div class="product-card" style="padding: 2rem;">
           <div class="section-head" style="margin-bottom: 1.25rem;">
             <div>
-              <h3 style="color: #fff;">// ORDER HISTORY</h3>
+              <h3 style="color: var(--text-main);">// ORDER HISTORY</h3>
               <p style="font-size: 0.88rem; color: var(--text-muted);">Complete record of all orders and license key allocations</p>
             </div>
           </div>
@@ -895,6 +986,12 @@
       const inEmail = document.getElementById('dash-inline-email');
       if (inEmail) inEmail.value = user.email || '';
 
+      // UID Badge
+      const uidEl = document.getElementById('dash-user-uid');
+      if (uidEl && user.id) {
+        uidEl.textContent = `UID: #WX-${String(user.id).padStart(4, '0')}`;
+      }
+
       const tierBadge = document.getElementById('dash-user-tier');
       const resellerSec = document.getElementById('sec-reseller-api');
       if (user.user_type === 'reseller') {
@@ -909,6 +1006,17 @@
         tierBadge.textContent = 'STANDARD CUSTOMER';
         if (resellerSec) resellerSec.style.display = 'none';
       }
+    }
+
+    function copyDashUid() {
+      const uidEl = document.getElementById('dash-user-uid');
+      if (!uidEl) return;
+      const text = uidEl.textContent.replace('UID: ', '').trim();
+      navigator.clipboard.writeText(text).then(() => {
+        if (typeof showToast === 'function') showToast(`UID ${text} copied to clipboard!`, 'success');
+      }).catch(() => {
+        if (typeof showToast === 'function') showToast(`UID ${text}`, 'info');
+      });
     }
 
     /* ==========================================================
@@ -1237,12 +1345,15 @@
         const tabKeysBadge = document.getElementById('tab-count-keys');
         if (tabKeysBadge) tabKeysBadge.textContent = totalDeliveredKeys;
 
+        const statKeysCount = document.getElementById('stat-row-keys-count');
+        if (statKeysCount) statKeysCount.textContent = totalDeliveredKeys;
+
         const overviewKeysCount = document.getElementById('overview-keys-count');
         if (overviewKeysCount) overviewKeysCount.textContent = `${totalDeliveredKeys} Key${totalDeliveredKeys === 1 ? '' : 's'}`;
 
         if (deliveredOrders.length === 0 && pendingOrderIds.size === 0) {
           keysContainer.innerHTML = `
-            <div style="text-align: center; padding: 2.5rem; background: #0d0d15; border-radius: var(--radius-md);">
+            <div style="text-align: center; padding: 2.5rem; background: var(--bg-card, #0d0d15); border: 1px solid var(--bg-card-border); border-radius: var(--radius-md);">
               <p style="color: var(--text-dim); margin-bottom: 1rem;">No license keys purchased yet.</p>
               <a href="/products.html" class="btn btn-outline btn-sm">Explore Cheats & Softwares</a>
             </div>
@@ -1255,9 +1366,9 @@
             const expiry = o.delivery_expires_at ? formatDate(o.delivery_expires_at) : 'N/A';
             const instructions = getUsageInstructions(o.product_name);
             html += `
-              <div style="background: #0d0d15; border: 1px solid var(--bg-card-border); border-radius: var(--radius-md); padding: 1.25rem;">
+              <div class="card-inner-box" style="background: var(--bg-card, #0d0d15); border: 1px solid var(--bg-card-border); border-radius: var(--radius-md); padding: 1.25rem;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                  <strong style="color: #fff; font-size: 1.05rem;">${escapeHtml(o.product_name)}</strong>
+                  <strong style="color: var(--text-main, #fff); font-size: 1.05rem;">${escapeHtml(o.product_name)}</strong>
                   <span class="badge badge-undetected">${escapeHtml(o.plan_name)}</span>
                 </div>
                 <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-dim); margin-bottom: 0.5rem;">
@@ -1286,16 +1397,16 @@
                 ` : ''}
                 <details style="margin-top: 1rem;">
                   <summary style="cursor: pointer; color: var(--text-muted); font-size: 0.8rem;">📖 Usage Instructions</summary>
-                  <pre style="margin-top: 0.5rem; font-size: 0.75rem; color: var(--text-dim); white-space: pre-wrap; background: #0d0d15; padding: 0.75rem; border-radius: var(--radius-sm);">${escapeHtml(instructions)}</pre>
+                  <pre style="margin-top: 0.5rem; font-size: 0.75rem; color: var(--text-dim); white-space: pre-wrap; background: var(--bg-card-inner, rgba(255,255,255,0.03)); padding: 0.75rem; border-radius: var(--radius-sm);">${escapeHtml(instructions)}</pre>
                 </details>
                 ${o.download_links && o.download_links.length > 0 ? `
                   <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--bg-card-border);">
                     <div style="font-size: 0.72rem; color: var(--primary); font-weight: 700; margin-bottom: 0.5rem;">📁 Download Links</div>
                     <div style="display: flex; flex-direction: column; gap: 0.5rem;">
                       ${o.download_links.map(dl => `
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; background: #0d0d15; border: 1px solid var(--bg-card-border); border-radius: var(--radius-sm);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; background: var(--bg-card-inner, rgba(255,255,255,0.03)); border: 1px solid var(--bg-card-border); border-radius: var(--radius-sm);">
                           <div style="flex: 1; min-width: 0;">
-                            <div style="font-weight: 600; color: #fff; font-size: 0.85rem;">${escapeHtml(dl.name)}</div>
+                            <div style="font-weight: 600; color: var(--text-main, #fff); font-size: 0.85rem;">${escapeHtml(dl.name)}</div>
                             <a href="${escapeHtml(dl.link)}" target="_blank" style="font-size: 0.75rem; color: var(--primary); text-decoration: none; font-family: monospace; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(dl.link)}</a>
                           </div>
                           <button class="btn btn-outline btn-sm" onclick="copyToClipboard('${escapeHtml(dl.link)}')" style="font-size: 0.7rem; white-space: nowrap;">📋 Copy Link</button>
@@ -1323,9 +1434,9 @@
             const isFlagged = o.delivery_display_status === 'flagged';
             
             html += `
-              <div style="background: #0d0d15; border: 1px solid ${isFailed || isFlagged ? 'var(--danger)' : 'var(--warning)'}; border-radius: var(--radius-md); padding: 1.25rem;">
+              <div class="card-inner-box" style="background: var(--bg-card, #0d0d15); border: 1px solid ${isFailed || isFlagged ? 'var(--danger)' : 'var(--warning)'}; border-radius: var(--radius-md); padding: 1.25rem;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                  <strong style="color: #fff; font-size: 1.05rem;">${escapeHtml(o.product_name)}</strong>
+                  <strong style="color: var(--text-main, #fff); font-size: 1.05rem;">${escapeHtml(o.product_name)}</strong>
                   <span class="badge badge-${isFailed || isFlagged ? 'danger' : 'warning'}">
                     ${isPending ? '⏳ Preparing...' : isFlagged ? '🔴 Needs Admin Review' : '❌ Failed'}
                   </span>
@@ -1570,7 +1681,7 @@
 
           return `
             <tr>
-              <td><strong style="color: #fff;">${escapeHtml(h.referee_name)}</strong></td>
+              <td><strong style="color: var(--text-main);">${escapeHtml(h.referee_name)}</strong></td>
               <td><span style="font-family: var(--font-mono); font-size: 0.85rem; color: #94a3b8;">${escapeHtml(h.referee_email)}</span></td>
               <td>${rewardHtml}</td>
               <td style="color: var(--text-dim); font-size: 0.84rem;">${dateStr}</td>
@@ -1715,7 +1826,7 @@
         return `
           <tr>
             <td>
-              <div style="font-weight: 700; color: #fff;">${escapeHtml(pl.product_name)}</div>
+              <div style="font-weight: 700; color: var(--text-main);">${escapeHtml(pl.product_name)}</div>
               <div style="font-size: 0.72rem; color: var(--text-dim);">${escapeHtml(pl.category || 'Cheat')}</div>
             </td>
             <td>
@@ -2123,7 +2234,7 @@ async function deliverKeyToCustomer(chatId, selectedPlanId) {
 
         return `
           <tr>
-            <td><span style="font-family: var(--font-mono); color: #fff; font-weight: 700;">${escapeHtml(l.order_code || '-')}</span></td>
+            <td><span style="font-family: var(--font-mono); color: var(--text-main); font-weight: 700;">${escapeHtml(l.order_code || '-')}</span></td>
             <td><strong style="color: #38bdf8;">${escapeHtml(l.product_name || 'Product')}</strong> <span style="font-size: 0.78rem; color: var(--text-dim);">(${escapeHtml(l.plan_name || '')})</span></td>
             <td>
               <div style="display: flex; align-items: center; gap: 0.4rem;">
@@ -2131,7 +2242,7 @@ async function deliverKeyToCustomer(chatId, selectedPlanId) {
                 ${keyStr !== '-' ? `<button type="button" class="btn btn-outline btn-sm" onclick="navigator.clipboard.writeText('${escapeHtml(keyStr)}'); showToast('Key copied! 📋', 'success');" style="padding: 1px 6px; font-size: 0.7rem;">📋</button>` : ''}
               </div>
             </td>
-            <td><strong style="color: #fff; font-family: var(--font-heading);">NPR ${parseFloat(l.amount_npr || 0).toFixed(2)}</strong></td>
+            <td><strong style="color: var(--text-main); font-family: var(--font-heading);">NPR ${parseFloat(l.amount_npr || 0).toFixed(2)}</strong></td>
             <td style="color: var(--text-dim); font-size: 0.84rem;">${formatDate(l.created_at)}</td>
             <td>${badge}</td>
           </tr>

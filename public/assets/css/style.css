@@ -5940,4 +5940,848 @@ a:hover {
   }
 }
 
+/* ==============================================================
+   SIMPLE SEGMENTED CURRENCY CHANGER (NPR | INR | USD)
+   ============================================================== */
+.nav-simple-cur-toggle {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(10, 15, 28, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  padding: 3px 4px;
+  gap: 3px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  user-select: none;
+}
+
+.cur-tab-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-family: var(--font-heading, inherit);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  outline: none;
+  line-height: 1.2;
+}
+
+.cur-tab-btn:hover {
+  color: #00f0ff;
+  background: rgba(0, 240, 255, 0.1);
+}
+
+.cur-tab-btn.active {
+  background: linear-gradient(135deg, #00f0ff 0%, #0284c7 100%) !important;
+  color: #030712 !important;
+  font-weight: 900 !important;
+  box-shadow: 0 2px 10px rgba(0, 240, 255, 0.5);
+  transform: scale(1.02);
+}
+
+[data-theme="light"] .nav-simple-cur-toggle {
+  background: #ffffff !important;
+  border: 1.5px solid #cbd5e1 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+}
+
+[data-theme="light"] .cur-tab-btn {
+  color: #475569 !important;
+}
+
+[data-theme="light"] .cur-tab-btn:hover {
+  color: #0284c7 !important;
+  background: #f1f5f9 !important;
+}
+
+[data-theme="light"] .cur-tab-btn.active {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.35) !important;
+}
+
+/* ==============================================================
+   AMAZING VIP GAMER PROFILE HUD DECK
+   ============================================================== */
+.dash-profile-hero-wrap.vip-hud-deck {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+/* 1. Holographic VIP Profile Main Card */
+.vip-profile-main-card {
+  background: radial-gradient(ellipse at 85% 15%, rgba(0, 240, 255, 0.08) 0%, rgba(10, 15, 30, 0.96) 70%), #080c18;
+  border: 1.5px solid rgba(0, 240, 255, 0.28);
+  border-radius: 20px;
+  padding: 1.75rem 2rem;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.65), 0 0 25px rgba(0, 240, 255, 0.12);
+  display: grid;
+  grid-template-columns: auto 1fr 320px;
+  gap: 2rem;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.vip-profile-main-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #00f0ff 30%, #34d399 70%, transparent);
+  opacity: 0.8;
+}
+
+/* Holographic Avatar Portal */
+.vip-avatar-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.vip-avatar-portal {
+  width: 90px;
+  height: 90px;
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.vip-avatar-portal:hover {
+  transform: scale(1.06);
+}
+
+.vip-portal-ring {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px dashed rgba(0, 240, 255, 0.7);
+  animation: vipRotateRing 14s linear infinite;
+}
+
+.vip-portal-ring-outer {
+  position: absolute;
+  inset: -10px;
+  border-radius: 50%;
+  border: 1px solid rgba(52, 211, 153, 0.35);
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
+}
+
+@keyframes vipRotateRing {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.vip-avatar-core {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #00f0ff 0%, #3b82f6 50%, #8b5cf6 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #030712;
+  font-family: var(--font-heading);
+  font-weight: 900;
+  font-size: 2.2rem;
+  box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.5), 0 8px 24px rgba(0, 240, 255, 0.4);
+  z-index: 1;
+}
+
+.vip-online-pulse {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #10b981;
+  border: 3px solid #080c18;
+  box-shadow: 0 0 10px #10b981;
+  z-index: 2;
+  animation: vipRadarPulse 2s infinite ease-in-out;
+}
+
+@keyframes vipRadarPulse {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+  70% { transform: scale(1.15); box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+.vip-rank-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.45);
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #fbbf24;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+/* User Identity Info */
+.vip-info-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.vip-name-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.vip-user-name {
+  font-family: var(--font-heading);
+  font-size: 1.65rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+.vip-verified-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(16, 185, 129, 0.16);
+  border: 1px solid #10b981;
+  color: #34d399;
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.5px;
+}
+
+.vip-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+  color: #94a3b8;
+}
+
+.vip-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.vip-uid-badge {
+  background: rgba(0, 240, 255, 0.08);
+  border: 1px solid rgba(0, 240, 255, 0.25);
+  padding: 3px 8px;
+  border-radius: 6px;
+  color: #00f0ff;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.vip-uid-badge:hover {
+  background: rgba(0, 240, 255, 0.18);
+  border-color: #00f0ff;
+  transform: translateY(-1px);
+}
+
+.vip-profile-actions {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.vip-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0.45rem 0.95rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  text-decoration: none;
+}
+
+.vip-action-btn.primary {
+  background: linear-gradient(135deg, #00f0ff 0%, #0284c7 100%);
+  border: 1px solid #00f0ff;
+  color: #030712;
+  box-shadow: 0 4px 14px rgba(0, 240, 255, 0.3);
+}
+
+.vip-action-btn.primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0, 240, 255, 0.45);
+}
+
+.vip-action-btn.secondary {
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #34d399;
+}
+
+.vip-action-btn.secondary:hover {
+  background: rgba(16, 185, 129, 0.24);
+  transform: translateY(-2px);
+}
+
+.vip-action-btn.outline {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #cbd5e1;
+}
+
+.vip-action-btn.outline:hover {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: #ef4444;
+  color: #ef4444;
+  transform: translateY(-2px);
+}
+
+/* Right Side: Security Mini Card */
+.vip-security-mini-card {
+  background: rgba(4, 8, 20, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.vip-sec-title {
+  font-family: var(--font-heading);
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #818cf8;
+  letter-spacing: 0.5px;
+}
+
+.vip-sec-desc {
+  font-size: 0.74rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.vip-sec-form {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 0.2rem;
+}
+
+.vip-pass-input {
+  height: 36px !important;
+  font-size: 0.82rem !important;
+  padding: 0 2rem 0 0.65rem !important;
+}
+
+.vip-pass-btn {
+  height: 36px;
+  padding: 0 0.85rem;
+  border-radius: 6px;
+  background: rgba(129, 140, 248, 0.15);
+  border: 1px solid #818cf8;
+  color: #818cf8;
+  font-weight: 700;
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.vip-pass-btn:hover {
+  background: #818cf8;
+  color: #030712;
+}
+
+/* 2. 4-Card 3D Cyber Stat HUD Grid */
+.vip-stat-hud-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+.hud-stat-card {
+  background: #090e1c;
+  border: 1.5px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 1.25rem 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+.hud-stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+}
+
+.hud-stat-card.glow-cyan {
+  border-color: rgba(0, 240, 255, 0.25);
+}
+.hud-stat-card.glow-cyan:hover {
+  border-color: #00f0ff;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 240, 255, 0.2);
+}
+
+.hud-stat-card.glow-emerald {
+  border-color: rgba(52, 211, 153, 0.25);
+}
+.hud-stat-card.glow-emerald:hover {
+  border-color: #34d399;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(52, 211, 153, 0.2);
+}
+
+.hud-stat-card.glow-purple {
+  border-color: rgba(168, 85, 247, 0.25);
+}
+.hud-stat-card.glow-purple:hover {
+  border-color: #c084fc;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(168, 85, 247, 0.2);
+}
+
+.hud-stat-card.glow-blue {
+  border-color: rgba(59, 130, 246, 0.25);
+}
+.hud-stat-card.glow-blue:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(59, 130, 246, 0.2);
+}
+
+.hud-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.hud-stat-icon-wrap {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.3);
+}
+
+.hud-stat-icon-wrap.cyan {
+  background: radial-gradient(circle at 30% 30%, rgba(0, 240, 255, 0.25), rgba(0, 0, 0, 0.6));
+  border: 1px solid rgba(0, 240, 255, 0.4);
+}
+.hud-stat-icon-wrap.emerald {
+  background: radial-gradient(circle at 30% 30%, rgba(16, 185, 129, 0.25), rgba(0, 0, 0, 0.6));
+  border: 1px solid rgba(16, 185, 129, 0.4);
+}
+.hud-stat-icon-wrap.purple {
+  background: radial-gradient(circle at 30% 30%, rgba(168, 85, 247, 0.25), rgba(0, 0, 0, 0.6));
+  border: 1px solid rgba(168, 85, 247, 0.4);
+}
+.hud-stat-icon-wrap.blue {
+  background: radial-gradient(circle at 30% 30%, rgba(59, 130, 246, 0.25), rgba(0, 0, 0, 0.6));
+  border: 1px solid rgba(59, 130, 246, 0.4);
+}
+
+.hud-stat-tag {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #94a3b8;
+}
+
+.hud-stat-tag.active {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.hud-stat-tag.safe {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.hud-stat-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #94a3b8;
+  margin-top: 0.2rem;
+}
+
+.hud-stat-value {
+  font-family: var(--font-heading);
+  font-size: 1.55rem;
+  font-weight: 900;
+  color: #ffffff;
+  line-height: 1.1;
+}
+
+.hud-stat-value.glow-cyan-text {
+  color: #00f0ff;
+  text-shadow: 0 0 12px rgba(0, 240, 255, 0.35);
+}
+
+.hud-stat-value.glow-emerald-text {
+  color: #34d399;
+  text-shadow: 0 0 12px rgba(52, 211, 153, 0.35);
+}
+
+.hud-stat-value.glow-blue-text {
+  color: #60a5fa;
+  text-shadow: 0 0 12px rgba(96, 165, 250, 0.35);
+}
+
+.hud-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.4rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.hud-mini-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #cbd5e1;
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.hud-mini-btn:hover {
+  background: rgba(0, 240, 255, 0.15);
+  border-color: #00f0ff;
+  color: #00f0ff;
+  transform: translateY(-1px);
+}
+
+.hud-mini-btn.primary-glow {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: #3b82f6;
+  color: #93c5fd;
+}
+
+.hud-mini-btn.primary-glow:hover {
+  background: #3b82f6;
+  color: #ffffff;
+}
+
+.hud-footer-hint {
+  font-size: 0.7rem;
+  color: #64748b;
+}
+
+/* 3. Tactile 3D Action Command Row */
+.vip-tactile-action-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.75rem;
+}
+
+.vip-tactile-btn {
+  background: #090e1c;
+  border: 1.5px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 0.85rem 0.6rem;
+  color: #cbd5e1;
+  font-weight: 700;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  text-align: center;
+}
+
+.vip-tactile-btn:hover {
+  background: rgba(0, 240, 255, 0.08);
+  border-color: #00f0ff;
+  color: #00f0ff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0, 240, 255, 0.25);
+}
+
+.vip-tactile-btn.highlight {
+  border-color: rgba(59, 130, 246, 0.4);
+  background: rgba(59, 130, 246, 0.08);
+  color: #93c5fd;
+}
+
+.vip-tactile-btn.highlight:hover {
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.2);
+  color: #ffffff;
+}
+
+/* ==============================================================
+   COMPREHENSIVE DAY MODE (LIGHT THEME) ROCK-SOLID OVERRIDES
+   Ensures 100% clarity, zero invisible text, crystal visibility
+   ============================================================== */
+[data-theme="light"] body {
+  background: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+/* Brand text in navbar */
+[data-theme="light"] .brand-text,
+[data-theme="light"] .drawer-brand-name {
+  color: #0f172a !important;
+}
+
+/* Universal text and heading overrides for Light Mode */
+[data-theme="light"] h1,
+[data-theme="light"] h2,
+[data-theme="light"] h3,
+[data-theme="light"] h4,
+[data-theme="light"] h5,
+[data-theme="light"] h6,
+[data-theme="light"] strong,
+[data-theme="light"] b {
+  color: #0f172a !important;
+}
+
+[data-theme="light"] p {
+  color: #334155 !important;
+}
+
+/* FORCE OVERRIDE on ANY inline white text (except primary buttons) */
+[data-theme="light"] [style*="color: #fff"],
+[data-theme="light"] [style*="color:#fff"],
+[data-theme="light"] [style*="color: white"],
+[data-theme="light"] [style*="color:white"],
+[data-theme="light"] [style*="color: #ffffff"],
+[data-theme="light"] [style*="color:#ffffff"],
+[data-theme="light"] [style*="color: rgb(255, 255, 255)"] {
+  color: #0f172a !important;
+}
+
+/* Ensure saturated action buttons retain crisp white text in Light Mode */
+[data-theme="light"] .btn-primary,
+[data-theme="light"] .btn-primary *,
+[data-theme="light"] .btn-primary span,
+[data-theme="light"] .vip-action-btn.primary,
+[data-theme="light"] .vip-action-btn.primary *,
+[data-theme="light"] .btn-danger,
+[data-theme="light"] .btn-danger *,
+[data-theme="light"] .cur-tab-btn.active,
+[data-theme="light"] .dash-cat-tab-btn.active,
+[data-theme="light"] .dash-cat-tab-btn.active * {
+  color: #ffffff !important;
+}
+
+/* FORCE OVERRIDE on ANY dark boxes in Light Mode */
+[data-theme="light"] [style*="background: #0"],
+[data-theme="light"] [style*="background:#0"],
+[data-theme="light"] [style*="background: #1"],
+[data-theme="light"] [style*="background:#1"],
+[data-theme="light"] [style*="background: rgba(0, 0, 0"],
+[data-theme="light"] [style*="background: rgba(0,0,0"],
+[data-theme="light"] [style*="background:radial-gradient"],
+[data-theme="light"] [style*="background: radial-gradient"] {
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+/* LIGHT MODE: VIP Profile Deck */
+[data-theme="light"] .vip-profile-main-card {
+  background: #ffffff !important;
+  border: 1.5px solid #cbd5e1 !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06) !important;
+}
+
+[data-theme="light"] .vip-user-name {
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .vip-meta-row {
+  color: #475569 !important;
+}
+
+[data-theme="light"] .vip-uid-badge {
+  background: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  color: #0284c7 !important;
+}
+
+[data-theme="light"] .vip-security-mini-card {
+  background: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+
+[data-theme="light"] .vip-sec-title {
+  color: #4338ca !important;
+}
+
+[data-theme="light"] .vip-sec-desc {
+  color: #64748b !important;
+}
+
+[data-theme="light"] .vip-pass-btn {
+  background: #eff6ff !important;
+  border-color: #3b82f6 !important;
+  color: #1d4ed8 !important;
+}
+
+[data-theme="light"] .vip-action-btn.outline {
+  background: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+  color: #334155 !important;
+}
+
+[data-theme="light"] .hud-stat-card {
+  background: #ffffff !important;
+  border: 1.5px solid #cbd5e1 !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05) !important;
+}
+
+[data-theme="light"] .hud-stat-card:hover {
+  border-color: #0284c7 !important;
+  box-shadow: 0 8px 24px rgba(2, 132, 199, 0.15) !important;
+}
+
+[data-theme="light"] .hud-stat-title {
+  color: #475569 !important;
+}
+
+[data-theme="light"] .hud-stat-value {
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .hud-stat-value.glow-cyan-text {
+  color: #0284c7 !important;
+  text-shadow: none !important;
+}
+
+[data-theme="light"] .hud-stat-value.glow-emerald-text {
+  color: #059669 !important;
+  text-shadow: none !important;
+}
+
+[data-theme="light"] .hud-stat-value.glow-blue-text {
+  color: #2563eb !important;
+  text-shadow: none !important;
+}
+
+[data-theme="light"] .hud-card-footer {
+  border-top-color: #f1f5f9 !important;
+}
+
+[data-theme="light"] .hud-mini-btn {
+  background: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  color: #334155 !important;
+}
+
+[data-theme="light"] .hud-mini-btn:hover {
+  background: #eff6ff !important;
+  border-color: #0284c7 !important;
+  color: #0284c7 !important;
+}
+
+[data-theme="light"] .hud-footer-hint {
+  color: #64748b !important;
+}
+
+[data-theme="light"] .vip-tactile-btn {
+  background: #ffffff !important;
+  border: 1.5px solid #cbd5e1 !important;
+  color: #334155 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+}
+
+[data-theme="light"] .vip-tactile-btn:hover {
+  background: #f0f9ff !important;
+  border-color: #0284c7 !important;
+  color: #0284c7 !important;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.18) !important;
+}
+
+/* Light mode for code blocks */
+[data-theme="light"] code,
+[data-theme="light"] pre {
+  background: #f1f5f9 !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+  .vip-profile-main-card {
+    grid-template-columns: 1fr !important;
+    gap: 1.25rem !important;
+    text-align: center;
+  }
+  .vip-avatar-col {
+    margin: 0 auto;
+  }
+  .vip-name-row, .vip-meta-row, .vip-profile-actions {
+    justify-content: center;
+  }
+  .vip-stat-hud-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .vip-tactile-action-row {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+@media (max-width: 576px) {
+  .vip-profile-main-card {
+    padding: 1.25rem 1rem !important;
+  }
+  .vip-stat-hud-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .vip-tactile-action-row {
+    grid-template-columns: 1fr !important;
+  }
+}
+
 
