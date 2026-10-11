@@ -23,6 +23,8 @@ CREATE TABLE IF NOT EXISTS users (
   status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'blocked')),
   referral_code TEXT UNIQUE,
   referred_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  api_key TEXT UNIQUE,
+  api_access_enabled BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -290,6 +292,28 @@ CREATE TABLE IF NOT EXISTS referrals (
 CREATE INDEX IF NOT EXISTS idx_referrals_referrer_month ON referrals (referrer_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_referrals_referred_user ON referrals (referred_user_id);
 CREATE INDEX IF NOT EXISTS idx_users_referral_code ON users (referral_code);
+
+-- 21. RESELLER API LOGS (Audit trail for programmatic key creations)
+CREATE TABLE IF NOT EXISTS reseller_api_logs (
+  id SERIAL PRIMARY KEY,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  endpoint TEXT NOT NULL,
+  ip_address TEXT,
+  status TEXT NOT NULL, -- 'success', 'failed', 'rejected'
+  plan_id INT,
+  product_id INT,
+  keys_count INT DEFAULT 1,
+  keys_delivered TEXT,
+  amount_usd NUMERIC DEFAULT 0,
+  amount_npr NUMERIC DEFAULT 0,
+  order_id INT REFERENCES orders(id) ON DELETE SET NULL,
+  order_code TEXT,
+  error_message TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_reseller_api_logs_user ON reseller_api_logs(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_users_api_key ON users(api_key);
 
 CREATE INDEX idx_hwid_reset_key ON hwid_reset_log(key_code);
 CREATE INDEX idx_hwid_reset_user ON hwid_reset_log(requested_by);

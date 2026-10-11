@@ -573,6 +573,7 @@
         <li class="admin-nav-item"><button data-tab="tab-hwid-reset">🔐 HWID Reset</button></li>
         <li class="admin-nav-item"><button data-tab="tab-users">👥 Users & Resellers</button></li>
         <li class="admin-nav-item"><button data-tab="tab-reseller-prices">🏷️ Reseller Prices</button></li>
+        <li class="admin-nav-item"><button data-tab="tab-reseller-api">⚡ Reseller API System</button></li>
         <li class="admin-nav-item"><button data-tab="tab-settings">⚙️ Settings & API</button></li>
         <li class="admin-nav-item"><button data-tab="tab-hero-banners">🖼️ Banner Board & Slider</button></li>
         <li class="admin-nav-item"><button data-tab="tab-social-links">🌐 Social Links</button></li>
@@ -1069,6 +1070,189 @@
               <tr><td colspan="6" style="text-align: center; padding: 2rem;">Loading custom prices...</td></tr>
             </tbody>
           </table>
+        </div>
+      <!-- TAB: RESELLER API SYSTEM & AUTOMATION ENGINE -->
+      <section id="tab-reseller-api" class="admin-tab-content">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <h2 style="color: #fff; margin: 0 0 0.35rem 0;">// RESELLER API SYSTEM & AUTOMATION ENGINE</h2>
+            <p style="color: var(--text-dim); margin: 0; font-size: 0.88rem;">
+              Provide verified resellers with secure REST API access to create license keys programmatically. Toggle API access globally or per reseller.
+            </p>
+          </div>
+          <button type="button" class="btn btn-outline btn-sm" onclick="loadAdminResellerApi()">
+            🔄 Refresh API Data
+          </button>
+        </div>
+
+        <!-- Master Global API Switch Card -->
+        <div style="background: linear-gradient(135deg, rgba(56, 189, 248, 0.08) 0%, rgba(13, 18, 30, 0.95) 100%); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: var(--radius-lg); padding: 1.5rem 1.75rem; margin-bottom: 1.75rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.25rem; box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 20px rgba(56, 189, 248, 0.05);">
+          <div>
+            <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.4rem;">
+              <span style="font-size: 1.4rem;">⚡</span>
+              <h3 style="margin: 0; color: #fff; font-size: 1.25rem;">GLOBAL RESELLER API MASTER SWITCH</h3>
+              <span id="adm-res-global-pill" class="badge" style="font-size: 0.8rem; padding: 4px 10px; font-weight: 800; background: rgba(52, 211, 153, 0.15); border: 1px solid #34d399; color: #34d399;">
+                ACTIVE 🟢
+              </span>
+            </div>
+            <p style="margin: 0; font-size: 0.85rem; color: var(--text-dim); max-width: 680px;">
+              Controls programmatic key creation across the entire store. When <strong>ON (Enabled)</strong>, verified resellers can create keys through the REST API. When <strong>OFF (Disabled)</strong>, all incoming reseller API calls are immediately blocked.
+            </p>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <button type="button" id="btn-toggle-global-api" class="btn btn-primary btn-lg btn-glow" onclick="toggleGlobalResellerApiFromBtn()" style="min-width: 220px; font-weight: 700;">
+              ⚡ Turn API OFF 🔴
+            </button>
+          </div>
+        </div>
+
+        <!-- 4 KPI Metrics -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1.75rem;">
+          <div class="admin-card" style="padding: 1.25rem; margin-bottom: 0;">
+            <div style="font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">Global API Switch</div>
+            <div id="adm-res-stat-global" style="font-size: 1.65rem; font-weight: 800; color: #34d399; margin-top: 0.25rem;">ONLINE 🟢</div>
+            <div id="adm-res-stat-global-sub" style="font-size: 0.75rem; color: var(--text-dim); margin-top: 0.2rem;">Accepting key creations</div>
+          </div>
+          <div class="admin-card" style="padding: 1.25rem; margin-bottom: 0;">
+            <div style="font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">Active API Resellers</div>
+            <div id="adm-res-stat-resellers" style="font-size: 1.65rem; font-weight: 800; color: #38bdf8; margin-top: 0.25rem;">0 / 0</div>
+            <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 0.2rem;">Permitted accounts</div>
+          </div>
+          <div class="admin-card" style="padding: 1.25rem; margin-bottom: 0;">
+            <div style="font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">Keys Created via API</div>
+            <div id="adm-res-stat-keys" style="font-size: 1.65rem; font-weight: 800; color: #facc15; margin-top: 0.25rem;">0 Keys</div>
+            <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 0.2rem;">Delivered automatically</div>
+          </div>
+          <div class="admin-card" style="padding: 1.25rem; margin-bottom: 0;">
+            <div style="font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">Total API Volume</div>
+            <div id="adm-res-stat-volume" style="font-size: 1.65rem; font-weight: 800; color: #fff; margin-top: 0.25rem;">NPR 0.00</div>
+            <div id="adm-res-stat-volume-usd" style="font-size: 0.75rem; color: var(--text-dim); margin-top: 0.2rem;">$0.00 USD</div>
+          </div>
+        </div>
+
+        <!-- Reseller Accounts & Access Control Table -->
+        <div class="admin-card" style="padding: 1.5rem; margin-bottom: 2rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+              <h3 style="color: #fff; margin: 0 0 0.25rem 0; font-size: 1.1rem;">👥 Reseller Accounts & Individual API Controls</h3>
+              <p style="font-size: 0.8rem; color: var(--text-dim); margin: 0;">
+                Turn API access ON/OFF per reseller, view API keys, check balances, or regenerate keys.
+              </p>
+            </div>
+            <div style="display: flex; gap: 0.75rem; align-items: center;">
+              <input type="text" id="adm-reseller-search-input" class="form-input" placeholder="🔍 Search reseller or API key..." style="width: 260px; font-size: 0.82rem; padding: 0.45rem 0.75rem;" oninput="filterAdminResellerApiTable()">
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table-custom">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Reseller</th>
+                  <th>Wallet Balance</th>
+                  <th>Discount</th>
+                  <th>API Key (Secret)</th>
+                  <th>API Access (ON/OFF)</th>
+                  <th>API Keys Created</th>
+                  <th>Last Call</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adm-reseller-api-tbody">
+                <tr>
+                  <td colspan="9" style="text-align: center; padding: 2rem; color: var(--text-dim);">
+                    Loading reseller accounts...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Live API Generation Activity Logs -->
+        <div class="admin-card" style="padding: 1.5rem; margin-bottom: 2rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+              <h3 style="color: #fff; margin: 0 0 0.25rem 0; font-size: 1.1rem;">📡 Real-Time Reseller API Key Generation Logs</h3>
+              <p style="font-size: 0.8rem; color: var(--text-dim); margin: 0;">
+                Full audit trail of programmatic key purchases, status codes, delivered keys, and amounts.
+              </p>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table-custom">
+              <thead>
+                <tr>
+                  <th>Order Code</th>
+                  <th>Reseller</th>
+                  <th>Product & Plan</th>
+                  <th>Keys Delivered</th>
+                  <th>Amount (NPR)</th>
+                  <th>Amount (USD)</th>
+                  <th>Status</th>
+                  <th>IP Address</th>
+                  <th>Timestamp</th>
+                </tr>
+              </thead>
+              <tbody id="adm-reseller-logs-tbody">
+                <tr>
+                  <td colspan="9" style="text-align: center; padding: 2rem; color: var(--text-dim);">
+                    Loading API activity logs...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Reseller API Developer Quick Reference Card -->
+        <div class="admin-card" style="padding: 1.5rem; border-color: rgba(56, 189, 248, 0.3); background: #080d1a;">
+          <h3 style="color: #38bdf8; margin: 0 0 0.75rem 0; font-size: 1.1rem;">📖 Reseller API Quick Reference & Endpoints</h3>
+          <p style="font-size: 0.82rem; color: var(--text-dim); margin-bottom: 1.25rem;">
+            Provide these details to your resellers so they can connect their websites, Telegram bots, or Discord bots:
+          </p>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1rem;">
+            <div style="background: #040711; border: 1px solid rgba(255,255,255,0.07); border-radius: var(--radius-sm); padding: 1rem;">
+              <div style="font-weight: 700; color: #34d399; font-size: 0.85rem; margin-bottom: 0.35rem;">
+                POST /api/v1/reseller/create-key
+              </div>
+              <div style="font-size: 0.78rem; color: var(--text-dim); margin-bottom: 0.6rem;">
+                Creates/allocates key(s) and deducts from reseller wallet balance.
+              </div>
+              <pre style="background: #000; color: #a5f3fc; padding: 0.6rem; border-radius: 4px; font-size: 0.75rem; overflow-x: auto;">// Headers:
+X-API-Key: wx_live_YOUR_KEY
+Content-Type: application/json
+
+// Body:
+{
+  "plan_id": 1,
+  "count": 1,
+  "custom_note": "Order #1234"
+}</pre>
+            </div>
+            <div style="background: #040711; border: 1px solid rgba(255,255,255,0.07); border-radius: var(--radius-sm); padding: 1rem;">
+              <div style="font-weight: 700; color: #38bdf8; font-size: 0.85rem; margin-bottom: 0.35rem;">
+                GET /api/v1/reseller/products
+              </div>
+              <div style="font-size: 0.78rem; color: var(--text-dim); margin-bottom: 0.6rem;">
+                Lists all products, plans, plan_ids, stock, and custom wholesale prices.
+              </div>
+              <pre style="background: #000; color: #a5f3fc; padding: 0.6rem; border-radius: 4px; font-size: 0.75rem; overflow-x: auto;">// Headers:
+X-API-Key: wx_live_YOUR_KEY</pre>
+            </div>
+            <div style="background: #040711; border: 1px solid rgba(255,255,255,0.07); border-radius: var(--radius-sm); padding: 1rem;">
+              <div style="font-weight: 700; color: #facc15; font-size: 0.85rem; margin-bottom: 0.35rem;">
+                GET /api/v1/reseller/balance
+              </div>
+              <div style="font-size: 0.78rem; color: var(--text-dim); margin-bottom: 0.6rem;">
+                Check real-time wallet balance (NPR & USD) and account status.
+              </div>
+              <pre style="background: #000; color: #a5f3fc; padding: 0.6rem; border-radius: 4px; font-size: 0.75rem; overflow-x: auto;">// Headers:
+X-API-Key: wx_live_YOUR_KEY</pre>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -3202,6 +3386,7 @@
           if (tabId === 'tab-hwid-reset') loadHwidLogs();
           if (tabId === 'tab-users') loadAdminUsers();
           if (tabId === 'tab-reseller-prices') loadAdminResellerPrices();
+          if (tabId === 'tab-reseller-api') loadAdminResellerApi();
           if (tabId === 'tab-settings') loadAdminSettings();
           if (tabId === 'tab-admin-account') loadAdminAccountDetails();
           if (tabId === 'tab-social-links') loadAdminSocialLinks();
@@ -5903,6 +6088,7 @@
         if (targetTabId === 'tab-admin-account') loadAdminAccountDetails();
         if (targetTabId === 'tab-social-links') loadAdminSocialLinks();
         if (targetTabId === 'tab-referrals') loadAdminReferrals();
+        if (targetTabId === 'tab-reseller-api') loadAdminResellerApi();
       }
     }
     window.switchAdminTab = switchAdminTab;
@@ -7180,6 +7366,322 @@
           btn.textContent = 'Save Referral Prizes & Rules 💾';
         }
       }
+    }
+
+    /* ==============================================================
+       RESELLER API SYSTEM & PROGRAMMATIC AUTOMATION CONTROLLER
+       ============================================================== */
+    let globalAdminResellersList = [];
+    let globalAdminResellerApiEnabled = true;
+
+    async function loadAdminResellerApi() {
+      try {
+        const res = await fetch('/api/admin/reseller-api/overview', { credentials: 'include' });
+        const data = await res.json();
+        if (!data.success) {
+          showToast(data.message || 'Failed to load Reseller API data', 'error');
+          return;
+        }
+
+        globalAdminResellerApiEnabled = data.global_api_enabled !== false;
+        globalAdminResellersList = data.resellers || [];
+
+        // 1. Update Master Global Switch Banner
+        const globalPill = document.getElementById('adm-res-global-pill');
+        const toggleBtn = document.getElementById('btn-toggle-global-api');
+        const statGlobal = document.getElementById('adm-res-stat-global');
+        const statGlobalSub = document.getElementById('adm-res-stat-global-sub');
+
+        if (globalAdminResellerApiEnabled) {
+          if (globalPill) {
+            globalPill.className = 'badge';
+            globalPill.style.background = 'rgba(52, 211, 153, 0.2)';
+            globalPill.style.border = '1px solid #34d399';
+            globalPill.style.color = '#34d399';
+            globalPill.textContent = 'ONLINE / ACTIVE 🟢';
+          }
+          if (toggleBtn) {
+            toggleBtn.className = 'btn btn-outline btn-lg';
+            toggleBtn.style.borderColor = '#f87171';
+            toggleBtn.style.color = '#f87171';
+            toggleBtn.style.background = 'rgba(239, 68, 68, 0.12)';
+            toggleBtn.innerHTML = '🛑 TURN API OFF (DISABLE)';
+          }
+          if (statGlobal) {
+            statGlobal.style.color = '#34d399';
+            statGlobal.textContent = 'ONLINE 🟢';
+          }
+          if (statGlobalSub) {
+            statGlobalSub.textContent = 'Accepting key creations';
+          }
+        } else {
+          if (globalPill) {
+            globalPill.className = 'badge';
+            globalPill.style.background = 'rgba(239, 68, 68, 0.2)';
+            globalPill.style.border = '1px solid #f87171';
+            globalPill.style.color = '#f87171';
+            globalPill.textContent = 'PAUSED / DISABLED 🔴';
+          }
+          if (toggleBtn) {
+            toggleBtn.className = 'btn btn-primary btn-lg btn-glow';
+            toggleBtn.style.borderColor = '';
+            toggleBtn.style.color = '';
+            toggleBtn.style.background = '';
+            toggleBtn.innerHTML = '⚡ TURN API ON (ENABLE) 🟢';
+          }
+          if (statGlobal) {
+            statGlobal.style.color = '#f87171';
+            statGlobal.textContent = 'OFFLINE 🔴';
+          }
+          if (statGlobalSub) {
+            statGlobalSub.textContent = 'All API calls paused (403)';
+          }
+        }
+
+        // 2. Update Stats
+        const stats = data.stats || {};
+        const statResellers = document.getElementById('adm-res-stat-resellers');
+        const statKeys = document.getElementById('adm-res-stat-keys');
+        const statVolume = document.getElementById('adm-res-stat-volume');
+        const statVolumeUsd = document.getElementById('adm-res-stat-volume-usd');
+
+        if (statResellers) {
+          statResellers.textContent = `${stats.active_api_resellers || 0} / ${stats.total_resellers || 0}`;
+        }
+        if (statKeys) {
+          statKeys.textContent = `${(stats.total_keys_created || 0).toLocaleString()} Keys`;
+        }
+        if (statVolume) {
+          statVolume.textContent = `NPR ${parseFloat(stats.total_volume_npr || 0).toLocaleString()}`;
+        }
+        if (statVolumeUsd) {
+          statVolumeUsd.textContent = `$${parseFloat(stats.total_volume_usd || 0).toFixed(2)} USD`;
+        }
+
+        // 3. Render Resellers Table
+        renderAdminResellerApiTable(globalAdminResellersList);
+
+        // 4. Render Logs Table
+        renderAdminResellerApiLogs(data.logs || []);
+
+      } catch (err) {
+        console.error('Error loading Reseller API data:', err);
+        showToast('Error loading Reseller API: ' + err.message, 'error');
+      }
+    }
+
+    function renderAdminResellerApiTable(list) {
+      const tbody = document.getElementById('adm-reseller-api-tbody');
+      if (!tbody) return;
+
+      if (!list || list.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="9" style="text-align: center; padding: 2.5rem; color: var(--text-dim);">
+              <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">👥</div>
+              <div>No reseller accounts found. Promote users to 'Reseller' in the Users tab to grant API access.</div>
+            </td>
+          </tr>`;
+        return;
+      }
+
+      tbody.innerHTML = list.map((r, idx) => {
+        const isApiOn = r.api_access_enabled !== false;
+        const bal = parseFloat(r.wallet_balance || 0);
+        const disc = parseFloat(r.reseller_discount || 0);
+        const apiKey = r.api_key || 'No key generated';
+        const maskedKey = apiKey.length > 12 ? apiKey.slice(0, 10) + '••••••••' + apiKey.slice(-4) : apiKey;
+        const lastCall = r.last_api_call ? formatDate(r.last_api_call) : 'Never';
+
+        const toggleBtnHtml = isApiOn
+          ? `<button type="button" class="btn btn-sm" onclick="toggleUserResellerApi('${r.id}', true)" style="background: rgba(52, 211, 153, 0.15); border: 1px solid #34d399; color: #34d399; font-weight: 700; padding: 3px 10px; font-size: 0.75rem;">
+               ON 🟢
+             </button>`
+          : `<button type="button" class="btn btn-sm" onclick="toggleUserResellerApi('${r.id}', false)" style="background: rgba(239, 68, 68, 0.15); border: 1px solid #f87171; color: #f87171; font-weight: 700; padding: 3px 10px; font-size: 0.75rem;">
+               OFF 🔴
+             </button>`;
+
+        return `
+          <tr>
+            <td style="color: var(--text-dim); font-size: 0.8rem;">${idx + 1}</td>
+            <td>
+              <div style="font-weight: 700; color: #fff;">${escapeHtml(r.name)}</div>
+              <div style="font-size: 0.76rem; color: var(--text-dim);">${escapeHtml(r.email)}</div>
+              <div style="font-size: 0.72rem; color: #38bdf8;">${escapeHtml(r.phone || '')}</div>
+            </td>
+            <td>
+              <strong style="color: #34d399; font-family: var(--font-heading);">NPR ${bal.toLocaleString()}</strong>
+            </td>
+            <td>
+              <span class="badge badge-reseller" style="font-size: 0.72rem;">${disc}% OFF</span>
+            </td>
+            <td>
+              <div style="display: flex; align-items: center; gap: 0.4rem;">
+                <code id="api-key-text-${r.id}" style="font-size: 0.76rem; background: #000; padding: 3px 6px; border-radius: 4px; color: #38bdf8; font-family: var(--font-mono); letter-spacing: 0.5px;">${maskedKey}</code>
+                <button type="button" class="btn btn-outline btn-sm" onclick="copyAdminApiKey('${apiKey}')" title="Copy API Key" style="padding: 2px 6px; font-size: 0.72rem;">
+                  📋
+                </button>
+              </div>
+            </td>
+            <td>
+              ${toggleBtnHtml}
+            </td>
+            <td>
+              <div style="font-weight: 700; color: #fff;">${r.total_api_keys || 0} Keys</div>
+              <div style="font-size: 0.72rem; color: var(--text-dim);">${r.total_api_orders || 0} orders</div>
+            </td>
+            <td style="font-size: 0.78rem; color: var(--text-dim);">${lastCall}</td>
+            <td>
+              <button type="button" class="btn btn-outline btn-sm" onclick="regenerateResellerApiKey('${r.id}', '${escapeHtml(r.name)}')" style="font-size: 0.72rem; padding: 3px 8px; white-space: nowrap;">
+                🔄 New Key
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderAdminResellerApiLogs(logs) {
+      const tbody = document.getElementById('adm-reseller-logs-tbody');
+      if (!tbody) return;
+
+      if (!logs || logs.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="9" style="text-align: center; padding: 2rem; color: var(--text-dim);">
+              No API key generation logs yet. When resellers call the API, live requests will appear here.
+            </td>
+          </tr>`;
+        return;
+      }
+
+      tbody.innerHTML = logs.map(l => {
+        const isSuccess = l.status === 'success';
+        const badge = isSuccess
+          ? `<span class="badge badge-undetected" style="font-size: 0.72rem;">SUCCESS 🟢</span>`
+          : `<span class="badge" style="background: rgba(239, 68, 68, 0.15); border: 1px solid #f87171; color: #f87171; font-size: 0.72rem;">FAILED 🔴</span>`;
+
+        const keyDisplay = (l.keys && l.keys.length > 0)
+          ? `<div style="font-family: monospace; font-size: 0.76rem; color: #34d399;">${escapeHtml(l.keys[0])}${l.keys.length > 1 ? ` <span style="color: var(--text-dim);">(+${l.keys.length - 1} more)</span>` : ''}</div>`
+          : (l.error_message ? `<div style="font-size: 0.72rem; color: #f87171;">${escapeHtml(l.error_message)}</div>` : '-');
+
+        return `
+          <tr>
+            <td style="font-family: monospace; font-size: 0.78rem; color: #fff; font-weight: 700;">${escapeHtml(l.order_code || '-')}</td>
+            <td>
+              <div style="font-weight: 700; color: #38bdf8; font-size: 0.82rem;">${escapeHtml(l.reseller_name || 'Reseller')}</div>
+              <div style="font-size: 0.72rem; color: var(--text-dim);">${escapeHtml(l.reseller_email || '')}</div>
+            </td>
+            <td>
+              <div style="font-weight: 600; color: #fff; font-size: 0.82rem;">${escapeHtml(l.product_name || 'Product')}</div>
+              <div style="font-size: 0.72rem; color: var(--text-dim);">${escapeHtml(l.plan_name || '')} (${l.days || 0}d)</div>
+            </td>
+            <td>${keyDisplay}</td>
+            <td><strong style="color: #34d399;">NPR ${parseFloat(l.amount_npr || 0).toFixed(2)}</strong></td>
+            <td style="color: var(--text-dim); font-size: 0.82rem;">$${parseFloat(l.amount_usd || 0).toFixed(2)}</td>
+            <td>${badge}</td>
+            <td style="font-size: 0.74rem; color: var(--text-dim); font-family: monospace;">${escapeHtml(l.ip_address || '-')}</td>
+            <td style="font-size: 0.78rem; color: var(--text-dim);">${formatDate(l.created_at)}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    async function toggleGlobalResellerApiFromBtn() {
+      const targetState = !globalAdminResellerApiEnabled;
+      const confirmMsg = targetState
+        ? 'Enable the Reseller API system globally? Authorized resellers will be able to create keys programmatically.'
+        : 'Disable the Reseller API system globally? ALL incoming reseller API calls will immediately be blocked with 403 Forbidden.';
+
+      if (!confirm(confirmMsg)) return;
+
+      try {
+        const res = await fetch('/api/admin/reseller-api/toggle-global', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ enabled: targetState })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(data.message, targetState ? 'success' : 'warning');
+          loadAdminResellerApi();
+        } else {
+          showToast(data.message || 'Failed to toggle global API', 'error');
+        }
+      } catch (err) {
+        showToast('Network error: ' + err.message, 'error');
+      }
+    }
+
+    async function toggleUserResellerApi(userId, currentEnabled) {
+      const targetState = !currentEnabled;
+      try {
+        const res = await fetch('/api/admin/reseller-api/toggle-user', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: userId, enabled: targetState })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(data.message, targetState ? 'success' : 'warning');
+          loadAdminResellerApi();
+        } else {
+          showToast(data.message || 'Failed to toggle reseller API', 'error');
+        }
+      } catch (err) {
+        showToast('Network error: ' + err.message, 'error');
+      }
+    }
+
+    async function regenerateResellerApiKey(userId, userName) {
+      if (!confirm(`Are you sure you want to regenerate the API key for ${userName}? Their old key will immediately stop working.`)) {
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/admin/reseller-api/regenerate-key', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: userId })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(data.message, 'success');
+          loadAdminResellerApi();
+        } else {
+          showToast(data.message || 'Failed to regenerate key', 'error');
+        }
+      } catch (err) {
+        showToast('Network error: ' + err.message, 'error');
+      }
+    }
+
+    function filterAdminResellerApiTable() {
+      const q = (document.getElementById('adm-reseller-search-input')?.value || '').toLowerCase().trim();
+      if (!q) {
+        renderAdminResellerApiTable(globalAdminResellersList);
+        return;
+      }
+      const filtered = globalAdminResellersList.filter(r => {
+        const name = (r.name || '').toLowerCase();
+        const email = (r.email || '').toLowerCase();
+        const key = (r.api_key || '').toLowerCase();
+        const phone = (r.phone || '').toLowerCase();
+        return name.includes(q) || email.includes(q) || key.includes(q) || phone.includes(q);
+      });
+      renderAdminResellerApiTable(filtered);
+    }
+
+    function copyAdminApiKey(key) {
+      if (!key) return;
+      navigator.clipboard.writeText(key).then(() => {
+        showToast('API Key copied to clipboard! 📋 Keep it secret.', 'success');
+      }).catch(() => {
+        prompt('Copy API Key:', key);
+      });
     }
 
     /* ==============================================================

@@ -79,6 +79,14 @@ import referralValidate from '../server/referrals/validate.js';
 import referralMyInfo from '../server/referrals/my-info.js';
 import adminReferrals from '../server/admin/referrals.js';
 
+// Reseller API System
+import resellerMe from '../server/reseller/me.js';
+import resellerProducts from '../server/reseller/products.js';
+import resellerCreateKey from '../server/reseller/create-key.js';
+import resellerOrders from '../server/reseller/orders.js';
+import resellerPortal from '../server/reseller/portal.js';
+import adminResellerApi from '../server/admin/reseller-api.js';
+
 const routes = {
   // Public Settings, Social Links & Banners
   '/api/settings': publicSettings,
@@ -163,6 +171,32 @@ const routes = {
   '/api/admin/banners': adminBanners,
   '/api/admin/referrals': adminReferrals,
   '/api/admin/referrals/settings': adminReferrals,
+
+  // Reseller Programmatic API (v1 & direct)
+  '/api/v1/reseller/me': resellerMe,
+  '/api/v1/reseller/balance': resellerMe,
+  '/api/v1/reseller/products': resellerProducts,
+  '/api/v1/reseller/create-key': resellerCreateKey,
+  '/api/v1/reseller/orders': resellerOrders,
+  '/api/v1/reseller/keys': resellerOrders,
+
+  '/api/reseller/me': resellerMe,
+  '/api/reseller/balance': resellerMe,
+  '/api/reseller/products': resellerProducts,
+  '/api/reseller/create-key': resellerCreateKey,
+  '/api/reseller/orders': resellerOrders,
+  '/api/reseller/keys': resellerOrders,
+
+  // Reseller Dashboard Portal
+  '/api/reseller/portal-info': resellerPortal,
+  '/api/reseller/regenerate-key': resellerPortal,
+
+  // Admin Reseller API Management
+  '/api/admin/reseller-api': adminResellerApi,
+  '/api/admin/reseller-api/overview': adminResellerApi,
+  '/api/admin/reseller-api/toggle-global': adminResellerApi,
+  '/api/admin/reseller-api/toggle-user': adminResellerApi,
+  '/api/admin/reseller-api/regenerate-key': adminResellerApi,
 };
 
 export default async function handler(req, res) {
@@ -170,7 +204,7 @@ export default async function handler(req, res) {
   const origin = req.headers.origin || '*';
   res.setHeader('Access-Control-Allow-Origin', origin);
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Cookie');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Cookie, X-API-Key, x-api-key');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
 
   if (req.method === 'OPTIONS') {

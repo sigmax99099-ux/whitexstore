@@ -118,6 +118,143 @@
         </div>
       </div>
 
+      <!-- Reseller API & Automation Portal Section (Visible only to Resellers) -->
+      <div id="sec-reseller-api" class="product-card" style="display: none; padding: 2rem; margin-bottom: 2rem; border-color: rgba(56, 189, 248, 0.35); background: radial-gradient(ellipse at 85% 15%, rgba(56, 189, 248, 0.08) 0%, rgba(10, 14, 24, 0.95) 70%), #070a14; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+          <div>
+            <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.35rem;">
+              <span style="font-size: 1.5rem;">⚡</span>
+              <h3 style="color: #fff; margin: 0; font-size: 1.35rem;">// RESELLER API & DEVELOPER PORTAL</h3>
+              <span id="res-portal-status-badge" class="badge" style="background: rgba(52, 211, 153, 0.15); border: 1px solid #34d399; color: #34d399; font-weight: 700;">
+                ACTIVE & CONNECTED 🟢
+              </span>
+            </div>
+            <p style="font-size: 0.88rem; color: var(--text-muted); margin: 0; max-width: 720px;">
+              Automate your key sales with our high-speed REST API. Connect your website, Telegram bot, or Discord bot to automatically create keys at your wholesale discount rate.
+            </p>
+          </div>
+          <div id="res-portal-balance-tag" style="padding: 0.5rem 1rem; border-radius: 999px; background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.35); color: #38bdf8; font-size: 0.82rem; font-weight: 700;">
+            Wholesale Balance: NPR 0.00
+          </div>
+        </div>
+
+        <!-- API Key & Endpoint Card -->
+        <div style="background: #040814; border: 1px solid rgba(56, 189, 248, 0.25); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.5rem;">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; align-items: end;">
+            <div>
+              <label style="display: block; font-size: 0.76rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700; margin-bottom: 0.4rem;">
+                Your Private API Key (Keep Confidential)
+              </label>
+              <div style="display: flex; gap: 0.4rem;">
+                <input type="password" id="res-dash-api-key" readonly value="..." style="flex: 1; height: 42px; background: #0c1020; border: 1px solid rgba(56, 189, 248, 0.4); color: #38bdf8; font-family: var(--font-mono); font-size: 0.95rem; font-weight: 700; padding: 0 0.8rem; border-radius: 6px; outline: none;">
+                <button type="button" class="btn btn-outline btn-sm" onclick="toggleApiKeyVisibilityDashboard()" id="btn-show-hide-key" style="height: 42px; padding: 0 0.8rem;" title="Show/Hide">
+                  👁️
+                </button>
+                <button type="button" class="btn btn-primary btn-sm btn-glow" onclick="copyResellerApiKey()" id="btn-copy-res-key" style="height: 42px; white-space: nowrap; padding: 0 1rem;">
+                  📋 Copy Key
+                </button>
+              </div>
+            </div>
+            <div>
+              <label style="display: block; font-size: 0.76rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700; margin-bottom: 0.4rem;">
+                Live Key Generation Endpoint
+              </label>
+              <div style="display: flex; gap: 0.4rem;">
+                <input type="text" id="res-dash-endpoint-url" readonly value="" style="flex: 1; height: 42px; background: #0c1020; border: 1px solid rgba(255, 255, 255, 0.12); color: #fff; font-family: var(--font-mono); font-size: 0.82rem; padding: 0 0.8rem; border-radius: 6px; outline: none;">
+                <button type="button" class="btn btn-outline btn-sm" onclick="copyResellerEndpoint()" style="height: 42px; white-space: nowrap; padding: 0 0.8rem;">
+                  🔗 Copy URL
+                </button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="regenerateResellerApiKeyFromDashboard()" style="height: 42px; white-space: nowrap; padding: 0 0.8rem; border-color: #f87171; color: #f87171;" title="Regenerate API Key">
+                  🔄 New Key
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Interactive API Key Generator Tester -->
+        <div style="background: rgba(13, 18, 30, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.5rem;">
+          <h4 style="color: #fff; margin: 0 0 0.3rem 0; font-size: 0.95rem;">⚡ Interactive API Key Generator (Test Console)</h4>
+          <p style="font-size: 0.8rem; color: var(--text-dim); margin: 0 0 1rem 0;">
+            Simulate a live API call directly from your browser. Your wholesale wallet balance will be charged at your reseller rate.
+          </p>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; align-items: end;">
+            <div>
+              <label style="display: block; font-size: 0.76rem; color: var(--text-dim); margin-bottom: 0.35rem;">Select Product & Plan</label>
+              <select id="res-test-plan-select" class="form-input" style="height: 40px; font-size: 0.85rem;" onchange="updateResellerTestPricePreview()">
+                <option value="">Loading products...</option>
+              </select>
+            </div>
+            <div>
+              <label style="display: block; font-size: 0.76rem; color: var(--text-dim); margin-bottom: 0.35rem;">Count</label>
+              <select id="res-test-count-select" class="form-input" style="height: 40px; font-size: 0.85rem;" onchange="updateResellerTestPricePreview()">
+                <option value="1">1 Key</option>
+                <option value="2">2 Keys</option>
+                <option value="3">3 Keys</option>
+                <option value="5">5 Keys</option>
+              </select>
+            </div>
+            <div>
+              <div id="res-test-price-tag" style="font-size: 0.85rem; color: #34d399; font-weight: 700; height: 40px; display: flex; align-items: center;">
+                Wholesale: NPR 0.00
+              </div>
+            </div>
+            <div>
+              <button type="button" id="btn-exec-res-api-test" class="btn btn-primary btn-block btn-glow" onclick="executeResellerApiTestKey()" style="height: 40px; font-size: 0.85rem;">
+                🚀 Generate Key via API
+              </button>
+            </div>
+          </div>
+
+          <!-- Result Celebration Box -->
+          <div id="res-test-result-box" style="display: none; margin-top: 1rem; padding: 1rem; background: #000; border: 1px solid #34d399; border-radius: 6px;">
+            <div style="font-size: 0.82rem; color: #34d399; font-weight: 700; margin-bottom: 0.4rem;">
+              ✅ API Key Successfully Generated!
+            </div>
+            <div id="res-test-result-keys" style="font-family: var(--font-mono); font-size: 1.1rem; color: #fff; font-weight: 800; word-break: break-all;"></div>
+          </div>
+        </div>
+
+        <!-- Code Snippet Tabs -->
+        <div style="background: #02040a; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.5rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+            <div style="font-size: 0.85rem; color: #fff; font-weight: 700;">💻 Integration Code Examples</div>
+            <div style="display: flex; gap: 0.35rem;">
+              <button type="button" class="btn btn-sm res-code-tab" onclick="switchResellerCodeTab('curl')" id="tab-btn-curl" style="padding: 3px 8px; font-size: 0.75rem; background: var(--primary); color: #fff;">cURL</button>
+              <button type="button" class="btn btn-sm res-code-tab" onclick="switchResellerCodeTab('python')" id="tab-btn-python" style="padding: 3px 8px; font-size: 0.75rem;">Python</button>
+              <button type="button" class="btn btn-sm res-code-tab" onclick="switchResellerCodeTab('node')" id="tab-btn-node" style="padding: 3px 8px; font-size: 0.75rem;">Node.js</button>
+              <button type="button" class="btn btn-sm res-code-tab" onclick="switchResellerCodeTab('php')" id="tab-btn-php" style="padding: 3px 8px; font-size: 0.75rem;">PHP</button>
+            </div>
+          </div>
+          <pre id="res-code-snippet-pre" style="background: #000; color: #7dd3fc; padding: 1rem; border-radius: 6px; font-size: 0.78rem; overflow-x: auto; margin: 0; line-height: 1.5; font-family: var(--font-mono);"></pre>
+        </div>
+
+        <!-- Recent API Key Generations Table -->
+        <h4 style="color: #fff; font-size: 0.95rem; margin-bottom: 0.75rem;">// YOUR API KEY GENERATION HISTORY</h4>
+        <div class="table-responsive">
+          <table class="table-custom">
+            <thead>
+              <tr>
+                <th>Order Code</th>
+                <th>Product & Plan</th>
+                <th>License Key</th>
+                <th>Amount (NPR)</th>
+                <th>Date</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="res-api-logs-tbody">
+              <tr>
+                <td colspan="6" style="text-align: center; padding: 1.5rem; color: var(--text-dim);">
+                  Loading API key history...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <!-- Referral Program Section (Invite & Earn) -->
       <div id="sec-referrals" class="product-card" style="padding: 2rem; margin-bottom: 2rem; border-color: rgba(52, 211, 153, 0.3); background: radial-gradient(ellipse at 90% 10%, rgba(52, 211, 153, 0.08) 0%, rgba(13, 13, 21, 0.95) 70%), #0a0e17; box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 20px rgba(52, 211, 153, 0.05);">
         <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
@@ -314,12 +451,18 @@
       document.getElementById('dash-wallet-bal').textContent = `NPR ${parseFloat(user.wallet_balance || 0).toLocaleString()}`;
 
       const tierBadge = document.getElementById('dash-user-tier');
+      const resellerSec = document.getElementById('sec-reseller-api');
       if (user.user_type === 'reseller') {
         tierBadge.className = 'badge badge-reseller';
         tierBadge.textContent = `RESELLER (${user.reseller_discount || 0}% OFF)`;
+        if (resellerSec) {
+          resellerSec.style.display = 'block';
+          loadResellerPortal();
+        }
       } else {
         tierBadge.className = 'badge badge-undetected';
         tierBadge.textContent = 'STANDARD CUSTOMER';
+        if (resellerSec) resellerSec.style.display = 'none';
       }
     }
 
@@ -751,6 +894,386 @@
         document.execCommand('copy');
         showToast('Copied to clipboard!', 'success');
       });
+    }
+
+    // ==============================================================
+    // RESELLER API & DEVELOPER PORTAL LOGIC
+    // ==============================================================
+    let globalResellerApiKey = '';
+    let globalResellerProducts = [];
+    let activeResellerCodeTab = 'curl';
+
+    async function loadResellerPortal() {
+      try {
+        const endpointInput = document.getElementById('res-dash-endpoint-url');
+        if (endpointInput) {
+          endpointInput.value = `${window.location.origin}/api/v1/reseller/create-key`;
+        }
+
+        const res = await fetch('/api/reseller/portal-info', { credentials: 'include' });
+        const data = await res.json();
+        if (!data.success) return;
+
+        globalResellerApiKey = data.credentials?.api_key || '';
+
+        const keyInput = document.getElementById('res-dash-api-key');
+        if (keyInput) keyInput.value = globalResellerApiKey;
+
+        // Status badge
+        const badge = document.getElementById('res-portal-status-badge');
+        const creds = data.credentials || {};
+
+        if (badge) {
+          if (!creds.global_api_enabled) {
+            badge.style.background = 'rgba(239, 68, 68, 0.2)';
+            badge.style.border = '1px solid #f87171';
+            badge.style.color = '#f87171';
+            badge.textContent = 'STORE API OFFLINE 🔴 (Paused by Admin)';
+          } else if (!creds.api_access_enabled) {
+            badge.style.background = 'rgba(234, 179, 8, 0.2)';
+            badge.style.border = '1px solid #facc15';
+            badge.style.color = '#facc15';
+            badge.textContent = 'YOUR API ACCESS PAUSED 🟡 (Contact Admin)';
+          } else {
+            badge.style.background = 'rgba(52, 211, 153, 0.15)';
+            badge.style.border = '1px solid #34d399';
+            badge.style.color = '#34d399';
+            badge.textContent = 'ACTIVE & CONNECTED 🟢';
+          }
+        }
+
+        // Balance tag
+        const balTag = document.getElementById('res-portal-balance-tag');
+        if (balTag && data.wallet) {
+          balTag.textContent = `Wholesale Balance: NPR ${data.wallet.balance_npr.toLocaleString()} ($${data.wallet.balance_usd} USD)`;
+        }
+
+        // Render code snippets
+        updateResellerCodeSnippets();
+
+        // Render recent logs
+        renderResellerApiLogs(data.recent_logs || []);
+
+        // Load plans for the tester
+        loadResellerApiTesterProducts();
+
+      } catch (err) {
+        console.error('Error loading reseller portal:', err);
+      }
+    }
+
+    function toggleApiKeyVisibilityDashboard() {
+      const input = document.getElementById('res-dash-api-key');
+      const btn = document.getElementById('btn-show-hide-key');
+      if (!input) return;
+      if (input.type === 'password') {
+        input.type = 'text';
+        if (btn) btn.textContent = '🙈';
+      } else {
+        input.type = 'password';
+        if (btn) btn.textContent = '👁️';
+      }
+    }
+
+    function copyResellerApiKey() {
+      if (!globalResellerApiKey) return;
+      navigator.clipboard.writeText(globalResellerApiKey).then(() => {
+        showToast('API Key copied to clipboard! 📋 Keep it secret.', 'success');
+        const btn = document.getElementById('btn-copy-res-key');
+        if (btn) {
+          const orig = btn.textContent;
+          btn.textContent = '✓ Copied!';
+          setTimeout(() => { btn.textContent = orig; }, 1800);
+        }
+      }).catch(() => {
+        prompt('Copy API Key:', globalResellerApiKey);
+      });
+    }
+
+    function copyResellerEndpoint() {
+      const url = `${window.location.origin}/api/v1/reseller/create-key`;
+      navigator.clipboard.writeText(url).then(() => {
+        showToast('API Endpoint URL copied! 🔗', 'success');
+      }).catch(() => {
+        prompt('Endpoint URL:', url);
+      });
+    }
+
+    async function regenerateResellerApiKeyFromDashboard() {
+      if (!confirm('Are you sure you want to regenerate your API key? Any bots or scripts using the current key will immediately stop working until updated.')) {
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/reseller/regenerate-key', {
+          method: 'POST',
+          credentials: 'include'
+        });
+        const data = await res.json();
+        if (data.success) {
+          globalResellerApiKey = data.api_key;
+          const input = document.getElementById('res-dash-api-key');
+          if (input) input.value = data.api_key;
+          updateResellerCodeSnippets();
+          showToast(data.message, 'success');
+        } else {
+          showToast(data.message || 'Failed to regenerate key', 'error');
+        }
+      } catch (e) {
+        showToast('Network error: ' + e.message, 'error');
+      }
+    }
+
+    async function loadResellerApiTesterProducts() {
+      try {
+        const res = await fetch(`/api/v1/reseller/products?api_key=${encodeURIComponent(globalResellerApiKey)}`);
+        const data = await res.json();
+        if (!data.success) return;
+
+        globalResellerProducts = data.products || [];
+
+        const select = document.getElementById('res-test-plan-select');
+        if (!select) return;
+
+        const options = [];
+        globalResellerProducts.forEach(prod => {
+          (prod.plans || []).forEach(plan => {
+            const stockNote = plan.stock?.local_keys_available > 0
+              ? ` (${plan.stock.local_keys_available} in stock)`
+              : (plan.stock?.supplier_auto_delivery ? ' (Auto-Delivery)' : ' (Out of stock)');
+            options.push({
+              id: plan.plan_id,
+              label: `${prod.name} - ${plan.plan_name} (${plan.days}d) — NPR ${plan.pricing.reseller_price_npr}${stockNote}`,
+              priceNpr: plan.pricing.reseller_price_npr
+            });
+          });
+        });
+
+        if (options.length === 0) {
+          select.innerHTML = '<option value="">No active plans available</option>';
+          return;
+        }
+
+        select.innerHTML = options.map(o => `<option value="${o.id}" data-price="${o.priceNpr}">${escapeHtml(o.label)}</option>`).join('');
+        updateResellerTestPricePreview();
+      } catch (err) {
+        console.error('Error loading tester products:', err);
+      }
+    }
+
+    function updateResellerTestPricePreview() {
+      const select = document.getElementById('res-test-plan-select');
+      const countSelect = document.getElementById('res-test-count-select');
+      const tag = document.getElementById('res-test-price-tag');
+      if (!select || !countSelect || !tag) return;
+
+      const opt = select.options[select.selectedIndex];
+      const unitPrice = parseFloat(opt ? opt.getAttribute('data-price') : 0) || 0;
+      const count = parseInt(countSelect.value, 10) || 1;
+      const total = (unitPrice * count).toFixed(2);
+
+      tag.textContent = `Wholesale: NPR ${parseFloat(total).toLocaleString()}`;
+    }
+
+    async function executeResellerApiTestKey() {
+      const select = document.getElementById('res-test-plan-select');
+      const countSelect = document.getElementById('res-test-count-select');
+      const btn = document.getElementById('btn-exec-res-api-test');
+      const resultBox = document.getElementById('res-test-result-box');
+      const resultKeys = document.getElementById('res-test-result-keys');
+
+      if (!select || !select.value) {
+        showToast('Please select a product plan first.', 'warning');
+        return;
+      }
+
+      const planId = parseInt(select.value, 10);
+      const count = parseInt(countSelect.value, 10) || 1;
+
+      btn.disabled = true;
+      btn.textContent = 'Calling API... ⚡';
+
+      try {
+        const res = await fetch('/api/v1/reseller/create-key', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-API-Key': globalResellerApiKey
+          },
+          body: JSON.stringify({
+            plan_id: planId,
+            count: count,
+            custom_note: 'Dashboard Test Generator'
+          })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+          showToast(data.error || 'Failed to generate key via API', 'error');
+          if (resultBox) resultBox.style.display = 'none';
+          return;
+        }
+
+        showToast(`Success! ${data.count} Key(s) generated via API! 🎉`, 'success');
+
+        if (resultBox && resultKeys) {
+          resultBox.style.display = 'block';
+          resultKeys.innerHTML = (data.keys || [data.key]).map(k => `
+            <div style="display: flex; justify-content: space-between; align-items: center; background: #0c1020; padding: 8px 12px; border-radius: 4px; margin-top: 6px;">
+              <span style="color: #38bdf8;">${escapeHtml(k)}</span>
+              <button type="button" class="btn btn-outline btn-sm" onclick="navigator.clipboard.writeText('${k}'); showToast('Key copied! 📋', 'success');" style="padding: 2px 8px; font-size: 0.72rem;">
+                📋 Copy
+              </button>
+            </div>
+          `).join('');
+        }
+
+        // Update wallet balance display
+        if (data.wallet) {
+          const balEl = document.getElementById('dash-wallet-bal');
+          if (balEl) balEl.textContent = `NPR ${parseFloat(data.wallet.balance_left_npr).toLocaleString()}`;
+          const balTag = document.getElementById('res-portal-balance-tag');
+          if (balTag) balTag.textContent = `Wholesale Balance: NPR ${data.wallet.balance_left_npr.toLocaleString()}`;
+        }
+
+        // Reload user orders and portal logs
+        loadUserOrders();
+        loadResellerPortal();
+
+      } catch (err) {
+        showToast('Network error: ' + err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '🚀 Generate Key via API';
+      }
+    }
+
+    function switchResellerCodeTab(tab) {
+      activeResellerCodeTab = tab;
+      document.querySelectorAll('.res-code-tab').forEach(b => {
+        b.style.background = 'transparent';
+        b.style.color = 'var(--text-dim)';
+      });
+      const activeBtn = document.getElementById(`tab-btn-${tab}`);
+      if (activeBtn) {
+        activeBtn.style.background = 'var(--primary)';
+        activeBtn.style.color = '#fff';
+      }
+      updateResellerCodeSnippets();
+    }
+
+    function updateResellerCodeSnippets() {
+      const pre = document.getElementById('res-code-snippet-pre');
+      if (!pre) return;
+
+      const endpoint = `${window.location.origin}/api/v1/reseller/create-key`;
+      const key = globalResellerApiKey || 'wx_live_YOUR_API_KEY';
+
+      if (activeResellerCodeTab === 'curl') {
+        pre.textContent = `curl -X POST "${endpoint}" \\
+  -H "X-API-Key: ${key}" \\
+  -H "Content-Type: application/json" \\
+  -d '{"plan_id": 1, "count": 1}'`;
+      } else if (activeResellerCodeTab === 'python') {
+        pre.textContent = `import requests
+
+url = "${endpoint}"
+headers = {
+    "X-API-Key": "${key}",
+    "Content-Type": "application/json"
+}
+payload = {
+    "plan_id": 1,
+    "count": 1
+}
+
+response = requests.post(url, json=payload, headers=headers)
+data = response.json()
+
+if data.get("success"):
+    print("License Key:", data["key"])
+    print("Balance Left NPR:", data["wallet"]["balance_left_npr"])
+else:
+    print("Error:", data.get("error"))`;
+      } else if (activeResellerCodeTab === 'node') {
+        pre.textContent = `const axios = require('axios'); // or fetch()
+
+async function createLicenseKey() {
+  const response = await axios.post('${endpoint}', {
+    plan_id: 1,
+    count: 1
+  }, {
+    headers: {
+      'X-API-Key': '${key}'
+    }
+  });
+
+  console.log('Delivered Key:', response.data.key);
+  console.log('Balance Left:', response.data.wallet.balance_left_npr);
+}
+
+createLicenseKey();`;
+      } else if (activeResellerCodeTab === 'php') {
+        pre.textContent = `<?php
+$ch = curl_init('${endpoint}');
+$payload = json_encode(['plan_id' => 1, 'count' => 1]);
+
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_POST, true);
+curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    'X-API-Key: ${key}',
+    'Content-Type: application/json'
+]);
+
+$response = curl_exec($ch);
+curl_close($ch);
+
+$result = json_decode($response, true);
+echo "License Key: " . $result['key'];
+?>`;
+      }
+    }
+
+    function renderResellerApiLogs(logs) {
+      const tbody = document.getElementById('res-api-logs-tbody');
+      if (!tbody) return;
+
+      if (!logs || logs.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-dim);">
+              No API key creations recorded yet. Test an API call above or integrate your bot!
+            </td>
+          </tr>`;
+        return;
+      }
+
+      tbody.innerHTML = logs.map(l => {
+        const isSuccess = l.status === 'success';
+        const badge = isSuccess
+          ? `<span class="badge badge-undetected">SUCCESS 🟢</span>`
+          : `<span class="badge" style="background: rgba(239, 68, 68, 0.15); color: #f87171;">FAILED 🔴</span>`;
+
+        const keyStr = (l.keys && l.keys.length > 0) ? l.keys[0] : '-';
+
+        return `
+          <tr>
+            <td><span style="font-family: var(--font-mono); color: #fff; font-weight: 700;">${escapeHtml(l.order_code || '-')}</span></td>
+            <td><strong style="color: #38bdf8;">${escapeHtml(l.product_name || 'Product')}</strong> <span style="font-size: 0.78rem; color: var(--text-dim);">(${escapeHtml(l.plan_name || '')})</span></td>
+            <td>
+              <div style="display: flex; align-items: center; gap: 0.4rem;">
+                <code style="font-family: var(--font-mono); font-size: 0.8rem; color: #34d399; background: #000; padding: 2px 6px; border-radius: 4px;">${escapeHtml(keyStr)}</code>
+                ${keyStr !== '-' ? `<button type="button" class="btn btn-outline btn-sm" onclick="navigator.clipboard.writeText('${escapeHtml(keyStr)}'); showToast('Key copied! 📋', 'success');" style="padding: 1px 6px; font-size: 0.7rem;">📋</button>` : ''}
+              </div>
+            </td>
+            <td><strong style="color: #fff; font-family: var(--font-heading);">NPR ${parseFloat(l.amount_npr || 0).toFixed(2)}</strong></td>
+            <td style="color: var(--text-dim); font-size: 0.84rem;">${formatDate(l.created_at)}</td>
+            <td>${badge}</td>
+          </tr>
+        `;
+      }).join('');
     }
   </script>
 </body>
