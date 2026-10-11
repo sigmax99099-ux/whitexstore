@@ -18,11 +18,14 @@ export default async function handler(req, res) {
       try {
         const refRes = await query(
           `SELECT r.id, r.referral_code, r.reward_referrer_npr, r.reward_referee_npr, r.created_at,
+                  COALESCE(r.status, 'completed') as status, r.rewarded_at, r.order_id,
+                  o.order_code,
                   referrer.id as referrer_id, referrer.name as referrer_name, referrer.email as referrer_email,
                   referee.id as referee_id, referee.name as referee_name, referee.email as referee_email
            FROM referrals r
            LEFT JOIN users referrer ON r.referrer_id = referrer.id
            LEFT JOIN users referee ON r.referred_user_id = referee.id
+           LEFT JOIN orders o ON r.order_id = o.id
            ORDER BY r.created_at DESC`
         );
         referrals = refRes.rows || [];
@@ -31,12 +34,20 @@ export default async function handler(req, res) {
       }
 
       let totalPaidNpr = 0;
+      let completedCount = 0;
+      let pendingCount = 0;
       const uniqueReferrers = new Set();
 
       referrals.forEach(r => {
-        const refReward = parseFloat(r.reward_referrer_npr || 0);
-        const newReward = parseFloat(r.reward_referee_npr || 0);
-        totalPaidNpr += (refReward + newReward);
+        const isCompleted = (r.status === 'completed');
+        if (isCompleted) {
+          completedCount++;
+          const refReward = parseFloat(r.reward_referrer_npr || 0);
+          const newReward = parseFloat(r.reward_referee_npr || 0);
+          totalPaidNpr += (refReward + newReward);
+        } else {
+          pendingCount++;
+        }
         if (r.referrer_id) uniqueReferrers.add(r.referrer_id);
       });
 
@@ -45,6 +56,8 @@ export default async function handler(req, res) {
         settings,
         stats: {
           total_referrals: referrals.length,
+          completed_referrals: completedCount,
+          pending_referrals: pendingCount,
           total_rewards_paid_npr: totalPaidNpr,
           active_referrers_count: uniqueReferrers.size
         },

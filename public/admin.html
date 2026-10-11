@@ -1717,7 +1717,7 @@
         <div class="admin-card" style="padding: 1.5rem; margin-bottom: 1.75rem; border-color: rgba(52, 211, 153, 0.35); background: radial-gradient(ellipse at 85% 20%, rgba(52, 211, 153, 0.08) 0%, rgba(10, 14, 23, 0.95) 70%), #070a12;">
           <h3 style="color: #34d399; margin: 0 0 0.5rem 0; font-size: 1.15rem;">⚙️ Set Referral Prizes & Monthly Quotas</h3>
           <p style="font-size: 0.82rem; color: var(--text-dim); margin: 0 0 1.25rem 0;">
-            When a new user registers with a client's referral code, both users instantly receive the bonus set below into their wallet balances.
+            When a referred client claims or buys any product from the store, both users instantly receive the bonus set below into their wallet balances.
           </p>
 
           <form id="form-adm-referral-settings">
@@ -1726,7 +1726,7 @@
                 <label class="form-label" for="tab-ref-referrer-reward">Referrer Prize Bonus (NPR)</label>
                 <input type="number" id="tab-ref-referrer-reward" class="form-input" min="0" step="any" placeholder="50" required>
                 <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: 0.25rem;">
-                  Amount credited to the referring user's wallet
+                  Amount credited to referring user's wallet when friend buys
                 </div>
               </div>
 
@@ -1734,7 +1734,7 @@
                 <label class="form-label" for="tab-ref-referee-reward">New Customer Prize Bonus (NPR)</label>
                 <input type="number" id="tab-ref-referee-reward" class="form-input" min="0" step="any" placeholder="50" required>
                 <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: 0.25rem;">
-                  Amount credited to the newly registered client
+                  Amount credited to new client upon their first store purchase
                 </div>
               </div>
 
@@ -7030,7 +7030,9 @@
         const statPaid = document.getElementById('adm-stat-ref-paid');
         const statUsers = document.getElementById('adm-stat-ref-users');
 
-        if (statTotal) statTotal.textContent = stats.total_referrals || 0;
+        if (statTotal) {
+          statTotal.innerHTML = `${stats.total_referrals || 0} <span style="font-size: 0.85rem; font-weight: 500; color: #34d399;">(${stats.completed_referrals || 0} Paid / ${stats.pending_referrals || 0} Awaiting 1st Buy)</span>`;
+        }
         if (statPaid) statPaid.textContent = `NPR ${parseFloat(stats.total_rewards_paid_npr || 0).toLocaleString()}`;
         if (statUsers) statUsers.textContent = stats.active_referrers_count || 0;
 
@@ -7069,7 +7071,16 @@
         const referrerReward = parseFloat(r.reward_referrer_npr || 0);
         const refereeReward = parseFloat(r.reward_referee_npr || 0);
         const totalPaid = (referrerReward + refereeReward);
-        const dateStr = formatDate(r.created_at);
+        const isCompleted = (r.status === 'completed');
+        const dateStr = formatDate(r.rewarded_at || r.created_at);
+
+        const statusBadge = isCompleted
+          ? `<span class="badge badge-undetected" style="font-size: 0.72rem; padding: 2px 7px;">AWARDED ON BUY 🟢</span>${r.order_code ? `<div style="font-size: 0.7rem; color: #34d399; font-family: monospace; margin-top: 2px;">Order: ${escapeHtml(r.order_code)}</div>` : ''}`
+          : `<span class="badge" style="background: rgba(234, 179, 8, 0.15); border: 1px solid rgba(234, 179, 8, 0.4); color: #facc15; font-size: 0.72rem; padding: 2px 7px;">AWAITING 1ST BUY ⏳</span>`;
+
+        const totalCell = isCompleted
+          ? `<strong style="color: #34d399; font-family: var(--font-heading);">NPR ${totalPaid.toFixed(2)}</strong>`
+          : `<span style="color: var(--text-dim); font-size: 0.78rem;">Pending Buy (NPR ${totalPaid.toFixed(2)})</span>`;
 
         return `
           <tr>
@@ -7089,12 +7100,10 @@
             </td>
             <td><strong style="color: #34d399;">NPR ${referrerReward.toFixed(2)}</strong></td>
             <td><strong style="color: #38bdf8;">NPR ${refereeReward.toFixed(2)}</strong></td>
-            <td><strong style="color: #fff; font-family: var(--font-heading);">NPR ${totalPaid.toFixed(2)}</strong></td>
+            <td>${totalCell}</td>
             <td style="font-size: 0.82rem; color: var(--text-dim);">${dateStr}</td>
             <td>
-              <span class="badge badge-undetected" style="font-size: 0.72rem; padding: 2px 7px;">
-                SUCCESS 🟢
-              </span>
+              ${statusBadge}
             </td>
           </tr>
         `;

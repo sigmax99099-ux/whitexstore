@@ -2,6 +2,7 @@ import { getClient } from '../../lib/db.js';
 import { getAuthAdmin } from '../../lib/auth.js';
 import { notifyOrderApproved } from '../../lib/discord.js';
 import { deliverOrder } from '../../services/delivery.js';
+import { processReferralRewardOnPurchase } from '../../lib/referral.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -152,6 +153,17 @@ export default async function handler(req, res) {
 
     try { await client.query('COMMIT'); } catch(e) {}
     client.release && client.release();
+
+    // Check & trigger referral rewards on first store purchase (if not already awarded)
+    try {
+      await processReferralRewardOnPurchase({
+        userId: order.user_id,
+        orderId: order.id,
+        orderCode: order.order_code
+      });
+    } catch (refErr) {
+      console.warn('[Referral] Notice processing referral reward on admin approval:', refErr.message);
+    }
 
     // 5. Discord notification
     await notifyOrderApproved({

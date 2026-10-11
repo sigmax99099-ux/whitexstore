@@ -4,6 +4,7 @@ import { getAuthUser } from '../../lib/auth.js';
 import { callSupplierForKey } from '../../lib/keylicense.js';
 import { notifyNewOrder, notifyOrderDelivered } from '../../lib/discord.js';
 import { deliverOrder } from '../../services/delivery.js';
+import { processReferralRewardOnPurchase } from '../../lib/referral.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -228,6 +229,23 @@ export default async function handler(req, res) {
     try { await client.query('COMMIT'); } catch(e) { /* mock: no-op */ }
     client.release && client.release();
 
+    // 6.5. Process referral bonus for first store purchase
+    // Both Referrer and Buyer get their bonus when buyer purchases/claims a product!
+    let refReward = null;
+    let finalWalletBalance = newBalance;
+    try {
+      refReward = await processReferralRewardOnPurchase({
+        userId: user.id,
+        orderId: order.id,
+        orderCode: order.order_code
+      });
+      if (refReward && refReward.awarded && refReward.reward_referee_npr > 0) {
+        finalWalletBalance = parseFloat((newBalance + refReward.reward_referee_npr).toFixed(2));
+      }
+    } catch (refErr) {
+      console.warn('[Referral] Notice processing referral on purchase:', refErr.message);
+    }
+
     // 7. Attempt Auto-Delivery of Key using new delivery service
     // This handles:
     // - Idempotency via UNIQUE delivery record per order_id
@@ -271,6 +289,13 @@ export default async function handler(req, res) {
         auto: true
       });
 
+      let successMsg = deliveryResult.alreadyDelivered 
+        ? 'Order already processed. Key delivered previously.' 
+        : 'Order completed and key delivered instantly!';
+      if (refReward && refReward.awarded && refReward.reward_referee_npr > 0) {
+        successMsg += ` 🎁 Referral Bonus: NPR ${refReward.reward_referee_npr} added to your wallet for your first store purchase!`;
+      }
+
       return res.status(200).json({
         success: true,
         order_status: 'approved',
@@ -282,12 +307,12 @@ export default async function handler(req, res) {
         delivery_id: deliveryResult.deliveryId,
         amount_usd: finalPriceUsd,
         amount_npr: finalPriceNpr,
-        new_wallet_balance: newBalance,
+        new_wallet_balance: finalWalletBalance,
+        referral_reward_awarded: refReward?.awarded || false,
+        referral_reward_npr: refReward?.reward_referee_npr || 0,
         discount_usd: couponDiscountUsd,
         redeem_code: appliedCoupon ? appliedCoupon.code : null,
-        message: deliveryResult.alreadyDelivered 
-          ? 'Order already processed. Key delivered previously.' 
-          : 'Order completed and key delivered instantly!',
+        message: successMsg,
         download_links: downloadLinks,
         supplier_cost: deliveryResult.supplierCost,
         balance_left: deliveryResult.balanceLeft
@@ -321,6 +346,10 @@ export default async function handler(req, res) {
         message = 'Delivery failed permanently. Contact support for refund.';
       }
 
+      if (refReward && refReward.awarded && refReward.reward_referee_npr > 0) {
+        message += ` 🎁 Referral Bonus: NPR ${refReward.reward_referee_npr} added to your wallet for your first store purchase!`;
+      }
+
       return res.status(200).json({
         success: true,
         order_status: 'pending_delivery',
@@ -335,7 +364,9 @@ export default async function handler(req, res) {
         delivery_retryable: isRetryable,
         amount_usd: finalPriceUsd,
         amount_npr: finalPriceNpr,
-        new_wallet_balance: newBalance,
+        new_wallet_balance: finalWalletBalance,
+        referral_reward_awarded: refReward?.awarded || false,
+        referral_reward_npr: refReward?.reward_referee_npr || 0,
         discount_usd: couponDiscountUsd,
         redeem_code: appliedCoupon ? appliedCoupon.code : null,
         message,

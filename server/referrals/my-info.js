@@ -32,6 +32,7 @@ export default async function handler(req, res) {
     try {
       const refRes = await query(
         `SELECT r.id, r.reward_referrer_npr, r.reward_referee_npr, r.created_at,
+                COALESCE(r.status, 'completed') as status, r.rewarded_at, r.order_id,
                 u.name as referee_name, u.email as referee_email
          FROM referrals r
          JOIN users u ON r.referred_user_id = u.id
@@ -44,21 +45,29 @@ export default async function handler(req, res) {
       console.warn('[Referrals] Notice fetching history:', e.message);
     }
 
-    // Calculate current calendar month usage
+    // Calculate current calendar month usage (only for COMPLETED referrals)
     const now = new Date();
     const curYear = now.getFullYear();
     const curMonth = now.getMonth();
 
     let referralsThisMonth = 0;
     let totalEarnedNpr = 0;
+    let completedCount = 0;
+    let pendingCount = 0;
 
     const formattedHistory = referrals.map(r => {
-      const d = new Date(r.created_at);
-      if (d.getFullYear() === curYear && d.getMonth() === curMonth) {
-        referralsThisMonth++;
+      const isCompleted = (r.status === 'completed');
+      if (isCompleted) {
+        completedCount++;
+        const d = new Date(r.rewarded_at || r.created_at);
+        if (d.getFullYear() === curYear && d.getMonth() === curMonth) {
+          referralsThisMonth++;
+        }
+        const earned = parseFloat(r.reward_referrer_npr || 0);
+        totalEarnedNpr += earned;
+      } else {
+        pendingCount++;
       }
-      const earned = parseFloat(r.reward_referrer_npr || 0);
-      totalEarnedNpr += earned;
 
       // Mask referee name and email for privacy
       const nameParts = (r.referee_name || 'Gamer').split(' ');
@@ -74,7 +83,10 @@ export default async function handler(req, res) {
         id: r.id,
         referee_name: maskedName,
         referee_email: maskedEmail,
-        reward_npr: earned,
+        reward_npr: parseFloat(r.reward_referrer_npr || 0),
+        status: r.status || 'completed',
+        rewarded_at: r.rewarded_at,
+        order_id: r.order_id,
         created_at: r.created_at
       };
     });
@@ -93,6 +105,8 @@ export default async function handler(req, res) {
       },
       stats: {
         total_referrals: referrals.length,
+        completed_referrals: completedCount,
+        pending_referrals: pendingCount,
         referrals_this_month: referralsThisMonth,
         remaining_this_month: remainingThisMonth,
         monthly_limit: monthlyLimit,

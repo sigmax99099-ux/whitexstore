@@ -281,10 +281,14 @@ CREATE TABLE IF NOT EXISTS referrals (
   referral_code TEXT NOT NULL,
   reward_referrer_npr NUMERIC NOT NULL DEFAULT 50,
   reward_referee_npr NUMERIC NOT NULL DEFAULT 50,
+  status TEXT NOT NULL DEFAULT 'completed' CHECK (status IN ('pending', 'completed')),
+  order_id INT REFERENCES orders(id) ON DELETE SET NULL,
+  rewarded_at TIMESTAMP WITH TIME ZONE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 CREATE INDEX IF NOT EXISTS idx_referrals_referrer_month ON referrals (referrer_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_referrals_referred_user ON referrals (referred_user_id);
 CREATE INDEX IF NOT EXISTS idx_users_referral_code ON users (referral_code);
 
 CREATE INDEX idx_hwid_reset_key ON hwid_reset_log(key_code);

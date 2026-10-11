@@ -116,6 +116,8 @@
             Loading keys...
           </div>
         </div>
+      </div>
+
       <!-- Referral Program Section (Invite & Earn) -->
       <div id="sec-referrals" class="product-card" style="padding: 2rem; margin-bottom: 2rem; border-color: rgba(52, 211, 153, 0.3); background: radial-gradient(ellipse at 90% 10%, rgba(52, 211, 153, 0.08) 0%, rgba(13, 13, 21, 0.95) 70%), #0a0e17; box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 20px rgba(52, 211, 153, 0.05);">
         <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
@@ -124,11 +126,11 @@
               <span style="font-size: 1.5rem;">🎁</span>
               <h3 style="color: #fff; margin: 0; font-size: 1.35rem;">// REFERRAL PROGRAM — INVITE & EARN</h3>
               <span id="ref-reward-tag" class="badge" style="background: rgba(52, 211, 153, 0.2); border: 1px solid #34d399; color: #34d399; font-weight: 700; letter-spacing: 0.5px;">
-                BOTH GET REWARDED
+                BOTH GET REWARDED ON 1ST PURCHASE
               </span>
             </div>
             <p style="font-size: 0.88rem; color: var(--text-muted); margin: 0; max-width: 720px;">
-              Share your exclusive referral code or link with other gamers. When someone registers an account using your referral, <strong style="color: #34d399;">BOTH of you immediately receive free NPR balance</strong> added directly to your White X Store wallet!
+              Share your exclusive referral code or link with other gamers. When your friend registers and <strong style="color: #34d399;">buys or claims any product from the store, BOTH of you instantly receive free NPR wallet bonus</strong>!
             </p>
           </div>
           <div id="ref-quota-pill" style="padding: 0.5rem 1rem; border-radius: 999px; background: rgba(52, 211, 153, 0.12); border: 1px solid rgba(52, 211, 153, 0.35); color: #34d399; font-size: 0.82rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
@@ -150,7 +152,7 @@
               </button>
             </div>
             <div style="font-size: 0.73rem; color: var(--text-dim); margin-top: 0.45rem;">
-              Friends can paste this code during sign-up to unlock your bonus.
+              When your friend buys their first product, both of your wallet bonuses unlock instantly!
             </div>
           </div>
 
@@ -627,14 +629,14 @@
         const waBtn = document.getElementById('ref-share-wa');
         const tgBtn = document.getElementById('ref-share-tg');
         const refereeReward = (data.settings && data.settings.reward_referee_npr) || 50;
-        const shareText = encodeURIComponent(`🎮 Join White X Store using my referral code ${code} and get NPR ${refereeReward} free wallet bonus instantly! Register here: ${link}`);
+        const shareText = encodeURIComponent(`🎮 Join White X Store using my referral code ${code} and unlock NPR ${refereeReward} free wallet bonus on your first store purchase! Register here: ${link}`);
         if (waBtn) waBtn.href = `https://wa.me/?text=${shareText}`;
-        if (tgBtn) tgBtn.href = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(`Join White X Store and get NPR ${refereeReward} free balance!`)}`;
+        if (tgBtn) tgBtn.href = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(`Join White X Store and get NPR ${refereeReward} free bonus on your first purchase!`)}`;
 
         // Reward tag
         const rewardTag = document.getElementById('ref-reward-tag');
         if (rewardTag) {
-          rewardTag.textContent = `BOTH GET NPR ${refereeReward} FREE`;
+          rewardTag.textContent = `BOTH GET NPR ${refereeReward} ON 1ST PURCHASE`;
         }
 
         // Stats
@@ -689,15 +691,26 @@
           return;
         }
 
-        tbody.innerHTML = data.history.map(h => `
-          <tr>
-            <td><strong style="color: #fff;">${escapeHtml(h.referee_name)}</strong></td>
-            <td><span style="font-family: var(--font-mono); font-size: 0.85rem; color: #94a3b8;">${escapeHtml(h.referee_email)}</span></td>
-            <td><span style="color: #34d399; font-weight: 700; font-family: var(--font-heading);">+ NPR ${parseFloat(h.reward_npr).toFixed(2)}</span></td>
-            <td style="color: var(--text-dim); font-size: 0.84rem;">${formatDate(h.created_at)}</td>
-            <td><span class="badge badge-undetected">SUCCESS / REWARDED</span></td>
-          </tr>
-        `).join('');
+        tbody.innerHTML = data.history.map(h => {
+          const isCompleted = (h.status === 'completed');
+          const badgeHtml = isCompleted
+            ? `<span class="badge badge-undetected">✅ COMPLETED / REWARDED</span>`
+            : `<span class="badge" style="background: rgba(234, 179, 8, 0.15); border: 1px solid rgba(234, 179, 8, 0.4); color: #facc15;">⏳ AWAITING 1ST PURCHASE</span>`;
+          const rewardHtml = isCompleted
+            ? `<span style="color: #34d399; font-weight: 700; font-family: var(--font-heading);">+ NPR ${parseFloat(h.reward_npr).toFixed(2)}</span>`
+            : `<span style="color: #94a3b8; font-size: 0.82rem; font-style: italic;">Unlocks on 1st buy (+NPR ${parseFloat(h.reward_npr).toFixed(2)})</span>`;
+          const dateStr = formatDate(h.rewarded_at || h.created_at);
+
+          return `
+            <tr>
+              <td><strong style="color: #fff;">${escapeHtml(h.referee_name)}</strong></td>
+              <td><span style="font-family: var(--font-mono); font-size: 0.85rem; color: #94a3b8;">${escapeHtml(h.referee_email)}</span></td>
+              <td>${rewardHtml}</td>
+              <td style="color: var(--text-dim); font-size: 0.84rem;">${dateStr}</td>
+              <td>${badgeHtml}</td>
+            </tr>
+          `;
+        }).join('');
 
       } catch (err) {
         console.error('Error loading referrals:', err);

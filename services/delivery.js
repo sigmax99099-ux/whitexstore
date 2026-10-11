@@ -10,6 +10,7 @@ import {
 } from './supplierApi.js';
 import { callSupplierForKey } from '../lib/keylicense.js';
 import { sendDiscordEmbed, DISCORD_COLORS, getDiscordWebhookUrl } from '../lib/discord.js';
+import { processReferralRewardOnPurchase } from '../lib/referral.js';
 
 /**
  * Delivery status constants
@@ -269,6 +270,17 @@ async function attemptDelivery(client, order, mapping, deliveryId) {
       "UPDATE orders SET status = 'approved' WHERE id = $1",
       [order.id]
     );
+
+    // 8.5. Process referral bonus for first store purchase (idempotent, won't duplicate)
+    try {
+      await processReferralRewardOnPurchase({
+        userId: order.user_id,
+        orderId: order.id,
+        orderCode: order.order_code
+      });
+    } catch (refErr) {
+      console.warn('[Delivery] Notice processing referral reward:', refErr.message);
+    }
     
     // 9. Notify Discord
     await notifyDiscordDelivery(order, keys, mapping.supplierProductName, order.plan_name);

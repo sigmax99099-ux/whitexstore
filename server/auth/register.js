@@ -103,60 +103,39 @@ export default async function handler(req, res) {
     const referrerBonus = validReferral ? parseFloat(validReferral.reward_referrer_npr || 0) : 0;
     const referrerId = validReferral ? validReferral.referrer.id : null;
 
-    // Insert user into Neon DB
+    // Insert user into Neon DB with initial wallet_balance = 0 (Referral bonus unlocks on first store purchase!)
     const insertRes = await query(
       `INSERT INTO users (name, email, phone, password_hash, user_type, reseller_discount, wallet_balance, status, referral_code, referred_by)
-       VALUES ($1, $2, $3, $4, 'customer', 0, $5, 'active', $6, $7)
+       VALUES ($1, $2, $3, $4, 'customer', 0, 0, 'active', $5, $6)
        RETURNING id, name, email, phone, user_type, reseller_discount, wallet_balance, status, referral_code, created_at`,
-      [name, email, phone, passwordHash, refereeBonus, newReferralCode, referrerId]
+      [name, email, phone, passwordHash, newReferralCode, referrerId]
     );
 
     const newUser = insertRes.rows[0];
 
-    // If a valid referral was applied, process rewards and ledger entries
+    // If a valid referral was applied, record pending referral (unlocks upon first product purchase)
     if (validReferral && referrerId) {
       try {
-        // 1. Credit referrer's wallet
         await query(
-          'UPDATE users SET wallet_balance = wallet_balance + $1 WHERE id = $2',
-          [referrerBonus, referrerId]
-        );
-
-        // 2. Record wallet transactions for Referrer (Credit)
-        await query(
-          `INSERT INTO wallet_transactions (user_id, type, amount, currency, status, description)
-           VALUES ($1, 'credit', $2, 'NPR', 'approved', $3)`,
-          [referrerId, referrerBonus, `Referral Reward: Invited ${newUser.name} (${newUser.email})`]
-        ).catch(e => console.warn('[Referral Transaction Referrer Error]:', e.message));
-
-        // 3. Record wallet transactions for Referee (Credit)
-        await query(
-          `INSERT INTO wallet_transactions (user_id, type, amount, currency, status, description)
-           VALUES ($1, 'credit', $2, 'NPR', 'approved', $3)`,
-          [newUser.id, refereeBonus, `Referral Welcome Bonus: Registered with code ${validReferral.referrer.referral_code}`]
-        ).catch(e => console.warn('[Referral Transaction Referee Error]:', e.message));
-
-        // 4. Record into referrals table
-        await query(
-          `INSERT INTO referrals (referrer_id, referred_user_id, referral_code, reward_referrer_npr, reward_referee_npr)
-           VALUES ($1, $2, $3, $4, $5)`,
+          `INSERT INTO referrals (referrer_id, referred_user_id, referral_code, reward_referrer_npr, reward_referee_npr, status)
+           VALUES ($1, $2, $3, $4, $5, 'pending')`,
           [referrerId, newUser.id, validReferral.referrer.referral_code, referrerBonus, refereeBonus]
         ).catch(e => console.warn('[Referral Record Error]:', e.message));
 
-        // 5. Discord Notification (non-blocking)
+        // Discord Notification for new referral registration awaiting purchase
         sendDiscordEmbed({
-          title: '🎁 Referral Bonus Awarded!',
-          description: `A new user registered using an active referral code!\nBoth users received **NPR ${refereeBonus}** in wallet balance.`,
-          color: DISCORD_COLORS.SUCCESS,
+          title: '👥 New Referral Registered (Awaiting 1st Purchase)!',
+          description: `**${newUser.name}** registered using referral code **${validReferral.referrer.referral_code}**.\n🎁 **Bonus Pending:** Both clients will receive **NPR ${refereeBonus}** in their wallet once ${newUser.name} buys/claims any product from the store!`,
+          color: DISCORD_COLORS.INFO,
           fields: [
-            { name: 'Referrer', value: `${validReferral.referrer.name} (Code: \`${validReferral.referrer.referral_code}\`)`, inline: true },
+            { name: 'Referrer', value: `${validReferral.referrer.name} (\`${validReferral.referrer.referral_code}\`)`, inline: true },
             { name: 'New User', value: `${newUser.name} (\`${newUser.email}\`)`, inline: true },
-            { name: 'Reward Credited', value: `NPR ${refereeBonus} each`, inline: true }
+            { name: 'Unlock Condition', value: 'First Product Purchase / Claim', inline: false }
           ]
         }).catch(() => {});
 
       } catch (err) {
-        console.error('Error crediting referral bonus:', err);
+        console.error('Error recording pending referral:', err);
       }
     }
 
@@ -171,7 +150,7 @@ export default async function handler(req, res) {
 
     let welcomeMsg = 'Account created successfully!';
     if (validReferral) {
-      welcomeMsg = `Account created successfully! NPR ${refereeBonus} referral bonus added to your wallet 🎁`;
+      welcomeMsg = `Account created successfully with referral code! Claim or buy your first product from the store to unlock your NPR ${refereeBonus} bonus for both of you 🎁`;
     }
 
     return res.status(201).json({

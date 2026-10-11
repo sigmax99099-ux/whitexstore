@@ -144,7 +144,7 @@
           const data = await res.json();
           if (data.valid) {
             refMsg.style.color = '#34d399';
-            refMsg.innerHTML = `🟢 <strong>Valid code from ${escapeHtml(data.referrer_name)}!</strong> Both you and your friend will receive <strong>NPR ${data.reward_referee_npr}</strong> free wallet balance upon registration!`;
+            refMsg.innerHTML = `🟢 <strong>Valid code from ${escapeHtml(data.referrer_name)}!</strong> When you buy or claim any product from the store, both you and your friend will instantly unlock <strong>NPR ${data.reward_referee_npr}</strong> wallet bonus!`;
           } else if (data.limit_reached) {
             refMsg.style.color = '#f87171';
             refMsg.innerHTML = `🔴 <strong>Monthly Limit Reached:</strong> This referrer has already completed their limit of 1 referral this month. You can still register without this code.`;
@@ -242,7 +242,7 @@
           }
 
           if (data.referral_applied) {
-            showToast(`Account created! NPR ${data.bonus_amount} referral bonus added to your wallet 🎁`, 'success');
+            showToast(`Account created! Buy or claim any store product to unlock your NPR ${data.bonus_amount || 50} referral bonus! 🎁`, 'success');
           } else {
             showToast('Account registered successfully! Welcome to White X.', 'success');
           }
