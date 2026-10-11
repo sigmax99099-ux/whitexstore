@@ -7,6 +7,7 @@ import authRegister from '../server/auth/register.js';
 import authLogin from '../server/auth/login.js';
 import authLogout from '../server/auth/logout.js';
 import authMe from '../server/auth/me.js';
+import authUpdateProfile from '../server/auth/update-profile.js';
 import authForgot from '../server/auth/forgot-password.js';
 import authReset from '../server/auth/reset-password.js';
 
@@ -103,6 +104,7 @@ const routes = {
   '/api/auth/login': authLogin,
   '/api/auth/logout': authLogout,
   '/api/auth/me': authMe,
+  '/api/auth/update-profile': authUpdateProfile,
   '/api/auth/forgot-password': authForgot,
   '/api/auth/reset-password': authReset,
 

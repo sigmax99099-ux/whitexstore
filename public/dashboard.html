@@ -52,75 +52,262 @@
   <main class="section">
     <div class="container">
       
-      <!-- User Profile & Balance Header -->
-      <div class="product-card" style="padding: 2rem; margin-bottom: 2rem;">
+      <!-- User Profile & Balance Header (Figure 1 & 2 Cyber Style) -->
+      <div class="product-card" style="padding: 1.6rem 2rem; margin-bottom: 1.5rem; position: relative; overflow: hidden; background: radial-gradient(ellipse at 85% 20%, rgba(0, 240, 255, 0.08) 0%, rgba(9, 14, 26, 0.98) 75%), #050812; border: 1.5px solid rgba(0, 240, 255, 0.35); box-shadow: 0 10px 30px rgba(0,0,0,0.6);">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
-          <div>
-            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.35rem;">
-              <h1 id="dash-user-name" style="font-size: 1.8rem; color: #fff;">User Profile</h1>
-              <span id="dash-user-tier" class="badge badge-undetected">Customer</span>
+          <div style="display: flex; align-items: center; gap: 1.15rem;">
+            <div class="drawer-avatar-ring" style="width: 58px; height: 58px; font-size: 1.3rem; margin: 0; flex-shrink: 0; cursor: pointer;" onclick="openProfileModal()" title="Edit Profile">
+              <span id="dash-avatar-initials">WX</span>
+              <span class="drawer-avatar-online"></span>
             </div>
-            <div style="color: var(--text-muted); font-size: 0.88rem;">
-              Email: <span id="dash-user-email" style="color: var(--text-main);">...</span> • 
-              Phone: <span id="dash-user-phone" style="color: var(--text-main);">...</span>
+            <div>
+              <div style="display: flex; align-items: center; gap: 0.65rem; margin-bottom: 0.25rem; flex-wrap: wrap;">
+                <h1 id="dash-user-name" style="font-size: 1.65rem; color: #fff; margin: 0; font-family: var(--font-heading);">User Profile</h1>
+                <span id="dash-user-tier" class="badge badge-undetected">Customer</span>
+                <button type="button" onclick="openProfileModal()" class="btn btn-outline btn-sm" style="padding: 0.2rem 0.6rem; font-size: 0.72rem; border-color: rgba(0, 240, 255, 0.4); color: #00f0ff;" title="Edit Profile">
+                  ✏️ Edit Profile
+                </button>
+              </div>
+              <div style="color: var(--text-muted); font-size: 0.84rem;">
+                Email: <span id="dash-user-email" style="color: var(--text-main);">...</span> • 
+                Phone: <span id="dash-user-phone" style="color: var(--text-main);">...</span>
+              </div>
             </div>
           </div>
 
           <div style="display: flex; align-items: center; gap: 0.85rem; flex-wrap: wrap;">
-            <div style="background: #0d0d15; border: 1px solid var(--bg-card-border); border-radius: var(--radius-md); padding: 0.75rem 1.4rem; text-align: right;">
-              <div style="font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase;">Wallet Balance</div>
-              <div id="dash-wallet-bal" style="font-family: var(--font-heading); font-size: 1.6rem; color: var(--primary); font-weight: 800; line-height: 1.1;">
+            <div style="background: #080c18; border: 1.5px solid rgba(0, 240, 255, 0.3); border-radius: var(--radius-md); padding: 0.65rem 1.25rem; text-align: right; box-shadow: 0 0 15px rgba(0,240,255,0.1);">
+              <div style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">Wallet Balance</div>
+              <div id="dash-wallet-bal" style="font-family: var(--font-heading); font-size: 1.5rem; color: #00f0ff; font-weight: 800; line-height: 1.1;">
                 NPR 0.00
               </div>
             </div>
 
-            <a href="#sec-referrals" class="btn btn-outline btn-sm" style="border-color: rgba(52, 211, 153, 0.45); color: #34d399; background: rgba(52, 211, 153, 0.08); font-weight: 600;">
+            <button type="button" onclick="switchDashTab('referrals')" class="btn btn-outline btn-sm" style="border-color: rgba(52, 211, 153, 0.45); color: #34d399; background: rgba(52, 211, 153, 0.08); font-weight: 600;">
               🎁 Invite & Earn
-            </a>
+            </button>
 
-            <a href="/wallet.html" class="btn btn-primary btn-sm btn-glow">
+            <button type="button" onclick="switchDashTab('deposit')" class="btn btn-primary btn-sm btn-glow">
               + Topup Balance
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Category-wise Separated Dashboard Tabs Bar -->
+      <div class="dash-category-tabs-bar" id="dash-category-tabs">
+        <button type="button" class="dash-cat-tab-btn active" data-tab="catalog" onclick="switchDashTab('catalog')">
+          <span>🛍️</span> <span>STORE CATALOG</span>
+        </button>
+        <button type="button" class="dash-cat-tab-btn" data-tab="licenses" onclick="switchDashTab('licenses')">
+          <span>🗝️</span> <span>MY LICENSES (<span id="tab-count-keys">0</span>)</span>
+        </button>
+        <button type="button" class="dash-cat-tab-btn" data-tab="deposit" onclick="switchDashTab('deposit')">
+          <span>💳</span> <span>DEPOSIT & WALLET</span>
+        </button>
+        <button type="button" class="dash-cat-tab-btn" data-tab="history" onclick="switchDashTab('history')">
+          <span>🕒</span> <span>ORDER HISTORY</span>
+        </button>
+        <button type="button" class="dash-cat-tab-btn" data-tab="referrals" onclick="switchDashTab('referrals')">
+          <span>🎁</span> <span>REFER & EARN</span>
+        </button>
+        <button type="button" class="dash-cat-tab-btn" data-tab="profile" onclick="switchDashTab('profile')">
+          <span>👤</span> <span>PROFILE & SETTINGS</span>
+        </button>
+      </div>
+
+      <!-- TAB 1: STORE CATALOG -->
+      <div id="tab-pane-catalog" class="tab-pane-content">
+        <!-- Quick Download Loader Banner -->
+        <div style="background: radial-gradient(ellipse at 85% 40%, rgba(0, 139, 163, 0.18) 0%, rgba(4, 18, 26, 0.95) 60%), #030c12; border: 1.5px solid rgba(0, 195, 255, 0.32); border-radius: var(--radius-lg); padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; box-shadow: 0 8px 25px rgba(0,0,0,0.7), inset 0 0 15px rgba(0,139,163,0.1);">
+          <div style="display: flex; align-items: center; gap: 1rem;">
+            <div style="font-size: 2rem;">💾</div>
+            <div>
+              <h4 style="color: #fff; margin-bottom: 0.2rem;">Official White X Cheat Loader (v4.8.2)</h4>
+              <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0;">
+                Universal bypass loader with automated key validation, HWID spoofing, and driver injection.
+              </p>
+            </div>
+          </div>
+          <a href="https://github.com" target="_blank" class="btn btn-outline btn-sm">
+            Download Loader (.exe) ⬇
+          </a>
+        </div>
+
+        <!-- Catalog Filter Bar (Category Pills & Search) -->
+        <div class="product-card" style="padding: 1.5rem; margin-bottom: 1.5rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;" id="catalog-category-pills">
+              <button type="button" class="btn btn-primary btn-sm cat-filter-btn active" data-cat="ALL" onclick="filterCatalogCategory('ALL')">ALL PRODUCTS</button>
+              <button type="button" class="btn btn-outline btn-sm cat-filter-btn" data-cat="FREE FIRE" onclick="filterCatalogCategory('FREE FIRE')">FREE FIRE / BR MODS</button>
+              <button type="button" class="btn btn-outline btn-sm cat-filter-btn" data-cat="BGMI" onclick="filterCatalogCategory('BGMI')">BGMI / PUBG</button>
+              <button type="button" class="btn btn-outline btn-sm cat-filter-btn" data-cat="VALORANT" onclick="filterCatalogCategory('VALORANT')">VALORANT</button>
+              <button type="button" class="btn btn-outline btn-sm cat-filter-btn" data-cat="FREE" onclick="filterCatalogCategory('FREE')">FREE PANEL ⭐</button>
+            </div>
+            <div style="min-width: 240px; flex: 1; max-width: 320px;">
+              <input type="text" id="catalog-search-input" class="form-input" placeholder="🔍 Search cheats & keys..." oninput="filterCatalogSearch()" style="width:100%; padding: 0.5rem 0.85rem;">
+            </div>
+          </div>
+
+          <!-- Catalog Products Grid -->
+          <div id="catalog-products-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 1.25rem;">
+            <div style="text-align: center; padding: 2.5rem; color: var(--text-dim); grid-column: 1 / -1;">
+              Loading store products...
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: MY ACTIVE LICENSE KEYS -->
+      <div id="tab-pane-licenses" class="tab-pane-content" style="display:none;">
+        <!-- Quick Download Loader Banner -->
+        <div style="background: radial-gradient(ellipse at 85% 40%, rgba(0, 139, 163, 0.18) 0%, rgba(4, 18, 26, 0.95) 60%), #030c12; border: 1.5px solid rgba(0, 195, 255, 0.32); border-radius: var(--radius-lg); padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; box-shadow: 0 8px 25px rgba(0,0,0,0.7), inset 0 0 15px rgba(0,139,163,0.1);">
+          <div style="display: flex; align-items: center; gap: 1rem;">
+            <div style="font-size: 2rem;">💾</div>
+            <div>
+              <h4 style="color: #fff; margin-bottom: 0.2rem;">Official White X Cheat Loader (v4.8.2)</h4>
+              <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0;">
+                Universal bypass loader with automated key validation, HWID spoofing, and driver injection.
+              </p>
+            </div>
+          </div>
+          <a href="https://github.com" target="_blank" class="btn btn-outline btn-sm">
+            Download Loader (.exe) ⬇
+          </a>
+        </div>
+
+        <div class="product-card" style="padding: 2rem; margin-bottom: 2rem;">
+          <div class="section-head" style="margin-bottom: 1.25rem;">
+            <div>
+              <h3 style="color: #fff;">// MY ACTIVE LICENSE KEYS</h3>
+              <p style="font-size: 0.88rem; color: var(--text-muted);">Click the key to copy. Auto-refreshes pending orders every 10s.</p>
+            </div>
+            <button type="button" onclick="switchDashTab('catalog')" class="btn btn-primary btn-sm">+ Buy New Key</button>
+          </div>
+
+          <div id="keys-container">
+            <div style="text-align: center; padding: 2rem; color: var(--text-dim);">
+              Loading keys...
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: DEPOSIT & WALLET -->
+      <div id="tab-pane-deposit" class="tab-pane-content" style="display:none;">
+        <div class="product-card" style="padding: 2rem; margin-bottom: 2rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem; margin-bottom: 1.5rem; padding-bottom: 1.25rem; border-bottom: 1px solid rgba(255,255,255,0.08);">
+            <div>
+              <h3 style="color: #fff; margin-bottom: 0.35rem;">// WALLET BALANCE & INSTANT DEPOSIT</h3>
+              <p style="font-size: 0.88rem; color: var(--text-muted); margin: 0;">Add funds via digital wallets, UPI, or crypto to enjoy 1-click purchases.</p>
+            </div>
+            <a href="/wallet.html" class="btn btn-primary btn-glow">
+              Open Full Wallet Page ⚡
+            </a>
+          </div>
+
+          <!-- Quick Balance Stats -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; margin-bottom: 2rem;">
+            <div style="background: #080c18; border: 1.5px solid rgba(0, 240, 255, 0.3); border-radius: var(--radius-md); padding: 1.25rem;">
+              <div style="font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">NPR Balance</div>
+              <div id="deposit-bal-npr" style="font-family: var(--font-heading); font-size: 1.6rem; color: #00f0ff; font-weight: 800; margin-top: 0.25rem;">
+                NPR 0.00
+              </div>
+            </div>
+            <div style="background: #080c18; border: 1.5px solid rgba(255, 170, 0, 0.3); border-radius: var(--radius-md); padding: 1.25rem;">
+              <div style="font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">USD Equivalent</div>
+              <div id="deposit-bal-usd" style="font-family: var(--font-heading); font-size: 1.6rem; color: #ffb703; font-weight: 800; margin-top: 0.25rem;">
+                $0.00
+              </div>
+            </div>
+            <div style="background: #080c18; border: 1.5px solid rgba(52, 211, 153, 0.3); border-radius: var(--radius-md); padding: 1.25rem;">
+              <div style="font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">INR Equivalent</div>
+              <div id="deposit-bal-inr" style="font-family: var(--font-heading); font-size: 1.6rem; color: #34d399; font-weight: 800; margin-top: 0.25rem;">
+                ₹0.00
+              </div>
+            </div>
+          </div>
+
+          <!-- Deposit Gateways Preview -->
+          <h4 style="color:#fff; font-size:0.95rem; margin-bottom:0.75rem;">// INSTANT SUPPORTED GATEWAYS</h4>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+            <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); border-radius:10px; padding:1.25rem; text-align:center;">
+              <div style="font-size:1.8rem; margin-bottom:0.4rem;">🟢</div>
+              <div style="font-weight:700; color:#fff;">eSewa / Khalti</div>
+              <div style="font-size:0.75rem; color:#94a3b8; margin-top:0.2rem;">Nepal QR / Mobile Wallet</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); border-radius:10px; padding:1.25rem; text-align:center;">
+              <div style="font-size:1.8rem; margin-bottom:0.4rem;">🇮🇳</div>
+              <div style="font-weight:700; color:#fff;">UPI / GPay / PhonePe</div>
+              <div style="font-size:0.75rem; color:#94a3b8; margin-top:0.2rem;">Direct UPI Transfer</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); border-radius:10px; padding:1.25rem; text-align:center;">
+              <div style="font-size:1.8rem; margin-bottom:0.4rem;">🪙</div>
+              <div style="font-weight:700; color:#fff;">USDT / Binance</div>
+              <div style="font-size:0.75rem; color:#94a3b8; margin-top:0.2rem;">Crypto TRC20 / BEP20</div>
+            </div>
+          </div>
+
+          <div style="text-align:center;">
+            <a href="/wallet.html" class="btn btn-primary btn-sm btn-glow" style="padding: 0.65rem 2rem; font-size: 0.95rem;">
+              ⚡ Proceed to Submit Deposit Request
             </a>
           </div>
         </div>
       </div>
 
-      <!-- Quick Download Loader Banner -->
-      <div style="background: radial-gradient(ellipse at 85% 40%, rgba(0, 139, 163, 0.18) 0%, rgba(4, 18, 26, 0.95) 60%), #030c12; border: 1.5px solid rgba(0, 195, 255, 0.32); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; box-shadow: 0 8px 25px rgba(0,0,0,0.7), inset 0 0 15px rgba(0,139,163,0.1);">
-        <div style="display: flex; align-items: center; gap: 1rem;">
-          <div style="font-size: 2.2rem;">💾</div>
-          <div>
-            <h4 style="color: #fff; margin-bottom: 0.2rem;">Official White X Cheat Loader (v4.8.2)</h4>
-            <p style="font-size: 0.85rem; color: var(--text-muted);">
-              Universal bypass loader with automated key validation, HWID spoofing, and driver injection.
-            </p>
+      <!-- TAB 6: PROFILE & RESELLER SETTINGS -->
+      <div id="tab-pane-profile" class="tab-pane-content" style="display:none;">
+        <!-- In-Page Profile Editor Card -->
+        <div class="product-card" style="padding: 2rem; margin-bottom: 2rem; border-color: rgba(0, 240, 255, 0.35); background: radial-gradient(ellipse at 90% 15%, rgba(0, 240, 255, 0.08) 0%, rgba(8, 12, 24, 0.98) 75%), #050812;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.08);">
+            <div>
+              <h3 style="color: #fff; margin-bottom: 0.25rem;">// USER & RESELLER PROFILE SETTINGS</h3>
+              <p style="font-size: 0.88rem; color: var(--text-muted); margin: 0;">Update your account alias, contact phone number, and password.</p>
+            </div>
+            <button type="button" onclick="openProfileModal()" class="btn btn-outline btn-sm">
+              Open Modal Window ↗
+            </button>
           </div>
-        </div>
-        <a href="https://github.com" target="_blank" class="btn btn-outline btn-sm">
-          Download Loader (.exe) ⬇
-        </a>
-      </div>
 
-      <!-- Active License Keys Section -->
-      <div class="product-card" style="padding: 2rem; margin-bottom: 2rem;">
-        <div class="section-head" style="margin-bottom: 1.25rem;">
-          <div>
-            <h3 style="color: #fff;">// MY ACTIVE LICENSE KEYS</h3>
-            <p style="font-size: 0.88rem; color: var(--text-muted);">Click the key to copy. Pending deliveries will auto-refresh every 10s.</p>
-          </div>
-          <a href="/products.html" class="btn btn-primary btn-sm">+ Buy New Key</a>
+          <form id="dash-inline-profile-form" onsubmit="handleInlineProfileSubmit(event)" style="max-width: 600px;">
+            <div style="margin-bottom: 1.25rem;">
+              <label style="display:block; font-size:0.8rem; font-weight:700; color:#cbd5e1; margin-bottom:0.4rem;">Full Name / Alias</label>
+              <input type="text" id="dash-inline-name" class="form-input" required minlength="2" style="width:100%;">
+            </div>
+            <div style="margin-bottom: 1.25rem;">
+              <label style="display:block; font-size:0.8rem; font-weight:700; color:#cbd5e1; margin-bottom:0.4rem;">Phone / WhatsApp Contact</label>
+              <input type="text" id="dash-inline-phone" class="form-input" placeholder="+977 98XXXXXXXX" style="width:100%;">
+            </div>
+            <div style="margin-bottom: 1.5rem;">
+              <label style="display:block; font-size:0.8rem; font-weight:700; color:#cbd5e1; margin-bottom:0.4rem;">Registered Email (Permanent)</label>
+              <input type="email" id="dash-inline-email" class="form-input" readonly disabled style="width:100%; opacity:0.65; cursor:not-allowed;">
+            </div>
+
+            <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:1.25rem; margin-bottom:1.5rem;">
+              <h4 style="color:#00f0ff; font-size:0.95rem; margin-bottom:0.85rem;">🔒 Change Password (Optional)</h4>
+              <div style="margin-bottom:0.85rem;">
+                <label style="display:block; font-size:0.75rem; color:#94a3b8; margin-bottom:0.25rem;">Current Password</label>
+                <input type="password" id="dash-inline-curr-pass" class="form-input" placeholder="Current password" style="width:100%;">
+              </div>
+              <div style="margin-bottom:0.85rem;">
+                <label style="display:block; font-size:0.75rem; color:#94a3b8; margin-bottom:0.25rem;">New Password</label>
+                <input type="password" id="dash-inline-new-pass" class="form-input" placeholder="Min. 6 characters" minlength="6" style="width:100%;">
+              </div>
+              <div>
+                <label style="display:block; font-size:0.75rem; color:#94a3b8; margin-bottom:0.25rem;">Confirm New Password</label>
+                <input type="password" id="dash-inline-conf-pass" class="form-input" placeholder="Repeat new password" minlength="6" style="width:100%;">
+              </div>
+            </div>
+
+            <button type="submit" id="dash-inline-submit-btn" class="btn btn-primary btn-glow">
+              Update Profile 💾
+            </button>
+          </form>
         </div>
 
-        <div id="keys-container">
-          <div style="text-align: center; padding: 2rem; color: var(--text-dim);">
-            Loading keys...
-          </div>
-        </div>
-      </div>
-
-      <!-- Reseller API & Automation Portal Section (Visible only to Resellers) -->
-      <!-- Reseller API & Automation Portal Section (Visible only to Resellers) -->
-      <div id="sec-reseller-api" class="product-card" style="display: none; padding: 2rem; margin-bottom: 2rem; border-color: rgba(56, 189, 248, 0.35); background: radial-gradient(ellipse at 85% 15%, rgba(56, 189, 248, 0.08) 0%, rgba(10, 14, 24, 0.95) 70%), #070a14; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+        <!-- Reseller API & Automation Portal Section (Visible only to Resellers) -->
+        <div id="sec-reseller-api" class="product-card" style="display: none; padding: 2rem; margin-bottom: 2rem; border-color: rgba(56, 189, 248, 0.35); background: radial-gradient(ellipse at 85% 15%, rgba(56, 189, 248, 0.08) 0%, rgba(10, 14, 24, 0.95) 70%), #070a14; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
         <!-- Disabled Warning Banner -->
         <div id="res-portal-disabled-banner" style="display: none; background: rgba(239, 68, 68, 0.15); border: 1px solid #f87171; border-radius: var(--radius-md); padding: 1rem 1.25rem; margin-bottom: 1.5rem; color: #fca5a5; font-size: 0.88rem;">
           <div style="font-weight: 800; color: #f87171; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
@@ -322,9 +509,11 @@
           </table>
         </div>
       </div>
+    </div>
 
-      <!-- Referral Program Section (Invite & Earn) -->
-      <div id="sec-referrals" class="product-card" style="padding: 2rem; margin-bottom: 2rem; border-color: rgba(52, 211, 153, 0.3); background: radial-gradient(ellipse at 90% 10%, rgba(52, 211, 153, 0.08) 0%, rgba(13, 13, 21, 0.95) 70%), #0a0e17; box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 20px rgba(52, 211, 153, 0.05);">
+      <!-- TAB 5: REFERRAL PROGRAM (INVITE & EARN) -->
+      <div id="tab-pane-referrals" class="tab-pane-content" style="display:none;">
+        <div id="sec-referrals" class="product-card" style="padding: 2rem; margin-bottom: 2rem; border-color: rgba(52, 211, 153, 0.3); background: radial-gradient(ellipse at 90% 10%, rgba(52, 211, 153, 0.08) 0%, rgba(13, 13, 21, 0.95) 70%), #0a0e17; box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 20px rgba(52, 211, 153, 0.05);">
         <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
           <div>
             <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.35rem;">
@@ -440,37 +629,40 @@
           </table>
         </div>
       </div>
+    </div>
 
-      <!-- Order History Section -->
-      <div class="product-card" style="padding: 2rem;">
-        <div class="section-head" style="margin-bottom: 1.25rem;">
-          <div>
-            <h3 style="color: #fff;">// ORDER HISTORY</h3>
-            <p style="font-size: 0.88rem; color: var(--text-muted);">Complete record of all orders and license key allocations</p>
+      <!-- TAB 4: ORDER HISTORY -->
+      <div id="tab-pane-history" class="tab-pane-content" style="display:none;">
+        <div class="product-card" style="padding: 2rem;">
+          <div class="section-head" style="margin-bottom: 1.25rem;">
+            <div>
+              <h3 style="color: #fff;">// ORDER HISTORY</h3>
+              <p style="font-size: 0.88rem; color: var(--text-muted);">Complete record of all orders and license key allocations</p>
+            </div>
           </div>
-        </div>
 
-        <div class="table-responsive">
-          <table class="table-custom">
-            <thead>
-              <tr>
-                <th>Order Code</th>
-                <th>Product</th>
-                <th>Plan Duration</th>
-                <th>Amount (USD)</th>
-                <th>Status</th>
-                <th>Delivery</th>
-                <th>Date</th>
-              </tr>
-            </thead>
-            <tbody id="orders-table-body">
-              <tr>
-                <td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-dim);">
-                  Loading orders...
-                </td>
-              </tr>
-            </tbody>
-          </table>
+          <div class="table-responsive">
+            <table class="table-custom">
+              <thead>
+                <tr>
+                  <th>Order Code</th>
+                  <th>Product</th>
+                  <th>Plan Duration</th>
+                  <th>Amount (USD)</th>
+                  <th>Status</th>
+                  <th>Delivery</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody id="orders-table-body">
+                <tr>
+                  <td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-dim);">
+                    Loading orders...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -492,6 +684,13 @@
   <script src="/assets/js/vanta.globe.min.js"></script>
   <script src="/assets/js/3d-scene.js"></script>
   <script>
+    let currentDashTab = 'catalog';
+    let dashCatalogProducts = [];
+    let currentCatalogCat = 'ALL';
+    let pollingInterval = null;
+    let pendingOrderIds = new Set();
+    window.currentDashUser = null;
+
     document.addEventListener('DOMContentLoaded', async () => {
       // Authenticate
       const userRes = await fetch('/api/auth/me', { credentials: 'include' });
@@ -507,16 +706,45 @@
       loadUserOrders();
       loadUserReferrals();
       startDeliveryPolling();
+
+      // Initialize tabs and load catalog
+      initDashHashRouting();
+      loadCatalogProducts();
     });
 
-    let pollingInterval = null;
-    let pendingOrderIds = new Set();
-
     function renderUserInfo(user) {
+      window.currentDashUser = user;
       document.getElementById('dash-user-name').textContent = user.name;
       document.getElementById('dash-user-email').textContent = user.email;
       document.getElementById('dash-user-phone').textContent = user.phone || 'N/A';
       document.getElementById('dash-wallet-bal').textContent = `NPR ${parseFloat(user.wallet_balance || 0).toLocaleString()}`;
+
+      // Initials badge (Figure 1 & 2)
+      const initials = (typeof getUserInitials === 'function') ? getUserInitials(user.name) : 'WX';
+      const avatarEl = document.getElementById('dash-avatar-initials');
+      if (avatarEl) avatarEl.textContent = initials;
+
+      // Tab Deposit & Wallet balances breakdown
+      const balNpr = parseFloat(user.wallet_balance || 0);
+      const nprRate = (window.Store && Store.rates && Store.rates.NPR) ? Store.rates.NPR : 134.50;
+      const inrRate = (window.Store && Store.rates && Store.rates.INR) ? Store.rates.INR : 84.00;
+      const balUsd = balNpr / nprRate;
+      const balInr = balUsd * inrRate;
+
+      const depNpr = document.getElementById('deposit-bal-npr');
+      if (depNpr) depNpr.textContent = `NPR ${balNpr.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+      const depUsd = document.getElementById('deposit-bal-usd');
+      if (depUsd) depUsd.textContent = `$${balUsd.toFixed(2)}`;
+      const depInr = document.getElementById('deposit-bal-inr');
+      if (depInr) depInr.textContent = `₹${balInr.toFixed(2)}`;
+
+      // In-page profile form prefill
+      const inName = document.getElementById('dash-inline-name');
+      if (inName) inName.value = user.name || '';
+      const inPhone = document.getElementById('dash-inline-phone');
+      if (inPhone) inPhone.value = user.phone || '';
+      const inEmail = document.getElementById('dash-inline-email');
+      if (inEmail) inEmail.value = user.email || '';
 
       const tierBadge = document.getElementById('dash-user-tier');
       const resellerSec = document.getElementById('sec-reseller-api');
@@ -533,6 +761,257 @@
         if (resellerSec) resellerSec.style.display = 'none';
       }
     }
+
+    /* ==========================================================
+       DASHBOARD CATEGORY TABS & HASH ROUTING SYSTEM
+       ========================================================== */
+    function initDashHashRouting() {
+      const hash = (window.location.hash || '').replace('#', '').toLowerCase();
+      if (hash) {
+        handleHashChange();
+      } else {
+        switchDashTab('catalog', false);
+      }
+      window.addEventListener('hashchange', handleHashChange);
+    }
+
+    function handleHashChange() {
+      const hash = (window.location.hash || '').replace('#', '').toLowerCase();
+      if (!hash) return;
+      let targetTab = hash;
+      if (targetTab === 'keys' || targetTab === 'my-keys' || targetTab === 'licenses') targetTab = 'licenses';
+      else if (targetTab === 'orders' || targetTab === 'order-history' || targetTab === 'history') targetTab = 'history';
+      else if (targetTab === 'deposit' || targetTab === 'wallet' || targetTab === 'balance') targetTab = 'deposit';
+      else if (targetTab === 'sec-referrals' || targetTab === 'referrals' || targetTab === 'referral' || targetTab === 'invite') targetTab = 'referrals';
+      else if (targetTab === 'profile' || targetTab === 'settings' || targetTab === 'account') targetTab = 'profile';
+      else if (targetTab === 'catalog' || targetTab === 'store' || targetTab === 'shop') targetTab = 'catalog';
+      switchDashTab(targetTab, false);
+    }
+
+    function switchDashTab(tabId, updateUrl = true) {
+      const validTabs = ['catalog', 'licenses', 'deposit', 'history', 'referrals', 'profile'];
+      if (!validTabs.includes(tabId)) {
+        if (tabId === 'keys' || tabId === 'my-keys') tabId = 'licenses';
+        else if (tabId === 'orders') tabId = 'history';
+        else if (tabId === 'wallet') tabId = 'deposit';
+        else if (tabId === 'sec-referrals' || tabId === 'referral') tabId = 'referrals';
+        else if (tabId === 'settings') tabId = 'profile';
+        else if (tabId === 'store') tabId = 'catalog';
+        else tabId = 'catalog';
+      }
+      currentDashTab = tabId;
+
+      // Update Tab Buttons in Header Bar
+      document.querySelectorAll('.dash-cat-tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-tab') === tabId);
+      });
+
+      // Show/Hide Tab Panes
+      validTabs.forEach(id => {
+        const pane = document.getElementById(`tab-pane-${id}`);
+        if (pane) {
+          pane.style.display = (id === tabId) ? 'block' : 'none';
+        }
+      });
+
+      // Sync Bottom Navigation
+      document.querySelectorAll('.bottom-nav-item').forEach(b => b.classList.remove('active'));
+      if (tabId === 'catalog') {
+        const b = document.getElementById('bnav-store'); if (b) b.classList.add('active');
+        if (dashCatalogProducts.length === 0) loadCatalogProducts();
+      } else if (tabId === 'licenses') {
+        const b = document.getElementById('bnav-licenses'); if (b) b.classList.add('active');
+      } else if (tabId === 'deposit') {
+        const b = document.getElementById('bnav-deposit'); if (b) b.classList.add('active');
+      } else if (tabId === 'profile') {
+        const b = document.getElementById('bnav-profile'); if (b) b.classList.add('active');
+      }
+
+      if (updateUrl && history.replaceState) {
+        history.replaceState(null, '', `#${tabId}`);
+      }
+    }
+
+    /* ==========================================================
+       CATALOG TAB PRODUCT LOADER & CATEGORY FILTER
+       ========================================================== */
+    async function loadCatalogProducts() {
+      const grid = document.getElementById('catalog-products-grid');
+      if (!grid) return;
+
+      try {
+        const res = await fetch('/api/products/list', { credentials: 'include' });
+        if (!res.ok) throw new Error('Failed to load store catalog');
+        const data = await res.json();
+        if (data.success && Array.isArray(data.products)) {
+          dashCatalogProducts = data.products;
+          renderCatalogProducts();
+        }
+      } catch (err) {
+        grid.innerHTML = `
+          <div style="grid-column: 1/-1; text-align: center; padding: 2rem; color: #f87171;">
+            Failed to load products: ${escapeHtml(err.message)}
+          </div>
+        `;
+      }
+    }
+
+    function filterCatalogCategory(cat) {
+      currentCatalogCat = cat;
+      document.querySelectorAll('.cat-filter-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-cat') === cat);
+      });
+      renderCatalogProducts();
+    }
+
+    function filterCatalogSearch() {
+      renderCatalogProducts();
+    }
+
+    function renderCatalogProducts() {
+      const grid = document.getElementById('catalog-products-grid');
+      if (!grid) return;
+
+      const searchVal = (document.getElementById('catalog-search-input')?.value || '').toLowerCase().trim();
+
+      let filtered = dashCatalogProducts;
+      if (currentCatalogCat !== 'ALL') {
+        filtered = filtered.filter(p => {
+          const cat = (p.category || '').toUpperCase();
+          const target = currentCatalogCat.toUpperCase();
+          if (target === 'FREE') {
+            return cat.includes('FREE') || parseFloat(p.lowest_price_usd || 0) === 0;
+          }
+          return cat.includes(target) || (p.name || '').toUpperCase().includes(target);
+        });
+      }
+
+      if (searchVal) {
+        filtered = filtered.filter(p => 
+          (p.name || '').toLowerCase().includes(searchVal) ||
+          (p.category || '').toLowerCase().includes(searchVal) ||
+          (p.description || '').toLowerCase().includes(searchVal)
+        );
+      }
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `
+          <div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--text-dim); background: rgba(0,0,0,0.25); border-radius: 12px; border: 1px solid rgba(255,255,255,0.06);">
+            <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔍</div>
+            <h4 style="color: #fff; margin-bottom: 0.35rem;">No cheats found matching your criteria</h4>
+            <p style="font-size: 0.85rem; margin: 0;">Try selecting ALL PRODUCTS or clear your search term.</p>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = filtered.map(p => {
+        if (typeof render7SProductCardHtml === 'function') {
+          return render7SProductCardHtml(p);
+        }
+        return `
+          <div class="product-card" style="padding: 1.25rem;">
+            <h4>${escapeHtml(p.name)}</h4>
+            <p>${escapeHtml(p.category)}</p>
+            <a href="/products.html" class="btn btn-primary btn-sm">Buy</a>
+          </div>
+        `;
+      }).join('');
+
+      if (typeof updateAllPricesOnPage === 'function') {
+        updateAllPricesOnPage();
+      }
+    }
+
+    /* ==========================================================
+       IN-PAGE USER & RESELLER PROFILE SUBMISSION
+       ========================================================== */
+    async function handleInlineProfileSubmit(e) {
+      e.preventDefault();
+      const btn = document.getElementById('dash-inline-submit-btn');
+      const name = document.getElementById('dash-inline-name')?.value.trim();
+      const phone = document.getElementById('dash-inline-phone')?.value.trim();
+      const currPass = document.getElementById('dash-inline-curr-pass')?.value;
+      const newPass = document.getElementById('dash-inline-new-pass')?.value;
+      const confPass = document.getElementById('dash-inline-conf-pass')?.value;
+
+      if (!name || name.length < 2) {
+        if (typeof showToast === 'function') showToast('Name must be at least 2 characters', 'error');
+        else alert('Name must be at least 2 characters');
+        return;
+      }
+
+      if (newPass) {
+        if (newPass.length < 6) {
+          if (typeof showToast === 'function') showToast('New password must be at least 6 characters', 'error');
+          else alert('New password must be at least 6 characters');
+          return;
+        }
+        if (newPass !== confPass) {
+          if (typeof showToast === 'function') showToast('New passwords do not match', 'error');
+          else alert('New passwords do not match');
+          return;
+        }
+        if (!currPass) {
+          if (typeof showToast === 'function') showToast('Please enter your current password to change it', 'error');
+          else alert('Please enter your current password to change it');
+          return;
+        }
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Saving Changes...';
+
+      try {
+        const payload = { name, phone };
+        if (newPass) {
+          payload.current_password = currPass;
+          payload.new_password = newPass;
+        }
+
+        const res = await fetch('/api/auth/update-profile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          throw new Error(data.error || 'Failed to update profile');
+        }
+
+        if (typeof showToast === 'function') showToast('Profile updated successfully! ✨', 'success');
+        else alert('Profile updated successfully!');
+
+        if (data.user) {
+          renderUserInfo(data.user);
+          if (typeof renderLoggedInNav === 'function') {
+            renderLoggedInNav(data.user);
+          }
+          if (typeof updateDrawerWithUser === 'function') {
+            updateDrawerWithUser(data.user);
+          }
+        }
+
+        // Clear password fields
+        if (document.getElementById('dash-inline-curr-pass')) document.getElementById('dash-inline-curr-pass').value = '';
+        if (document.getElementById('dash-inline-new-pass')) document.getElementById('dash-inline-new-pass').value = '';
+        if (document.getElementById('dash-inline-conf-pass')) document.getElementById('dash-inline-conf-pass').value = '';
+      } catch (err) {
+        if (typeof showToast === 'function') showToast(err.message, 'error');
+        else alert(err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Update Profile 💾';
+      }
+    }
+
+    // Export functions to window
+    window.switchDashTab = switchDashTab;
+    window.filterCatalogCategory = filterCatalogCategory;
+    window.filterCatalogSearch = filterCatalogSearch;
+    window.handleInlineProfileSubmit = handleInlineProfileSubmit;
 
     function escapeHtml(text) {
       if (!text) return '';
@@ -583,6 +1062,12 @@
 
         // ============ Render License Keys ============
         const deliveredOrders = orders.filter(o => o.license_keys && o.license_keys.length > 0);
+        let totalDeliveredKeys = 0;
+        deliveredOrders.forEach(o => {
+          totalDeliveredKeys += (o.license_keys ? o.license_keys.length : 1);
+        });
+        const tabKeysBadge = document.getElementById('tab-count-keys');
+        if (tabKeysBadge) tabKeysBadge.textContent = totalDeliveredKeys;
 
         if (deliveredOrders.length === 0 && pendingOrderIds.size === 0) {
           keysContainer.innerHTML = `

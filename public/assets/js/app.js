@@ -189,11 +189,45 @@ function setCurrency(newCurrency) {
     btn.classList.toggle('active', btn.getAttribute('data-currency') === newCurrency);
   });
 
+  // Update Header Currency Pill
+  updateCurrencyPillUI();
+
   // Re-render prices dynamically
   updateAllPricesOnPage();
 
   // Dispatch event for page-specific listeners
   window.dispatchEvent(new CustomEvent('currencyChanged', { detail: { currency: newCurrency } }));
+}
+
+function formatWalletBalance(balanceNpr, currency = Store.currency) {
+  const npr = parseFloat(balanceNpr) || 0;
+  const nprRate = Store.rates.NPR || 134.50;
+  const inrRate = Store.rates.INR || 84.00;
+  const usd = npr / nprRate;
+
+  if (currency === 'NPR') {
+    return `NPR ${Math.round(npr).toLocaleString()}`;
+  } else if (currency === 'INR') {
+    const inr = usd * inrRate;
+    return `₹${Math.round(inr).toLocaleString()}`;
+  } else {
+    return `$${usd.toFixed(2)}`;
+  }
+}
+
+function updateCurrencyPillUI() {
+  const trigger = document.getElementById('currency-pill-trigger-text');
+  if (trigger) {
+    const symbol = Store.currency === 'USD' ? '$' : (Store.currency === 'INR' ? '₹' : 'Rs.');
+    trigger.textContent = `${symbol} ${Store.currency}`;
+  }
+  document.querySelectorAll('.currency-pill-opt').forEach(opt => {
+    opt.classList.toggle('active', opt.getAttribute('data-cur') === Store.currency);
+  });
+  if (Store.user) {
+    const balEl = document.getElementById('hdr-wallet-bal');
+    if (balEl) balEl.textContent = formatWalletBalance(Store.user.wallet_balance, Store.currency);
+  }
 }
 
 function formatPrice(usdAmount, currency = Store.currency) {
@@ -215,6 +249,10 @@ function updateAllPricesOnPage() {
     const usd = el.getAttribute('data-usd-price');
     el.textContent = formatPrice(usd);
   });
+  if (Store.user) {
+    const balEl = document.getElementById('hdr-wallet-bal');
+    if (balEl) balEl.textContent = formatWalletBalance(Store.user.wallet_balance, Store.currency);
+  }
 }
 
 /* ==============================================================
@@ -293,7 +331,6 @@ window.loadHeroBanners = loadHeroBanners;
 async function checkAuth() {
   try {
     const res = await fetch('/api/auth/me');
-    const authNav = document.getElementById('nav-auth-container');
 
     if (res.ok) {
       const data = await res.json();
@@ -302,6 +339,7 @@ async function checkAuth() {
         document.body.classList.add('user-authenticated');
         document.body.classList.add('auth-checked');
         renderLoggedInNav(data.user);
+        updateDrawerWithUser(data.user);
         window.dispatchEvent(new CustomEvent('userLoaded', { detail: { user: data.user } }));
         return;
       }
@@ -312,38 +350,100 @@ async function checkAuth() {
     document.body.classList.add('auth-checked');
     localStorage.removeItem('wx_token');
     renderGuestNav();
+    updateDrawerWithUser(null);
   } catch (err) {
     Store.user = null;
     document.body.classList.remove('user-authenticated');
     document.body.classList.add('auth-checked');
     renderGuestNav();
+    updateDrawerWithUser(null);
   }
+}
+
+function getUserInitials(name) {
+  if (!name) return 'WX';
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+  return name.trim().substring(0, 2).toUpperCase();
+}
+
+function setupCurrencyPillEvents() {
+  const trigger = document.getElementById('currency-pill-trigger-btn');
+  const menu = document.getElementById('currency-pill-menu');
+  if (!trigger || !menu) return;
+
+  if (trigger._hasPillListener) return;
+  trigger._hasPillListener = true;
+
+  trigger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    menu.classList.toggle('show');
+  });
+
+  menu.querySelectorAll('.currency-pill-opt').forEach(opt => {
+    opt.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const cur = opt.getAttribute('data-cur');
+      if (cur) {
+        setCurrency(cur);
+        menu.classList.remove('show');
+      }
+    });
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!menu.contains(e.target) && !trigger.contains(e.target)) {
+      menu.classList.remove('show');
+    }
+  });
 }
 
 function renderLoggedInNav(user) {
   const container = document.getElementById('nav-auth-container');
   if (!container) return;
 
-  const balanceNpr = parseFloat(user.wallet_balance || 0).toLocaleString();
-  const isReseller = user.user_type === 'reseller';
+  const initials = getUserInitials(user.name);
+  const walletFormatted = formatWalletBalance(user.wallet_balance, Store.currency);
 
   container.innerHTML = `
-    <div style="display: flex; align-items: center; gap: 0.6rem;">
-      <a href="/wallet.html" class="btn btn-outline btn-sm" title="Topup / Manage Wallet" style="border-color: rgba(255, 42, 133, 0.45); background: rgba(255, 42, 133, 0.08); color: #ff2a85;">
-        <span style="color: var(--primary);">⚡</span> NPR ${balanceNpr}
+    <div class="nav-pill-group">
+      <!-- Currency Dropdown Pill (Figure 2 Style: $ USD v in amber/gold border) -->
+      <div class="currency-pill-dropdown" id="nav-currency-pill-wrap">
+        <button type="button" class="currency-pill-trigger" id="currency-pill-trigger-btn" aria-label="Change Currency" title="Select Currency">
+          <span id="currency-pill-trigger-text">${Store.currency === 'USD' ? '$' : (Store.currency === 'INR' ? '₹' : 'Rs.')} ${Store.currency}</span>
+          <span style="font-size: 0.7rem; transition: transform 0.2s;">▾</span>
+        </button>
+        <div class="currency-pill-menu" id="currency-pill-menu">
+          <button type="button" class="currency-pill-opt ${Store.currency === 'USD' ? 'active' : ''}" data-cur="USD">
+            <span>$ USD</span> <span style="font-size: 0.72rem; opacity: 0.7;">Dollar</span>
+          </button>
+          <button type="button" class="currency-pill-opt ${Store.currency === 'NPR' ? 'active' : ''}" data-cur="NPR">
+            <span>Rs. NPR</span> <span style="font-size: 0.72rem; opacity: 0.7;">Rupee</span>
+          </button>
+          <button type="button" class="currency-pill-opt ${Store.currency === 'INR' ? 'active' : ''}" data-cur="INR">
+            <span>₹ INR</span> <span style="font-size: 0.72rem; opacity: 0.7;">Rupee</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Live Wallet Balance Pill (Figure 2 Style: Cyan $ 0.00 / NPR) -->
+      <a href="/wallet.html" class="wallet-pill-btn" id="nav-wallet-pill" title="Topup / View Wallet Balance">
+        <span class="wallet-pill-icon">⚡</span>
+        <span id="hdr-wallet-bal">${walletFormatted}</span>
       </a>
-      <a href="/dashboard.html#sec-referrals" class="btn btn-outline btn-sm" title="Refer & Earn Free Wallet Balance" style="border-color: rgba(52, 211, 153, 0.4); color: #34d399; background: rgba(52, 211, 153, 0.08); padding: 0.4rem 0.65rem;">
-        🎁
+
+      <!-- User Avatar Badge (Figure 2 Style: AP with Green Online Dot) -->
+      <a href="javascript:void(0)" onclick="openProfileModal()" class="user-avatar-badge-btn" id="nav-avatar-btn" title="Edit Profile (${escapeHtml(user.name)})">
+        <span>${escapeHtml(initials)}</span>
+        <span class="user-avatar-online-dot"></span>
       </a>
-      <a href="/dashboard.html" class="btn btn-outline btn-sm">
-        ${isReseller ? '<span class="badge badge-reseller" style="margin-right:4px;">RESELLER</span>' : ''}
-        ${escapeHtml(user.name.split(' ')[0])}
-      </a>
-      <button onclick="handleLogout()" class="btn btn-outline btn-sm" style="padding: 0.4rem 0.6rem;" title="Logout">
-        ✕
-      </button>
     </div>
   `;
+
+  setupCurrencyPillEvents();
+  updateDrawerWithUser(user);
 }
 
 function renderGuestNav() {
@@ -351,11 +451,35 @@ function renderGuestNav() {
   if (!container) return;
 
   container.innerHTML = `
-    <div style="display: flex; align-items: center; gap: 0.6rem;">
-      <a href="/login.html" class="btn btn-outline btn-sm">Login</a>
-      <a href="/register.html" class="btn btn-primary btn-sm">Register</a>
+    <div class="nav-pill-group">
+      <!-- Currency Dropdown Pill -->
+      <div class="currency-pill-dropdown" id="nav-currency-pill-wrap">
+        <button type="button" class="currency-pill-trigger" id="currency-pill-trigger-btn" aria-label="Change Currency" title="Select Currency">
+          <span id="currency-pill-trigger-text">${Store.currency === 'USD' ? '$' : (Store.currency === 'INR' ? '₹' : 'Rs.')} ${Store.currency}</span>
+          <span style="font-size: 0.7rem; transition: transform 0.2s;">▾</span>
+        </button>
+        <div class="currency-pill-menu" id="currency-pill-menu">
+          <button type="button" class="currency-pill-opt ${Store.currency === 'USD' ? 'active' : ''}" data-cur="USD">
+            <span>$ USD</span> <span style="font-size: 0.72rem; opacity: 0.7;">Dollar</span>
+          </button>
+          <button type="button" class="currency-pill-opt ${Store.currency === 'NPR' ? 'active' : ''}" data-cur="NPR">
+            <span>Rs. NPR</span> <span style="font-size: 0.72rem; opacity: 0.7;">Rupee</span>
+          </button>
+          <button type="button" class="currency-pill-opt ${Store.currency === 'INR' ? 'active' : ''}" data-cur="INR">
+            <span>₹ INR</span> <span style="font-size: 0.72rem; opacity: 0.7;">Rupee</span>
+          </button>
+        </div>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <a href="/login.html" class="btn btn-outline btn-sm">Login</a>
+        <a href="/register.html" class="btn btn-primary btn-sm">Register</a>
+      </div>
     </div>
   `;
+
+  setupCurrencyPillEvents();
+  updateDrawerWithUser(null);
 }
 
 async function handleLogout() {
@@ -531,30 +655,646 @@ function resetCardTilt(e) {
 }
 
 /* ==============================================================
-   MOBILE NAVIGATION
+   7S CYBERPUNK RESPONSIVE NAVIGATION SYSTEM (FIGURES 1, 2, 3)
+   Drawer Sidebar, Fixed Bottom Bar, Profile Editor & Real-Time Sync
    ============================================================== */
+
 function initMobileNav() {
-  const toggle = document.querySelector('.mobile-toggle');
-  const links = document.querySelector('.nav-links');
-  if (toggle && links) {
-    toggle.addEventListener('click', (e) => {
+  // 1. Mount Drawer, Bottom Bar & Profile Modal in DOM
+  mountDrawerAndBars();
+
+  // 2. Inject Cyber Hamburger Button on left of navbar
+  const navbarContainer = document.querySelector('.navbar .container');
+  const brandLogo = document.querySelector('.navbar .nav-brand');
+  if (navbarContainer && brandLogo && !document.getElementById('drawer-hamburger-btn')) {
+    const hamburger = document.createElement('button');
+    hamburger.type = 'button';
+    hamburger.id = 'drawer-hamburger-btn';
+    hamburger.className = 'drawer-hamburger-btn';
+    hamburger.setAttribute('aria-label', 'Open Navigation Drawer');
+    hamburger.title = 'Open Menu Navigation';
+    hamburger.innerHTML = '<span></span><span></span><span></span>';
+    navbarContainer.insertBefore(hamburger, brandLogo);
+
+    hamburger.addEventListener('click', (e) => {
       e.stopPropagation();
-      links.classList.toggle('show');
+      toggleDrawer();
     });
+  }
 
-    // Close when tapping any link
-    links.querySelectorAll('a').forEach(a => {
-      a.addEventListener('click', () => {
-        links.classList.remove('show');
-      });
-    });
+  // 3. Highlight currently active tab on bottom bar
+  highlightActiveBottomNavItem();
+}
 
-    // Close when tapping outside
-    document.addEventListener('click', (e) => {
-      if (links.classList.contains('show') && !links.contains(e.target) && !toggle.contains(e.target)) {
-        links.classList.remove('show');
+function mountDrawerAndBars() {
+  if (document.getElementById('wx-drawer-sidebar')) return;
+
+  // --- A. DRAWER OVERLAY & SIDEBAR (FIGURE 1) ---
+  const overlay = document.createElement('div');
+  overlay.id = 'wx-drawer-overlay';
+  overlay.className = 'drawer-overlay';
+
+  const sidebar = document.createElement('aside');
+  sidebar.id = 'wx-drawer-sidebar';
+  sidebar.className = 'drawer-sidebar';
+  sidebar.setAttribute('aria-label', 'Navigation Sidebar');
+
+  sidebar.innerHTML = `
+    <!-- Top Header (Figure 1: 7S WORLD + HIDE Button) -->
+    <div class="drawer-header">
+      <a href="/index.html" class="drawer-brand" onclick="closeDrawer()">
+        <img src="/assets/images/white-x-logo.png" alt="White X Logo" class="drawer-brand-img">
+        <span class="drawer-brand-name">WHITE <span>X</span> STORE</span>
+      </a>
+      <button type="button" class="drawer-close-btn" id="drawer-close-top-btn" title="Hide Sidebar">
+        <span>✕</span> <span>HIDE</span>
+      </button>
+    </div>
+
+    <!-- Scrollable Drawer Body -->
+    <div class="drawer-content">
+      <!-- Profile Card (Figure 1) -->
+      <div class="drawer-profile-card" id="drawer-profile-card">
+        <button type="button" class="drawer-profile-x-btn" id="drawer-profile-card-close" title="Close Drawer">✕</button>
+        <div class="drawer-avatar-ring">
+          <span id="drawer-user-initials">WX</span>
+          <span class="drawer-avatar-online"></span>
+        </div>
+        <div class="drawer-user-name-row">
+          <span class="drawer-user-name" id="drawer-user-name">Guest Player</span>
+          <span class="drawer-verified-badge" id="drawer-user-badge">VERIFIED</span>
+        </div>
+        <div class="drawer-user-email" id="drawer-user-email">guest@whitexstore.com</div>
+        <div class="drawer-level-wrap">
+          <div class="drawer-level-header">
+            <span class="drawer-level-badge">⚡ LEVEL 1</span>
+            <span class="drawer-xp-text" id="drawer-xp-text">0/500 XP</span>
+          </div>
+          <div class="drawer-level-bar">
+            <div class="drawer-level-progress" id="drawer-xp-progress" style="width: 20%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation Menu (Figure 1) -->
+      <ul class="drawer-nav-list">
+        <li class="drawer-nav-item">
+          <a href="/products.html" class="drawer-nav-link" id="drawer-link-store" onclick="closeDrawer()">
+            <span class="drawer-nav-left"><span class="drawer-nav-icon">🛍️</span> Store</span>
+            <span class="drawer-nav-badge" id="drawer-count-store">--</span>
+          </a>
+        </li>
+        <li class="drawer-nav-item">
+          <a href="/products.html?category=FREE" class="drawer-nav-link" id="drawer-link-free" onclick="closeDrawer()">
+            <span class="drawer-nav-left"><span class="drawer-nav-icon">🎁</span> Free Panel</span>
+            <span class="drawer-nav-badge free">FREE</span>
+          </a>
+        </li>
+        <li class="drawer-nav-item">
+          <a href="/dashboard.html#keys" class="drawer-nav-link" id="drawer-link-licenses" onclick="closeDrawer()">
+            <span class="drawer-nav-left"><span class="drawer-nav-icon">🗝️</span> Your Licenses</span>
+            <span class="drawer-nav-badge" id="drawer-count-licenses">0</span>
+          </a>
+        </li>
+        <li class="drawer-nav-item">
+          <a href="javascript:void(0)" onclick="triggerLoaderDownload()" class="drawer-nav-link" id="drawer-link-downloads">
+            <span class="drawer-nav-left"><span class="drawer-nav-icon">📥</span> Downloads</span>
+            <span class="drawer-nav-badge" id="drawer-count-downloads">1</span>
+          </a>
+        </li>
+        <li class="drawer-nav-item">
+          <button type="button" class="drawer-nav-link" id="drawer-history-accordion-btn">
+            <span class="drawer-nav-left"><span class="drawer-nav-icon">🕒</span> History</span>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span class="drawer-nav-badge" id="drawer-count-history">0</span>
+              <span id="drawer-history-caret" style="font-size:0.75rem; transition:transform 0.25s;">▾</span>
+            </div>
+          </button>
+          <div class="drawer-accordion-content" id="drawer-history-accordion-content">
+            <a href="/wallet.html" class="drawer-sub-link" onclick="closeDrawer()">
+              <span>💳 Payment History</span>
+              <span class="drawer-nav-badge" id="drawer-count-pay-history">0</span>
+            </a>
+            <a href="/dashboard.html#orders" class="drawer-sub-link" onclick="closeDrawer()">
+              <span>🛍️ Purchase History</span>
+              <span class="drawer-nav-badge" id="drawer-count-purchase-history">0</span>
+            </a>
+          </div>
+        </li>
+        <li class="drawer-nav-item">
+          <a href="/wallet.html" class="drawer-nav-link" onclick="closeDrawer()">
+            <span class="drawer-nav-left"><span class="drawer-nav-icon">➕</span> Add Credit</span>
+          </a>
+        </li>
+        <li class="drawer-nav-item">
+          <a href="/dashboard.html#sec-referrals" class="drawer-nav-link" onclick="closeDrawer()">
+            <span class="drawer-nav-left"><span class="drawer-nav-icon">👥</span> Refer & Earn</span>
+          </a>
+        </li>
+        <li class="drawer-nav-item">
+          <a href="javascript:void(0)" onclick="openRedeemDialog()" class="drawer-nav-link">
+            <span class="drawer-nav-left"><span class="drawer-nav-icon">🎁</span> Redeem Code</span>
+          </a>
+        </li>
+        <li class="drawer-nav-item">
+          <button type="button" onclick="openProfileModal()" class="drawer-nav-link">
+            <span class="drawer-nav-left"><span class="drawer-nav-icon">✏️</span> Edit Profile</span>
+          </button>
+        </li>
+      </ul>
+
+      <!-- Logout Button (Figure 1: Red Outlined Button) -->
+      <button type="button" class="drawer-logout-btn" id="drawer-logout-btn" onclick="handleLogout()">
+        <span>↪</span> <span>LOG OUT</span>
+      </button>
+
+      <!-- Social Links Strip (Figure 1: WhatsApp, Discord, Telegram) -->
+      <div class="drawer-social-strip">
+        <a href="https://chat.whatsapp.com" target="_blank" rel="noopener noreferrer" class="drawer-social-link" id="drawer-social-wa">
+          <span class="drawer-social-left"><span style="color:#25d366; font-size:1.1rem;">💬</span> WHATSAPP GROUP</span>
+          <span style="color:#f97316;">→</span>
+        </a>
+        <a href="https://discord.gg" target="_blank" rel="noopener noreferrer" class="drawer-social-link" id="drawer-social-dc">
+          <span class="drawer-social-left"><span style="color:#5865f2; font-size:1.1rem;">🎮</span> DISCORD SERVER</span>
+          <span style="color:#f97316;">→</span>
+        </a>
+        <a href="https://t.me" target="_blank" rel="noopener noreferrer" class="drawer-social-link" id="drawer-social-tg">
+          <span class="drawer-social-left"><span style="color:#0088cc; font-size:1.1rem;">✈️</span> TELEGRAM CHANNEL</span>
+          <span style="color:#f97316;">→</span>
+        </a>
+      </div>
+
+      <!-- Bottom Hide Sidebar Button (Figure 1) -->
+      <button type="button" class="drawer-bottom-hide-btn" id="drawer-bottom-hide-btn" title="Hide Sidebar">
+        <span>←</span> <span>HIDE SIDEBAR</span>
+      </button>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+  document.body.appendChild(sidebar);
+
+  // --- B. FIXED BOTTOM NAVIGATION BAR (FIGURE 3) ---
+  const bottomNav = document.createElement('nav');
+  bottomNav.id = 'wx-bottom-bar';
+  bottomNav.className = 'bottom-nav-bar';
+  bottomNav.setAttribute('aria-label', 'Mobile Quick Navigation');
+
+  bottomNav.innerHTML = `
+    <a href="/products.html" class="bottom-nav-item" id="bnav-store">
+      <span class="b-icon">🏠</span>
+      <span>Store</span>
+    </a>
+    <a href="/products.html?category=FREE" class="bottom-nav-item" id="bnav-free">
+      <span class="b-icon">⭐</span>
+      <span>Free Panel</span>
+    </a>
+    <a href="/dashboard.html#keys" class="bottom-nav-item" id="bnav-licenses">
+      <span class="b-icon">🔒</span>
+      <span>Licenses</span>
+    </a>
+    <a href="/wallet.html" class="bottom-nav-item" id="bnav-deposit">
+      <span class="b-icon">➕</span>
+      <span>Deposit</span>
+    </a>
+    <button type="button" class="bottom-nav-item" id="bnav-profile" onclick="openProfileModal()">
+      <span class="b-icon">👤</span>
+      <span>Profile</span>
+    </button>
+  `;
+
+  document.body.appendChild(bottomNav);
+
+  // --- C. USER & RESELLER PROFILE EDIT MODAL ---
+  const profileModal = document.createElement('div');
+  profileModal.id = 'wx-profile-modal';
+  profileModal.className = 'wx-modal-backdrop';
+  profileModal.setAttribute('aria-hidden', 'true');
+
+  profileModal.innerHTML = `
+    <div class="wx-modal-box">
+      <div class="wx-modal-header">
+        <div class="wx-modal-title">
+          <span>✏️</span> <span>Edit Account Profile</span>
+        </div>
+        <button type="button" class="wx-modal-close" onclick="closeProfileModal()" title="Close">✕</button>
+      </div>
+      <form id="wx-profile-form" onsubmit="handleProfileSubmit(event)">
+        <div style="margin-bottom: 1.1rem;">
+          <label style="display:block; font-size:0.75rem; font-weight:700; color:#94a3b8; margin-bottom:0.35rem; text-transform:uppercase;">Account Status</label>
+          <div id="modal-user-role-badge" class="badge badge-undetected" style="font-size:0.85rem; padding:0.35rem 0.85rem;">Standard Customer</div>
+        </div>
+        <div style="margin-bottom: 1.1rem;">
+          <label style="display:block; font-size:0.78rem; font-weight:700; color:#cbd5e1; margin-bottom:0.35rem;">Full Name / Reseller Alias</label>
+          <input type="text" id="modal-user-name-input" class="form-input" required minlength="2" placeholder="Your Name" style="width:100%;">
+        </div>
+        <div style="margin-bottom: 1.1rem;">
+          <label style="display:block; font-size:0.78rem; font-weight:700; color:#cbd5e1; margin-bottom:0.35rem;">Phone / WhatsApp Contact</label>
+          <input type="text" id="modal-user-phone-input" class="form-input" placeholder="+977 98XXXXXXXX" style="width:100%;">
+        </div>
+        <div style="margin-bottom: 1.3rem;">
+          <label style="display:block; font-size:0.78rem; font-weight:700; color:#cbd5e1; margin-bottom:0.35rem;">Registered Email (Secure)</label>
+          <input type="email" id="modal-user-email-input" class="form-input" readonly disabled style="width:100%; opacity:0.65; cursor:not-allowed;">
+        </div>
+
+        <!-- Change Password Box -->
+        <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:1.1rem; margin-bottom:1.5rem;">
+          <div style="font-family:var(--font-heading); font-size:0.92rem; font-weight:800; color:#00f0ff; margin-bottom:0.75rem; display:flex; align-items:center; gap:0.4rem;">
+            <span>🔒</span> <span>Change Password (Optional)</span>
+          </div>
+          <div style="margin-bottom:0.75rem;">
+            <label style="display:block; font-size:0.75rem; color:#94a3b8; margin-bottom:0.25rem;">Current Password</label>
+            <input type="password" id="modal-current-pass-input" class="form-input" placeholder="Enter current password" style="width:100%;">
+          </div>
+          <div style="margin-bottom:0.75rem;">
+            <label style="display:block; font-size:0.75rem; color:#94a3b8; margin-bottom:0.25rem;">New Password</label>
+            <input type="password" id="modal-new-pass-input" class="form-input" placeholder="At least 6 characters" minlength="6" style="width:100%;">
+          </div>
+          <div>
+            <label style="display:block; font-size:0.75rem; color:#94a3b8; margin-bottom:0.25rem;">Confirm New Password</label>
+            <input type="password" id="modal-confirm-pass-input" class="form-input" placeholder="Re-type new password" minlength="6" style="width:100%;">
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:0.75rem;">
+          <button type="button" class="btn btn-outline btn-sm" onclick="closeProfileModal()">Cancel</button>
+          <button type="submit" id="modal-profile-submit-btn" class="btn btn-primary btn-sm btn-glow">
+            Save Changes 💾
+          </button>
+        </div>
+      </form>
+    </div>
+  `;
+
+  document.body.appendChild(profileModal);
+
+  // --- D. WIRE EVENT LISTENERS ---
+  const closeTopBtn = document.getElementById('drawer-close-top-btn');
+  const closeCardBtn = document.getElementById('drawer-profile-card-close');
+  const closeBottomBtn = document.getElementById('drawer-bottom-hide-btn');
+
+  if (closeTopBtn) closeTopBtn.addEventListener('click', closeDrawer);
+  if (closeCardBtn) closeCardBtn.addEventListener('click', closeDrawer);
+  if (closeBottomBtn) closeBottomBtn.addEventListener('click', closeDrawer);
+  overlay.addEventListener('click', closeDrawer);
+
+  // History Accordion
+  const histBtn = document.getElementById('drawer-history-accordion-btn');
+  const histContent = document.getElementById('drawer-history-accordion-content');
+  const histCaret = document.getElementById('drawer-history-caret');
+  if (histBtn && histContent) {
+    histBtn.addEventListener('click', () => {
+      const isExpanded = histContent.classList.toggle('show');
+      if (histCaret) {
+        histCaret.style.transform = isExpanded ? 'rotate(180deg)' : 'rotate(0deg)';
       }
     });
+  }
+
+  // Close modals/drawer with Escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeDrawer();
+      closeProfileModal();
+    }
+  });
+
+  // Modal Backdrop Click
+  profileModal.addEventListener('click', (e) => {
+    if (e.target === profileModal) {
+      closeProfileModal();
+    }
+  });
+
+  // If user data already exists, populate drawer
+  if (Store.user) {
+    updateDrawerWithUser(Store.user);
+  }
+}
+
+function toggleDrawer(force) {
+  const sidebar = document.getElementById('wx-drawer-sidebar');
+  const overlay = document.getElementById('wx-drawer-overlay');
+  const btn = document.getElementById('drawer-hamburger-btn');
+  if (!sidebar || !overlay) return;
+
+  const isOpen = force !== undefined ? !force : sidebar.classList.contains('show');
+  if (isOpen) {
+    closeDrawer();
+  } else {
+    openDrawer();
+  }
+}
+
+function openDrawer() {
+  const sidebar = document.getElementById('wx-drawer-sidebar');
+  const overlay = document.getElementById('wx-drawer-overlay');
+  const btn = document.getElementById('drawer-hamburger-btn');
+  if (!sidebar || !overlay) return;
+
+  sidebar.classList.add('show');
+  overlay.classList.add('show');
+  if (btn) btn.classList.add('active');
+  document.body.style.overflow = 'hidden';
+
+  // Refresh counts
+  updateDrawerBadgeCounts();
+}
+
+function closeDrawer() {
+  const sidebar = document.getElementById('wx-drawer-sidebar');
+  const overlay = document.getElementById('wx-drawer-overlay');
+  const btn = document.getElementById('drawer-hamburger-btn');
+  if (sidebar) sidebar.classList.remove('show');
+  if (overlay) overlay.classList.remove('show');
+  if (btn) btn.classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+function highlightActiveBottomNavItem() {
+  const path = window.location.pathname.toLowerCase();
+  const search = window.location.search.toUpperCase();
+  const hash = window.location.hash.toLowerCase();
+
+  document.querySelectorAll('.bottom-nav-item').forEach(el => el.classList.remove('active'));
+
+  if (path.includes('product') && search.includes('FREE')) {
+    const el = document.getElementById('bnav-free');
+    if (el) el.classList.add('active');
+  } else if (path.includes('product')) {
+    const el = document.getElementById('bnav-store');
+    if (el) el.classList.add('active');
+  } else if (path.includes('wallet')) {
+    const el = document.getElementById('bnav-deposit');
+    if (el) el.classList.add('active');
+  } else if (path.includes('dashboard')) {
+    if (hash.includes('keys')) {
+      const el = document.getElementById('bnav-licenses');
+      if (el) el.classList.add('active');
+    } else {
+      const el = document.getElementById('bnav-store');
+      if (el) el.classList.add('active');
+    }
+  } else if (path === '/' || path.includes('index')) {
+    const el = document.getElementById('bnav-store');
+    if (el) el.classList.add('active');
+  }
+}
+
+function updateDrawerWithUser(user) {
+  const card = document.getElementById('drawer-profile-card');
+  const initialsEl = document.getElementById('drawer-user-initials');
+  const nameEl = document.getElementById('drawer-user-name');
+  const badgeEl = document.getElementById('drawer-user-badge');
+  const emailEl = document.getElementById('drawer-user-email');
+  const logoutBtn = document.getElementById('drawer-logout-btn');
+
+  if (!card) return;
+
+  if (user) {
+    if (initialsEl) initialsEl.textContent = getUserInitials(user.name);
+    if (nameEl) nameEl.textContent = user.name;
+    if (badgeEl) {
+      if (user.user_type === 'reseller') {
+        badgeEl.textContent = 'RESELLER';
+        badgeEl.style.borderColor = '#fbbf24';
+        badgeEl.style.color = '#fbbf24';
+      } else {
+        badgeEl.textContent = 'VERIFIED';
+        badgeEl.style.borderColor = '#00f0ff';
+        badgeEl.style.color = '#00f0ff';
+      }
+    }
+    if (emailEl) emailEl.textContent = user.email;
+    if (logoutBtn) logoutBtn.style.display = 'flex';
+  } else {
+    if (initialsEl) initialsEl.textContent = 'WX';
+    if (nameEl) nameEl.textContent = 'Guest Player';
+    if (badgeEl) {
+      badgeEl.textContent = 'UNVERIFIED';
+      badgeEl.style.borderColor = '#94a3b8';
+      badgeEl.style.color = '#94a3b8';
+    }
+    if (emailEl) emailEl.textContent = 'Login to view license keys';
+    if (logoutBtn) logoutBtn.style.display = 'none';
+  }
+
+  updateDrawerBadgeCounts();
+}
+
+async function updateDrawerBadgeCounts() {
+  try {
+    // 1. Store Product Count
+    const storeCountEl = document.getElementById('drawer-count-store');
+    if (storeCountEl) {
+      const res = await fetch('/api/products/list');
+      if (res.ok) {
+        const d = await res.json();
+        const count = Array.isArray(d.products) ? d.products.length : (Array.isArray(d) ? d.length : 0);
+        storeCountEl.textContent = count;
+      }
+    }
+
+    // 2. Licenses & Orders count (if user logged in)
+    if (Store.user) {
+      const ordRes = await fetch('/api/orders/my-orders');
+      if (ordRes.ok) {
+        const ordData = await ordRes.json();
+        const orders = ordData.orders || [];
+        const delivered = orders.filter(o => o.license_keys && o.license_keys.length > 0);
+        
+        const licEl = document.getElementById('drawer-count-licenses');
+        if (licEl) licEl.textContent = delivered.length;
+
+        const purchEl = document.getElementById('drawer-count-purchase-history');
+        if (purchEl) purchEl.textContent = orders.length;
+
+        const totalHistEl = document.getElementById('drawer-count-history');
+        if (totalHistEl) totalHistEl.textContent = orders.length;
+      }
+
+      // 3. Payment History count
+      const wallRes = await fetch('/api/wallet/history');
+      if (wallRes.ok) {
+        const wallData = await wallRes.json();
+        const txs = wallData.transactions || [];
+        const payEl = document.getElementById('drawer-count-pay-history');
+        if (payEl) payEl.textContent = txs.length;
+      }
+    }
+  } catch (err) {
+    // Graceful fallback
+  }
+}
+
+function openProfileModal() {
+  closeDrawer();
+  const modal = document.getElementById('wx-profile-modal');
+  if (!modal) return;
+
+  if (!Store.user) {
+    window.location.href = '/login.html?redirect=' + encodeURIComponent(window.location.pathname);
+    return;
+  }
+
+  const roleBadge = document.getElementById('modal-user-role-badge');
+  const nameInput = document.getElementById('modal-user-name-input');
+  const phoneInput = document.getElementById('modal-user-phone-input');
+  const emailInput = document.getElementById('modal-user-email-input');
+  const currPass = document.getElementById('modal-current-pass-input');
+  const newPass = document.getElementById('modal-new-pass-input');
+  const confPass = document.getElementById('modal-confirm-pass-input');
+
+  if (roleBadge) {
+    if (Store.user.user_type === 'reseller') {
+      roleBadge.className = 'badge badge-reseller';
+      roleBadge.textContent = `RESELLER (${Store.user.reseller_discount || 0}% WHOLESALE DISCOUNT)`;
+    } else {
+      roleBadge.className = 'badge badge-undetected';
+      roleBadge.textContent = 'STANDARD CUSTOMER';
+    }
+  }
+
+  if (nameInput) nameInput.value = Store.user.name || '';
+  if (phoneInput) phoneInput.value = Store.user.phone || '';
+  if (emailInput) emailInput.value = Store.user.email || '';
+  if (currPass) currPass.value = '';
+  if (newPass) newPass.value = '';
+  if (confPass) confPass.value = '';
+
+  modal.classList.add('show');
+  modal.setAttribute('aria-hidden', 'false');
+  if (nameInput) nameInput.focus();
+}
+
+function closeProfileModal() {
+  const modal = document.getElementById('wx-profile-modal');
+  if (modal) {
+    modal.classList.remove('show');
+    modal.setAttribute('aria-hidden', 'true');
+  }
+}
+
+async function handleProfileSubmit(e) {
+  e.preventDefault();
+  const nameInput = document.getElementById('modal-user-name-input');
+  const phoneInput = document.getElementById('modal-user-phone-input');
+  const currPass = document.getElementById('modal-current-pass-input');
+  const newPass = document.getElementById('modal-new-pass-input');
+  const confPass = document.getElementById('modal-confirm-pass-input');
+  const submitBtn = document.getElementById('modal-profile-submit-btn');
+
+  const nameVal = nameInput ? nameInput.value.trim() : '';
+  const phoneVal = phoneInput ? phoneInput.value.trim() : '';
+  const currPassVal = currPass ? currPass.value : '';
+  const newPassVal = newPass ? newPass.value : '';
+  const confPassVal = confPass ? confPass.value : '';
+
+  if (nameVal.length < 2) {
+    showToast('Name must be at least 2 characters.', 'error');
+    return;
+  }
+
+  if (newPassVal) {
+    if (!currPassVal) {
+      showToast('Please enter your current password to change password.', 'warning');
+      return;
+    }
+    if (newPassVal.length < 6) {
+      showToast('New password must be at least 6 characters.', 'error');
+      return;
+    }
+    if (newPassVal !== confPassVal) {
+      showToast('New passwords do not match!', 'error');
+      return;
+    }
+  }
+
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Saving Changes...';
+  }
+
+  try {
+    const payload = {
+      name: nameVal,
+      phone: phoneVal
+    };
+    if (newPassVal) {
+      payload.current_password = currPassVal;
+      payload.new_password = newPassVal;
+    }
+
+    const res = await fetch('/api/auth/update-profile', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+
+    if (res.ok && data.success) {
+      if (data.user) {
+        Store.user.name = data.user.name;
+        Store.user.phone = data.user.phone;
+      }
+      showToast('Profile updated successfully! ✨', 'success');
+      closeProfileModal();
+
+      // Update UI components across the page
+      renderLoggedInNav(Store.user);
+      updateDrawerWithUser(Store.user);
+
+      // If on dashboard, update dashboard elements
+      const dashName = document.getElementById('dash-user-name');
+      const dashPhone = document.getElementById('dash-user-phone');
+      if (dashName) dashName.textContent = Store.user.name;
+      if (dashPhone) dashPhone.textContent = Store.user.phone || 'N/A';
+    } else {
+      showToast(data.message || 'Failed to update profile', 'error');
+    }
+  } catch (err) {
+    showToast('Network error while updating profile', 'error');
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Save Changes 💾';
+    }
+  }
+}
+
+function triggerLoaderDownload() {
+  closeDrawer();
+  showToast('Initiating official White X Loader download...', 'info');
+  window.open('https://github.com', '_blank');
+}
+
+function openRedeemDialog() {
+  closeDrawer();
+  const code = prompt('Enter White X Store Gift/Promo Code:');
+  if (code && code.trim()) {
+    validateAndApplyRedeemCode(code.trim());
+  }
+}
+
+async function validateAndApplyRedeemCode(code) {
+  try {
+    const res = await fetch('/api/redeem/validate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code })
+    });
+    const d = await res.json();
+    if (res.ok && d.success) {
+      showToast(d.message || 'Code redeemed successfully!', 'success');
+      if (Store.user) {
+        checkAuth();
+      }
+    } else {
+      showToast(d.message || 'Invalid or expired code', 'error');
+    }
+  } catch (e) {
+    showToast('Failed to validate code', 'error');
   }
 }
 
@@ -1012,4 +1752,14 @@ window.render7SProductCardHtml = render7SProductCardHtml;
 window.getCategoryIcon = getCategoryIcon;
 window.getProductSocialProof = getProductSocialProof;
 window.formatCompactNumber = formatCompactNumber;
+window.toggleDrawer = toggleDrawer;
+window.openDrawer = openDrawer;
+window.closeDrawer = closeDrawer;
+window.openProfileModal = openProfileModal;
+window.closeProfileModal = closeProfileModal;
+window.handleProfileSubmit = handleProfileSubmit;
+window.triggerLoaderDownload = triggerLoaderDownload;
+window.openRedeemDialog = openRedeemDialog;
+window.formatWalletBalance = formatWalletBalance;
+window.updateDrawerBadgeCounts = updateDrawerBadgeCounts;
 
