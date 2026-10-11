@@ -75,6 +75,55 @@ export default async function handler(req, res) {
         };
       });
 
+      // 5. Fetch products and plans with reseller wholesale prices
+      const rpRes = await query(
+        `SELECT plan_id, custom_price_usd FROM reseller_prices WHERE user_id = $1`,
+        [user.id]
+      );
+      const customPriceMap = {};
+      rpRes.rows.forEach(r => {
+        customPriceMap[r.plan_id] = parseFloat(r.custom_price_usd);
+      });
+      const resellerDiscountPct = parseFloat(dbUser.reseller_discount || 0);
+
+      const plansRes = await query(
+        `SELECT pl.id as plan_id, pl.product_id, pl.plan_name, pl.days, pl.price_usd,
+                p.name as product_name, p.category
+         FROM plans pl
+         JOIN products p ON pl.product_id = p.id
+         WHERE p.status = 'active'
+         ORDER BY p.name ASC, pl.days ASC`
+      );
+
+      const catalog = plansRes.rows.map(pl => {
+        const baseRetailUsd = parseFloat(pl.price_usd);
+        let resellerPriceUsd = baseRetailUsd;
+        let pricingType = 'retail';
+
+        if (customPriceMap[pl.plan_id] !== undefined) {
+          resellerPriceUsd = customPriceMap[pl.plan_id];
+          pricingType = 'custom_override';
+        } else if (resellerDiscountPct > 0) {
+          resellerPriceUsd = parseFloat((baseRetailUsd * (1 - resellerDiscountPct / 100)).toFixed(2));
+          pricingType = 'percent_discount';
+        }
+
+        const resellerPriceNpr = parseFloat((resellerPriceUsd * nprRate).toFixed(2));
+
+        return {
+          plan_id: pl.plan_id,
+          product_id: pl.product_id,
+          product_name: pl.product_name,
+          category: pl.category,
+          plan_name: pl.plan_name,
+          days: pl.days,
+          retail_price_usd: baseRetailUsd,
+          reseller_price_usd: resellerPriceUsd,
+          reseller_price_npr: resellerPriceNpr,
+          pricing_type: pricingType
+        };
+      });
+
       return res.status(200).json({
         success: true,
         credentials: {
@@ -88,7 +137,8 @@ export default async function handler(req, res) {
           balance_usd: parseFloat((parseFloat(dbUser.wallet_balance || 0) / nprRate).toFixed(2)),
           exchange_rate: nprRate
         },
-        reseller_discount_percent: parseFloat(dbUser.reseller_discount || 0),
+        reseller_discount_percent: resellerDiscountPct,
+        catalog,
         recent_logs: logs
       });
     } catch (err) {

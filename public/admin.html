@@ -1141,8 +1141,11 @@
                 Turn API access ON/OFF per reseller, view API keys, check balances, or regenerate keys.
               </p>
             </div>
-            <div style="display: flex; gap: 0.75rem; align-items: center;">
-              <input type="text" id="adm-reseller-search-input" class="form-input" placeholder="🔍 Search reseller or API key..." style="width: 260px; font-size: 0.82rem; padding: 0.45rem 0.75rem;" oninput="filterAdminResellerApiTable()">
+            <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+              <input type="text" id="adm-reseller-search-input" class="form-input" placeholder="🔍 Search reseller or API key..." style="width: 240px; font-size: 0.82rem; padding: 0.45rem 0.75rem;" oninput="filterAdminResellerApiTable()">
+              <button type="button" class="btn btn-primary btn-sm btn-glow" onclick="openGrantResellerApiModal()" style="font-size: 0.82rem; white-space: nowrap;">
+                + Grant API to Client 👤
+              </button>
             </div>
           </div>
 
@@ -2133,6 +2136,50 @@ X-API-Key: wx_live_YOUR_KEY</pre>
   </div>
 
   <!-- MODALS -->
+
+  <!-- GRANT RESELLER API MODAL -->
+  <div id="modal-grant-reseller-api" class="modal-backdrop">
+    <div class="modal-box" style="max-width: 540px; width: 95%;">
+      <button class="modal-close" onclick="closeModal('modal-grant-reseller-api')">✕</button>
+      <h3 style="color: #fff; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+        <span>⚡</span> <span>Grant Reseller Status & API Access</span>
+      </h3>
+      <p style="font-size: 0.85rem; color: var(--text-dim); margin-bottom: 1.25rem;">
+        Upgrade an existing customer into a verified Reseller and generate a private REST API key for their bots or website.
+      </p>
+
+      <form id="form-grant-reseller-api" onsubmit="handleGrantResellerApiSubmit(event)">
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label class="form-label" for="grant-reseller-user-select">Select Customer Account *</label>
+          <select id="grant-reseller-user-select" class="form-select" required style="width: 100%;">
+            <option value="">Loading customer accounts...</option>
+          </select>
+          <div style="font-size: 0.74rem; color: var(--text-dim); margin-top: 0.25rem;">Select any registered client from the store database.</div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
+          <div class="form-group">
+            <label class="form-label" for="grant-reseller-discount">Wholesale Discount (%)</label>
+            <input type="number" id="grant-reseller-discount" class="form-input" min="0" max="100" step="1" value="10" required>
+            <div style="font-size: 0.74rem; color: var(--text-dim); margin-top: 0.25rem;">Percentage off all products.</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="grant-reseller-api-enabled">API Access Status</label>
+            <select id="grant-reseller-api-enabled" class="form-select">
+              <option value="true" selected>🟢 Enabled (ON)</option>
+              <option value="false">🔴 Disabled (OFF)</option>
+            </select>
+            <div style="font-size: 0.74rem; color: var(--text-dim); margin-top: 0.25rem;">Can be toggled anytime later.</div>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+          <button type="button" class="btn btn-outline" onclick="closeModal('modal-grant-reseller-api')">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-glow">Grant Reseller & Save 🚀</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <!-- BANNER SLIDE EDITOR MODAL -->
   <div id="modal-banner-slide" class="modal-backdrop">
@@ -5829,9 +5876,21 @@ X-API-Key: wx_live_YOUR_KEY</pre>
           const isReseller = u.user_type === 'reseller';
           const isActive = u.status === 'active';
 
+          const isApiOn = u.api_access_enabled !== false;
           const typeBadge = isReseller 
-            ? '<span class="user-type-badge-reseller">🏪 RESELLER</span>' 
+            ? `<div style="display: flex; flex-direction: column; gap: 4px; align-items: center;">
+                 <span class="user-type-badge-reseller">🏪 RESELLER</span>
+                 ${isApiOn 
+                   ? '<span class="badge" style="background: rgba(52, 211, 153, 0.15); border: 1px solid #34d399; color: #34d399; font-size: 0.68rem; padding: 2px 6px; font-weight: 800;">⚡ API: ON 🟢</span>' 
+                   : '<span class="badge" style="background: rgba(239, 68, 68, 0.15); border: 1px solid #f87171; color: #f87171; font-size: 0.68rem; padding: 2px 6px; font-weight: 800;">⚡ API: OFF 🔴</span>'}
+               </div>` 
             : '<span class="user-type-badge-customer">👤 CUSTOMER</span>';
+
+          const apiToggleBtn = isReseller
+            ? `<button type="button" class="btn btn-outline btn-sm" onclick="toggleUserResellerApi('${u.id}', ${isApiOn})" style="font-size: 0.72rem; padding: 2px 6px; border-color: ${isApiOn ? '#f87171' : '#34d399'}; color: ${isApiOn ? '#f87171' : '#34d399'}; white-space: nowrap;" title="${isApiOn ? 'Turn API OFF for this client' : 'Turn API ON for this client'}">
+                 ${isApiOn ? '⚡ API Off 🛑' : '⚡ API On 🟢'}
+               </button>`
+            : '';
 
           const tierActionBtn = isReseller
             ? `<button type="button" class="btn-action-reseller" onclick="editUserTier('${u.id}', '${u.user_type}', ${u.reseller_discount || 0})">✏️ Edit Tier</button>`
@@ -5857,8 +5916,9 @@ X-API-Key: wx_live_YOUR_KEY</pre>
               </td>
               <td>
                 <div style="display: flex; flex-direction: column; gap: 6px;">
-                  <div style="display: flex; gap: 6px; align-items: center;">
+                  <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
                     ${tierActionBtn}
+                    ${apiToggleBtn}
                     ${statusBtn}
                   </div>
                   <div>
@@ -5909,15 +5969,16 @@ X-API-Key: wx_live_YOUR_KEY</pre>
           method: 'PUT',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id, user_type: 'reseller', reseller_discount: numDisc })
+          body: JSON.stringify({ id, user_type: 'reseller', reseller_discount: numDisc, api_access_enabled: true })
         });
         const data = await res.json();
         if (!res.ok || !data.success) {
           showToast(data.message || 'Failed to update user tier', 'error');
           return;
         }
-        showToast(`${name} upgraded to Reseller (${numDisc}% discount)!`, 'success');
+        showToast(`${name} upgraded to Reseller (${numDisc}% off) & API access turned ON! 🚀`, 'success');
         loadAdminUsers();
+        if (typeof loadAdminResellerApi === 'function') loadAdminResellerApi();
       } catch (err) {
         showToast('Error upgrading user tier', 'error');
       }
@@ -7465,6 +7526,8 @@ X-API-Key: wx_live_YOUR_KEY</pre>
           statVolumeUsd.textContent = `$${parseFloat(stats.total_volume_usd || 0).toFixed(2)} USD`;
         }
 
+        window.globalAdminEligibleUsers = data.eligible_users || [];
+
         // 3. Render Resellers Table
         renderAdminResellerApiTable(globalAdminResellersList);
 
@@ -7486,7 +7549,7 @@ X-API-Key: wx_live_YOUR_KEY</pre>
           <tr>
             <td colspan="9" style="text-align: center; padding: 2.5rem; color: var(--text-dim);">
               <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">👥</div>
-              <div>No reseller accounts found. Promote users to 'Reseller' in the Users tab to grant API access.</div>
+              <div>No reseller accounts found. Click '+ Grant API to Client' above to create one.</div>
             </td>
           </tr>`;
         return;
@@ -7501,12 +7564,18 @@ X-API-Key: wx_live_YOUR_KEY</pre>
         const lastCall = r.last_api_call ? formatDate(r.last_api_call) : 'Never';
 
         const toggleBtnHtml = isApiOn
-          ? `<button type="button" class="btn btn-sm" onclick="toggleUserResellerApi('${r.id}', true)" style="background: rgba(52, 211, 153, 0.15); border: 1px solid #34d399; color: #34d399; font-weight: 700; padding: 3px 10px; font-size: 0.75rem;">
-               ON 🟢
-             </button>`
-          : `<button type="button" class="btn btn-sm" onclick="toggleUserResellerApi('${r.id}', false)" style="background: rgba(239, 68, 68, 0.15); border: 1px solid #f87171; color: #f87171; font-weight: 700; padding: 3px 10px; font-size: 0.75rem;">
-               OFF 🔴
-             </button>`;
+          ? `<div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-start;">
+               <span class="badge" style="background: rgba(52, 211, 153, 0.15); border: 1px solid #34d399; color: #34d399; font-weight: 800; font-size: 0.72rem; padding: 2px 7px;">ACTIVE 🟢</span>
+               <button type="button" class="btn btn-outline btn-sm" onclick="toggleUserResellerApi('${r.id}', true)" style="border-color: #f87171; color: #f87171; font-size: 0.72rem; padding: 2px 8px; white-space: nowrap;">
+                 Turn OFF 🛑
+               </button>
+             </div>`
+          : `<div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-start;">
+               <span class="badge" style="background: rgba(239, 68, 68, 0.15); border: 1px solid #f87171; color: #f87171; font-weight: 800; font-size: 0.72rem; padding: 2px 7px;">DISABLED 🔴</span>
+               <button type="button" class="btn btn-primary btn-sm btn-glow" onclick="toggleUserResellerApi('${r.id}', false)" style="font-size: 0.72rem; padding: 2px 8px; white-space: nowrap;">
+                 Turn ON 🟢
+               </button>
+             </div>`;
 
         return `
           <tr>
@@ -7634,11 +7703,64 @@ X-API-Key: wx_live_YOUR_KEY</pre>
         if (data.success) {
           showToast(data.message, targetState ? 'success' : 'warning');
           loadAdminResellerApi();
+          if (typeof loadAdminUsers === 'function') loadAdminUsers();
         } else {
           showToast(data.message || 'Failed to toggle reseller API', 'error');
         }
       } catch (err) {
         showToast('Network error: ' + err.message, 'error');
+      }
+    }
+
+    function openGrantResellerApiModal() {
+      const select = document.getElementById('grant-reseller-user-select');
+      if (select) {
+        if (!window.globalAdminEligibleUsers || window.globalAdminEligibleUsers.length === 0) {
+          select.innerHTML = '<option value="">No customer accounts found or all are resellers</option>';
+        } else {
+          select.innerHTML = '<option value="">-- Choose Registered Customer --</option>' +
+            window.globalAdminEligibleUsers.map(u => 
+              `<option value="${u.id}">${escapeHtml(u.name)} (${escapeHtml(u.email)}) — Balance: NPR ${parseFloat(u.wallet_balance || 0).toLocaleString()}</option>`
+            ).join('');
+        }
+      }
+      openModal('modal-grant-reseller-api');
+    }
+
+    async function handleGrantResellerApiSubmit(e) {
+      if (e) e.preventDefault();
+      const userId = document.getElementById('grant-reseller-user-select')?.value;
+      const discount = parseFloat(document.getElementById('grant-reseller-discount')?.value || '10');
+      const apiAccess = document.getElementById('grant-reseller-api-enabled')?.value === 'true';
+
+      if (!userId) {
+        showToast('Please select a customer to grant reseller API access', 'warning');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/admin/reseller-api', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'grant-user',
+            user_id: userId,
+            reseller_discount: discount,
+            api_access_enabled: apiAccess
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(data.message, 'success');
+          closeModal('modal-grant-reseller-api');
+          loadAdminResellerApi();
+          if (typeof loadAdminUsers === 'function') loadAdminUsers();
+        } else {
+          showToast(data.message || 'Failed to grant reseller API', 'error');
+        }
+      } catch (err) {
+        showToast('Error granting reseller API: ' + err.message, 'error');
       }
     }
 

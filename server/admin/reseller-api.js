@@ -44,6 +44,14 @@ export default async function handler(req, res) {
         }
       }
 
+      // Fetch active non-reseller customers so admin can select client to enable API
+      const eligibleUsersRes = await query(
+        `SELECT id, name, email, phone, wallet_balance
+         FROM users
+         WHERE user_type != 'reseller' AND status = 'active'
+         ORDER BY name ASC LIMIT 100`
+      );
+
       // Fetch overall stats
       const statsRes = await query(
         `SELECT 
@@ -113,11 +121,54 @@ export default async function handler(req, res) {
           exchange_rate_usd: nprRate
         },
         resellers: resellersRes.rows,
+        eligible_users: eligibleUsersRes.rows,
         logs
       });
     } catch (err) {
       console.error('Admin reseller API overview error:', err);
       return res.status(500).json({ success: false, message: 'Failed to load reseller API overview: ' + err.message });
+    }
+  }
+
+  // POST: Grant Reseller & Enable API for a Client
+  if (req.method === 'POST' && (action === 'grant-user' || action === 'add-reseller')) {
+    try {
+      const { user_id, reseller_discount, api_access_enabled } = req.body || {};
+      if (!user_id) {
+        return res.status(400).json({ success: false, message: 'user_id is required.' });
+      }
+
+      const curUserRes = await query('SELECT id, name, email, api_key FROM users WHERE id = $1', [user_id]);
+      if (curUserRes.rows.length === 0) {
+        return res.status(404).json({ success: false, message: 'User not found.' });
+      }
+
+      let key = curUserRes.rows[0].api_key;
+      if (!key || !key.trim()) {
+        key = generateApiKey();
+      }
+
+      const discount = reseller_discount !== undefined ? parseFloat(reseller_discount) : 10;
+      const apiAccess = api_access_enabled === undefined ? true : (api_access_enabled === true || api_access_enabled === 'true');
+
+      await query(
+        `UPDATE users 
+         SET user_type = 'reseller',
+             reseller_discount = $1,
+             api_key = $2,
+             api_access_enabled = $3
+         WHERE id = $4`,
+        [discount, key, apiAccess, user_id]
+      );
+
+      return res.status(200).json({
+        success: true,
+        message: `Successfully granted Reseller status & API access to ${curUserRes.rows[0].name}! 🚀`,
+        api_key: key
+      });
+    } catch (err) {
+      console.error('Grant user reseller API error:', err);
+      return res.status(500).json({ success: false, message: 'Failed to grant reseller API: ' + err.message });
     }
   }
 
