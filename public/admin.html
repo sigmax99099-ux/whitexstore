@@ -4102,10 +4102,21 @@ X-API-Key: wx_live_YOUR_KEY</pre>
       openModal('modal-reject-order');
     }
 
+    let isRejectingOrder = false;
+
     async function handleRejectOrderSubmit(e) {
       e.preventDefault();
+      if (isRejectingOrder) return;
+
       const order_id = parseInt(document.getElementById('reject-order-id').value, 10);
       const reason = document.getElementById('reject-order-reason').value.trim();
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+
+      isRejectingOrder = true;
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Processing Rejection...';
+      }
 
       try {
         const res = await fetch('/api/admin/reject-order', {
@@ -4119,12 +4130,18 @@ X-API-Key: wx_live_YOUR_KEY</pre>
           showToast(data.message || 'Rejection failed.', 'error');
           return;
         }
-        showToast('Order rejected and refund credited!', 'info');
+        showToast(data.message || 'Order rejected and refund credited!', 'info');
         closeModal('modal-reject-order');
         loadAdminOrders();
         loadDashboardData();
       } catch (err) {
-        showToast('Rejection error.', 'error');
+        showToast('Rejection error: ' + err.message, 'error');
+      } finally {
+        isRejectingOrder = false;
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Reject & Refund ✕';
+        }
       }
     }
 

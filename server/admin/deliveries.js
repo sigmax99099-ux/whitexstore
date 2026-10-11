@@ -119,6 +119,16 @@ export default async function handler(req, res) {
             await client.query('ROLLBACK');
             return res.status(400).json({ success: false, message: 'Cannot refund delivered order' });
           }
+
+          // Check if already refunded
+          const existingRefundRes = await client.query(
+            "SELECT COALESCE(SUM(amount), 0) as total_refunded FROM wallet_transactions WHERE order_id = $1 AND type = 'credit'",
+            [delivery.order_id]
+          );
+          if (parseFloat(existingRefundRes.rows[0]?.total_refunded || 0) > 0) {
+            await client.query('ROLLBACK');
+            return res.status(400).json({ success: false, message: 'Order was already refunded previously' });
+          }
           
           // Get exchange rate
           const ratesRes = await client.query(

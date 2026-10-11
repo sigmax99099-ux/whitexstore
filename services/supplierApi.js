@@ -423,46 +423,57 @@ export async function getProductMapping(productId, planId) {
         }
       }
 
-      // If resolved, ensure corresponding entry in product_mappings for foreign keys
-      let pmId = null;
-      if (supProdId > 0 && supDays > 0) {
-        try {
-          const pmUpsert = await query(
-            `INSERT INTO product_mappings 
-             (product_id, plan_id, supplier_product_id, supplier_product_name, supplier_plan_days, supplier_plan_count, auto_delivery, is_active, supplier_status, updated_at)
-             VALUES ($1, $2, $3, $4, $5, 1, true, true, 'active', NOW())
-             ON CONFLICT (product_id, plan_id) DO UPDATE SET
-               supplier_product_id = EXCLUDED.supplier_product_id,
-               supplier_product_name = EXCLUDED.supplier_product_name,
-               supplier_plan_days = EXCLUDED.supplier_plan_days,
-               is_active = true,
-               auto_delivery = true,
-               updated_at = NOW()
-             RETURNING id`,
-            [prodId, plId, supProdId, supProdName || 'Supplier Product', supDays]
-          );
-          pmId = pmUpsert.rows[0]?.id || null;
-        } catch (pmErr) {
-          // product_mappings table might not exist yet; non-blocking
-        }
+      // Detect supplier type
+      const svApiUrl = (sv.api_url || '').toLowerCase();
+      const svApiType = (sv.api_type || '').toLowerCase();
+      const svApiKey = sv.api_key || '';
+      const svName = (sv.supplier_name || '').toLowerCase();
+      const isAuthzen = svApiType === 'authzen' || svApiUrl.includes('authzen') || svApiKey.startsWith('sk_') || svName.includes('authzen');
+      const finalApiType = isAuthzen ? 'authzen' : (sv.api_type || 'keylicense');
 
-        return {
-          supplierProductId: supProdId,
-          supplier_product_id: supProdId,
-          supplierProductName: supProdName || 'Supplier Product',
-          supplier_product_name: supProdName || 'Supplier Product',
-          supplierPlanDays: supDays,
-          supplier_plan_days: supDays,
-          supplierPlanCount: 1,
-          supplier_plan_count: 1,
-          mappingId: pmId,
-          variantId: sv.supplier_variant_id,
-          supplierApiId: sv.supplier_api_id,
-          supplierApiType: isAuthzen ? 'authzen' : (sv.api_type || 'keylicense'),
-          supplierApiUrl: sv.api_url,
-          supplierApiKey: sv.api_key
-        };
+      // KeyLicense or variant mapping is valid as long as supplier_variant_id is set
+      const finalProdId = supProdId > 0 ? supProdId : (prodId || 1);
+      const finalDays = supDays > 0 ? supDays : (sv.plan_days || sv.supplier_plan_days || 1);
+      const finalProdName = supProdName || sv.product_name || 'Supplier Product';
+
+      let pmId = null;
+      try {
+        const pmUpsert = await query(
+          `INSERT INTO product_mappings 
+           (product_id, plan_id, supplier_product_id, supplier_product_name, supplier_plan_days, supplier_plan_count, auto_delivery, is_active, supplier_status, updated_at)
+           VALUES ($1, $2, $3, $4, $5, 1, true, true, 'active', NOW())
+           ON CONFLICT (product_id, plan_id) DO UPDATE SET
+             supplier_product_id = EXCLUDED.supplier_product_id,
+             supplier_product_name = EXCLUDED.supplier_product_name,
+             supplier_plan_days = EXCLUDED.supplier_plan_days,
+             is_active = true,
+             auto_delivery = true,
+             updated_at = NOW()
+           RETURNING id`,
+          [prodId, plId, finalProdId, finalProdName, finalDays]
+        );
+        pmId = pmUpsert.rows[0]?.id || null;
+      } catch (pmErr) {
+        // Non-blocking
       }
+
+      return {
+        supplierProductId: finalProdId,
+        supplier_product_id: finalProdId,
+        supplierProductName: finalProdName,
+        supplier_product_name: finalProdName,
+        supplierPlanDays: finalDays,
+        supplier_plan_days: finalDays,
+        supplierPlanCount: parseInt(sv.supplier_plan_count, 10) || 1,
+        supplier_plan_count: parseInt(sv.supplier_plan_count, 10) || 1,
+        supplierPlanPrice: parseFloat(sv.supplier_plan_price || 0),
+        mappingId: pmId,
+        variantId: sv.supplier_variant_id,
+        supplierApiId: sv.supplier_api_id,
+        supplierApiType: finalApiType,
+        supplierApiUrl: sv.api_url,
+        supplierApiKey: sv.api_key
+      };
     }
 
     // 2. Fallback to product_mappings table

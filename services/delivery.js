@@ -203,11 +203,21 @@ async function attemptDelivery(client, order, mapping, deliveryId) {
 
     if (mapping.supplierApiType === 'keylicense' || (mapping.supplierApiUrl && mapping.supplierApiUrl.includes('keylicense'))) {
       console.log(`[Delivery] Using KeyLicense API for Order #${order.id}, variant: ${mapping.variantId}`);
-      const klRes = await callSupplierForKey(mapping.variantId, order.plan_id);
-      if (!klRes || (!klRes.success && !klRes.key && !klRes.keys)) {
+      const klRes = await callSupplierForKey(mapping.variantId, order.plan_id, {
+        apiUrl: mapping.supplierApiUrl,
+        apiKey: mapping.supplierApiKey,
+        apiType: mapping.supplierApiType
+      });
+
+      // Flexible key extraction for all KeyLicense formats (key, license_key, license, code, keys)
+      const extractedKeys = (Array.isArray(klRes?.keys) && klRes.keys.length > 0)
+        ? klRes.keys
+        : (klRes?.key ? [klRes.key] : (klRes?.license_key ? [klRes.license_key] : (klRes?.license ? [klRes.license] : [])));
+
+      if (!klRes || (!klRes.success && extractedKeys.length === 0)) {
         throw new SupplierError('KeyLicense delivery error: ' + (klRes?.error || klRes?.message || 'No keys returned'));
       }
-      keys = klRes.keys || (klRes.key ? [klRes.key] : []);
+      keys = extractedKeys;
       unitPrice = parseFloat(mapping.supplierPlanPrice || 0);
       totalCost = unitPrice * supCount;
     } else {
@@ -301,6 +311,60 @@ async function attemptDelivery(client, order, mapping, deliveryId) {
     };
     
   } catch (err) {
+    // Local Stock Emergency Fallback:
+    // If supplier API has an outage or error, check if local pre-stocked keys exist in license_keys!
+    try {
+      const targetDays = parseInt(mapping?.supplierPlanDays || order.days || 1, 10);
+      const localStockRes = await client.query(
+        `SELECT id, key_code FROM license_keys 
+         WHERE product_id = $1 AND status = 'available' AND (days = $2 OR days IS NULL)
+         LIMIT 1 FOR UPDATE`,
+        [order.product_id, targetDays]
+      );
+
+      if (localStockRes.rows.length > 0) {
+        const localKey = localStockRes.rows[0].key_code;
+        const localKeyId = localStockRes.rows[0].id;
+        console.log(`[Delivery] Supplier error (${err.message}). Using local stock key for Order #${order.id}`);
+
+        await client.query(
+          `UPDATE license_keys 
+           SET status = 'sold', assigned_order_id = $1, assigned_user_id = $2 
+           WHERE id = $3`,
+          [order.id, order.user_id, localKeyId]
+        );
+
+        await client.query(
+          `UPDATE deliveries SET
+             status = 'delivered',
+             keys = $1,
+             unit_price = 0,
+             total_cost = 0,
+             delivered_at = NOW(),
+             last_error = NULL,
+             next_retry_at = NULL
+           WHERE id = $2`,
+          [[localKey], deliveryId]
+        );
+
+        await client.query(
+          "UPDATE orders SET status = 'approved' WHERE id = $1",
+          [order.id]
+        );
+
+        await notifyDiscordDelivery(order, [localKey], mapping?.supplierProductName || order.product_name, order.plan_name);
+
+        return {
+          success: true,
+          keys: [localKey],
+          deliveryId,
+          source: 'local_stock_fallback'
+        };
+      }
+    } catch (fallbackErr) {
+      console.warn('[Delivery] Fallback local stock check notice:', fallbackErr.message);
+    }
+
     // Handle different error types
     await handleDeliveryError(client, deliveryId, order, mapping, err);
     

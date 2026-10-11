@@ -23,7 +23,7 @@ export default async function handler(req, res) {
   try {
     try { await client.query('BEGIN'); } catch(e) {}
 
-    // 1. Fetch order
+    // 1. Fetch order with row lock
     const orderRes = await client.query(
       `SELECT o.id, o.order_code, o.user_id, o.amount_usd, o.status,
               COALESCE(p.name, o.product_name, 'Product') as product_name,
@@ -31,7 +31,8 @@ export default async function handler(req, res) {
        FROM orders o
        JOIN users u ON o.user_id = u.id
        LEFT JOIN products p ON o.product_id = p.id
-       WHERE o.id = $1`,
+       WHERE o.id = $1
+       FOR UPDATE`,
       [order_id]
     );
 
@@ -46,10 +47,23 @@ export default async function handler(req, res) {
     if (order.status === 'rejected') {
       try { await client.query('ROLLBACK'); } catch(e) {}
       client.release && client.release();
-      return res.status(400).json({ success: false, message: 'Order is already marked as rejected' });
+      return res.status(400).json({ 
+        success: false, 
+        message: `Order ${order.order_code} is already marked as rejected. No additional refund can be issued.` 
+      });
     }
 
-    // 2. Find original debit transaction to know the exact NPR amount to refund
+    // 2. Critical Idempotency Check: Has this order ALREADY been refunded in wallet_transactions?
+    const existingRefundRes = await client.query(
+      `SELECT COALESCE(SUM(amount), 0) as total_refunded, COUNT(*)::int as refund_count
+       FROM wallet_transactions 
+       WHERE order_id = $1 AND type = 'credit'`,
+      [order.id]
+    );
+
+    const alreadyRefundedNpr = parseFloat(existingRefundRes.rows[0]?.total_refunded || 0);
+
+    // 3. Find original debit transaction to know the exact NPR amount to refund
     const debitRes = await client.query(
       "SELECT amount FROM wallet_transactions WHERE order_id = $1 AND type = 'debit' LIMIT 1",
       [order.id]
@@ -62,24 +76,29 @@ export default async function handler(req, res) {
       // Fallback: convert USD using current rate
       const rateRes = await client.query("SELECT setting_value FROM settings WHERE setting_key = 'npr_usd_rate' LIMIT 1");
       const rate = parseFloat(rateRes.rows[0]?.setting_value || '134.50');
-      refundNpr = parseFloat((parseFloat(order.amount_usd) * rate).toFixed(2));
+      refundNpr = parseFloat((parseFloat(order.amount_usd || 0) * rate).toFixed(2));
     }
 
-    // 3. Mark order as rejected
+    // 4. Mark order as rejected
     const rejectReason = reason || 'Order rejected by administrator.';
     await client.query(
       "UPDATE orders SET status = 'rejected', reject_reason = $1 WHERE id = $2",
       [rejectReason, order.id]
     );
 
-    // 4. Release any assigned license keys back to 'available'
+    // 5. Release any assigned license keys back to 'available'
     await client.query(
       "UPDATE license_keys SET status = 'available', assigned_order_id = NULL, assigned_user_id = NULL WHERE assigned_order_id = $1",
       [order.id]
     );
 
-    // 5. Refund wallet balance (credit)
-    if (refundNpr > 0) {
+    // 6. Idempotent Wallet Refund:
+    // If a refund was ALREADY issued for this order (e.g. from previous action, API failure, or delivery refund),
+    // strictly SKIP second wallet credit to prevent DOUBLE REFUND!
+    let refundedThisTime = 0;
+    if (alreadyRefundedNpr > 0) {
+      console.log(`[Reject Order] Notice: Order #${order.id} was already refunded NPR ${alreadyRefundedNpr}. Skipping duplicate wallet credit.`);
+    } else if (refundNpr > 0) {
       await client.query(
         'UPDATE users SET wallet_balance = wallet_balance + $1 WHERE id = $2',
         [refundNpr, order.user_id]
@@ -95,26 +114,39 @@ export default async function handler(req, res) {
           order.id
         ]
       );
+      refundedThisTime = refundNpr;
     }
 
     try { await client.query('COMMIT'); } catch(e) {}
     client.release && client.release();
 
-    // 6. Notify Discord
+    // 7. Notify Discord
     await sendDiscordEmbed({
-      title: 'Order Rejected & Refunded',
+      title: 'Order Rejected',
       description: `Order **${order.order_code}** for **${order.user_name}** was rejected.`,
       color: DISCORD_COLORS.ERROR,
       fields: [
         { name: 'Product', value: order.product_name, inline: true },
-        { name: 'Refunded Amount', value: `NPR ${refundNpr}`, inline: true },
+        { 
+          name: 'Wallet Refund', 
+          value: refundedThisTime > 0 
+            ? `NPR ${refundedThisTime} refunded` 
+            : (alreadyRefundedNpr > 0 ? `Already refunded previously (NPR ${alreadyRefundedNpr})` : 'NPR 0'), 
+          inline: true 
+        },
         { name: 'Reason', value: rejectReason }
       ]
     });
 
+    const successMsg = refundedThisTime > 0
+      ? `Order ${order.order_code} rejected and NPR ${refundedThisTime} refunded to user.`
+      : `Order ${order.order_code} marked as rejected. (Refund of NPR ${alreadyRefundedNpr} was already credited previously)`;
+
     return res.status(200).json({
       success: true,
-      message: `Order ${order.order_code} rejected and NPR ${refundNpr} refunded to user.`
+      message: successMsg,
+      refunded_npr: refundedThisTime,
+      already_refunded: alreadyRefundedNpr > 0
     });
   } catch (err) {
     try { await client.query('ROLLBACK'); } catch (rbErr) {}
