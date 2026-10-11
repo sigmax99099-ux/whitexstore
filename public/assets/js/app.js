@@ -745,21 +745,15 @@ function mountDrawerAndBars() {
           </a>
         </li>
         <li class="drawer-nav-item">
-          <a href="/products.html?category=FREE" class="drawer-nav-link" id="drawer-link-free" onclick="closeDrawer()">
-            <span class="drawer-nav-left"><span class="drawer-nav-icon">🎁</span> Free Panel</span>
-            <span class="drawer-nav-badge free">FREE</span>
+          <a href="/dashboard.html#referrals" class="drawer-nav-link" id="drawer-link-refer" onclick="closeDrawer()">
+            <span class="drawer-nav-left"><span class="drawer-nav-icon">🎁</span> Refer & Earn</span>
+            <span class="drawer-nav-badge free" style="background:rgba(52,211,153,0.18); border-color:#34d399; color:#34d399;">BONUS</span>
           </a>
         </li>
         <li class="drawer-nav-item">
           <a href="/dashboard.html#keys" class="drawer-nav-link" id="drawer-link-licenses" onclick="closeDrawer()">
-            <span class="drawer-nav-left"><span class="drawer-nav-icon">🗝️</span> Your Licenses</span>
+            <span class="drawer-nav-left"><span class="drawer-nav-icon">🔑</span> My License Keys & Files</span>
             <span class="drawer-nav-badge" id="drawer-count-licenses">0</span>
-          </a>
-        </li>
-        <li class="drawer-nav-item">
-          <a href="javascript:void(0)" onclick="triggerLoaderDownload()" class="drawer-nav-link" id="drawer-link-downloads">
-            <span class="drawer-nav-left"><span class="drawer-nav-icon">📥</span> Downloads</span>
-            <span class="drawer-nav-badge" id="drawer-count-downloads">1</span>
           </a>
         </li>
         <li class="drawer-nav-item">
@@ -775,7 +769,7 @@ function mountDrawerAndBars() {
               <span>💳 Payment History</span>
               <span class="drawer-nav-badge" id="drawer-count-pay-history">0</span>
             </a>
-            <a href="/dashboard.html#orders" class="drawer-sub-link" onclick="closeDrawer()">
+            <a href="/dashboard.html#history" class="drawer-sub-link" onclick="closeDrawer()">
               <span>🛍️ Purchase History</span>
               <span class="drawer-nav-badge" id="drawer-count-purchase-history">0</span>
             </a>
@@ -783,18 +777,16 @@ function mountDrawerAndBars() {
         </li>
         <li class="drawer-nav-item">
           <a href="/wallet.html" class="drawer-nav-link" onclick="closeDrawer()">
-            <span class="drawer-nav-left"><span class="drawer-nav-icon">➕</span> Add Credit</span>
+            <span class="drawer-nav-left"><span class="drawer-nav-icon">💳</span> Add Credit</span>
           </a>
         </li>
         <li class="drawer-nav-item">
-          <a href="/dashboard.html#sec-referrals" class="drawer-nav-link" onclick="closeDrawer()">
-            <span class="drawer-nav-left"><span class="drawer-nav-icon">👥</span> Refer & Earn</span>
-          </a>
-        </li>
-        <li class="drawer-nav-item">
-          <a href="javascript:void(0)" onclick="openRedeemDialog()" class="drawer-nav-link">
-            <span class="drawer-nav-left"><span class="drawer-nav-icon">🎁</span> Redeem Code</span>
-          </a>
+          <button type="button" onclick="openNotificationsModal()" class="drawer-nav-link">
+            <span class="drawer-nav-left">
+              <span class="drawer-nav-icon" style="position:relative;">🔔<span class="nav-notif-dot"></span></span> Notifications
+            </span>
+            <span class="drawer-nav-badge" style="background:rgba(255,0,85,0.18); border-color:#ff0055; color:#ff0055;">ALERTS</span>
+          </button>
         </li>
         <li class="drawer-nav-item">
           <button type="button" onclick="openProfileModal()" class="drawer-nav-link">
@@ -834,7 +826,7 @@ function mountDrawerAndBars() {
   document.body.appendChild(overlay);
   document.body.appendChild(sidebar);
 
-  // --- B. FIXED BOTTOM NAVIGATION BAR (FIGURE 3) ---
+  // --- B. FIXED BOTTOM NAVIGATION BAR (FIGURE 3 WITH NOTIFICATIONS) ---
   const bottomNav = document.createElement('nav');
   bottomNav.id = 'wx-bottom-bar';
   bottomNav.className = 'bottom-nav-bar';
@@ -845,17 +837,20 @@ function mountDrawerAndBars() {
       <span class="b-icon">🏠</span>
       <span>Store</span>
     </a>
-    <a href="/products.html?category=FREE" class="bottom-nav-item" id="bnav-free">
-      <span class="b-icon">⭐</span>
-      <span>Free Panel</span>
-    </a>
+    <button type="button" class="bottom-nav-item" id="bnav-notifications" onclick="openNotificationsModal()">
+      <span class="b-icon" style="position:relative;">
+        🔔
+        <span class="nav-notif-dot"></span>
+      </span>
+      <span>Alerts</span>
+    </button>
     <a href="/dashboard.html#keys" class="bottom-nav-item" id="bnav-licenses">
-      <span class="b-icon">🔒</span>
-      <span>Licenses</span>
+      <span class="b-icon">🔑</span>
+      <span>My Keys</span>
     </a>
     <a href="/wallet.html" class="bottom-nav-item" id="bnav-deposit">
-      <span class="b-icon">➕</span>
-      <span>Deposit</span>
+      <span class="b-icon">💳</span>
+      <span>Credit</span>
     </a>
     <button type="button" class="bottom-nav-item" id="bnav-profile" onclick="openProfileModal()">
       <span class="b-icon">👤</span>
@@ -928,7 +923,56 @@ function mountDrawerAndBars() {
 
   document.body.appendChild(profileModal);
 
-  // --- D. WIRE EVENT LISTENERS ---
+  // --- D. LIVE NOTIFICATIONS & ALERTS MODAL ---
+  const notifModal = document.createElement('div');
+  notifModal.id = 'wx-notifications-modal';
+  notifModal.className = 'wx-modal-backdrop';
+  notifModal.setAttribute('aria-hidden', 'true');
+
+  notifModal.innerHTML = `
+    <div class="wx-modal-box" style="max-width: 440px;">
+      <div class="wx-modal-header">
+        <div class="wx-modal-title">
+          <span>🔔</span> <span>Live Alerts & Updates</span>
+        </div>
+        <button type="button" class="wx-modal-close" onclick="closeNotificationsModal()" title="Close">✕</button>
+      </div>
+      <div class="notifications-list" style="display:flex; flex-direction:column; gap:0.85rem;">
+        <div class="notification-item" style="background:#050814; border:1px solid rgba(0, 240, 255, 0.25); border-radius:10px; padding:0.95rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.35rem;">
+            <span class="badge badge-undetected" style="font-size:0.7rem; padding:2px 7px;">UNDETECTED 🟢</span>
+            <span style="font-size:0.72rem; color:var(--text-dim);">Live Status</span>
+          </div>
+          <div style="font-size:0.88rem; font-weight:700; color:#fff; margin-bottom:0.25rem;">Kernel Bypasses Active</div>
+          <div style="font-size:0.78rem; color:var(--text-muted); line-height:1.4;">All game cheat loaders & mobile panels are updated and 100% undetected on the current season patches.</div>
+        </div>
+
+        <div class="notification-item" style="background:#050814; border:1px solid rgba(52, 211, 153, 0.25); border-radius:10px; padding:0.95rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.35rem;">
+            <span class="badge" style="background:rgba(52, 211, 153, 0.15); color:#34d399; font-size:0.7rem; padding:2px 7px;">SPECIAL OFFER 🎁</span>
+            <span style="font-size:0.72rem; color:var(--text-dim);">Referral Bonus</span>
+          </div>
+          <div style="font-size:0.88rem; font-weight:700; color:#fff; margin-bottom:0.25rem;">Double Referral Rewards Active!</div>
+          <div style="font-size:0.78rem; color:var(--text-muted); line-height:1.4;">Invite your friends using your referral link/code. Both of you receive instant free NPR wallet bonus on their first purchase!</div>
+          <a href="/dashboard.html#referrals" onclick="closeNotificationsModal()" style="display:inline-block; font-size:0.75rem; color:#34d399; font-weight:700; margin-top:0.4rem; text-decoration:none;">View Referral Offer →</a>
+        </div>
+
+        <div class="notification-item" style="background:#050814; border:1px solid rgba(255, 0, 85, 0.25); border-radius:10px; padding:0.95rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.35rem;">
+            <span class="badge" style="background:rgba(255, 0, 85, 0.15); color:#ff0055; font-size:0.7rem; padding:2px 7px;">LOADER UPDATE 💾</span>
+            <span style="font-size:0.72rem; color:var(--text-dim);">v4.8.2</span>
+          </div>
+          <div style="font-size:0.88rem; font-weight:700; color:#fff; margin-bottom:0.25rem;">Universal Bypass Loader v4.8.2 Live</div>
+          <div style="font-size:0.78rem; color:var(--text-muted); line-height:1.4;">Automated HWID spoofing and one-click key activation is ready. Download it from your Keys & Files section.</div>
+          <a href="/dashboard.html#keys" onclick="closeNotificationsModal()" style="display:inline-block; font-size:0.75rem; color:#ff0055; font-weight:700; margin-top:0.4rem; text-decoration:none;">Download Loader & Keys →</a>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(notifModal);
+
+  // --- E. WIRE EVENT LISTENERS ---
   const closeTopBtn = document.getElementById('drawer-close-top-btn');
   const closeCardBtn = document.getElementById('drawer-profile-card-close');
   const closeBottomBtn = document.getElementById('drawer-bottom-hide-btn');
@@ -956,6 +1000,7 @@ function mountDrawerAndBars() {
     if (e.key === 'Escape') {
       closeDrawer();
       closeProfileModal();
+      closeNotificationsModal();
     }
   });
 
@@ -963,6 +1008,12 @@ function mountDrawerAndBars() {
   profileModal.addEventListener('click', (e) => {
     if (e.target === profileModal) {
       closeProfileModal();
+    }
+  });
+
+  notifModal.addEventListener('click', (e) => {
+    if (e.target === notifModal) {
+      closeNotificationsModal();
     }
   });
 
@@ -1018,28 +1069,33 @@ function highlightActiveBottomNavItem() {
 
   document.querySelectorAll('.bottom-nav-item').forEach(el => el.classList.remove('active'));
 
-  if (path.includes('product') && search.includes('FREE')) {
-    const el = document.getElementById('bnav-free');
-    if (el) el.classList.add('active');
+  if (path.includes('dashboard')) {
+    if (hash.includes('keys') || hash.includes('licenses')) {
+      const el = document.getElementById('bnav-licenses');
+      if (el) el.classList.add('active');
+    } else if (hash.includes('deposit') || hash.includes('wallet')) {
+      const el = document.getElementById('bnav-deposit');
+      if (el) el.classList.add('active');
+    } else if (hash.includes('profile') || hash.includes('settings')) {
+      const el = document.getElementById('bnav-profile');
+      if (el) el.classList.add('active');
+    } else {
+      const el = document.getElementById('bnav-store');
+      if (el) el.classList.add('active');
+    }
   } else if (path.includes('product')) {
     const el = document.getElementById('bnav-store');
     if (el) el.classList.add('active');
   } else if (path.includes('wallet')) {
     const el = document.getElementById('bnav-deposit');
     if (el) el.classList.add('active');
-  } else if (path.includes('dashboard')) {
-    if (hash.includes('keys')) {
-      const el = document.getElementById('bnav-licenses');
-      if (el) el.classList.add('active');
-    } else {
-      const el = document.getElementById('bnav-store');
-      if (el) el.classList.add('active');
-    }
   } else if (path === '/' || path.includes('index')) {
     const el = document.getElementById('bnav-store');
     if (el) el.classList.add('active');
   }
 }
+
+window.addEventListener('hashchange', highlightActiveBottomNavItem);
 
 function updateDrawerWithUser(user) {
   const card = document.getElementById('drawer-profile-card');
@@ -1169,6 +1225,23 @@ function openProfileModal() {
 
 function closeProfileModal() {
   const modal = document.getElementById('wx-profile-modal');
+  if (modal) {
+    modal.classList.remove('show');
+    modal.setAttribute('aria-hidden', 'true');
+  }
+}
+
+function openNotificationsModal() {
+  closeDrawer();
+  const modal = document.getElementById('wx-notifications-modal');
+  if (modal) {
+    modal.classList.add('show');
+    modal.setAttribute('aria-hidden', 'false');
+  }
+}
+
+function closeNotificationsModal() {
+  const modal = document.getElementById('wx-notifications-modal');
   if (modal) {
     modal.classList.remove('show');
     modal.setAttribute('aria-hidden', 'true');
@@ -1762,4 +1835,6 @@ window.triggerLoaderDownload = triggerLoaderDownload;
 window.openRedeemDialog = openRedeemDialog;
 window.formatWalletBalance = formatWalletBalance;
 window.updateDrawerBadgeCounts = updateDrawerBadgeCounts;
+window.openNotificationsModal = openNotificationsModal;
+window.closeNotificationsModal = closeNotificationsModal;
 

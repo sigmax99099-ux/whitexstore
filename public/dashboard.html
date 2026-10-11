@@ -96,30 +96,106 @@
 
       <!-- Category-wise Separated Dashboard Tabs Bar -->
       <div class="dash-category-tabs-bar" id="dash-category-tabs">
-        <button type="button" class="dash-cat-tab-btn active" data-tab="catalog" onclick="switchDashTab('catalog')">
-          <span>🛍️</span> <span>STORE CATALOG</span>
+        <button type="button" class="dash-cat-tab-btn active" data-tab="dashboard" onclick="switchDashTab('dashboard')">
+          <span>📊</span> <span>DASHBOARD</span>
         </button>
-        <button type="button" class="dash-cat-tab-btn" data-tab="licenses" onclick="switchDashTab('licenses')">
-          <span>🗝️</span> <span>MY LICENSES (<span id="tab-count-keys">0</span>)</span>
-        </button>
-        <button type="button" class="dash-cat-tab-btn" data-tab="deposit" onclick="switchDashTab('deposit')">
-          <span>💳</span> <span>DEPOSIT & WALLET</span>
+        <button type="button" class="dash-cat-tab-btn" data-tab="keys" onclick="switchDashTab('keys')">
+          <span>🔑</span> <span>MY KEYS & FILES (<span id="tab-count-keys">0</span>)</span>
         </button>
         <button type="button" class="dash-cat-tab-btn" data-tab="history" onclick="switchDashTab('history')">
-          <span>🕒</span> <span>ORDER HISTORY</span>
+          <span>🕒</span> <span>HISTORY</span>
+        </button>
+        <button type="button" class="dash-cat-tab-btn" data-tab="deposit" onclick="switchDashTab('deposit')">
+          <span>💳</span> <span>ADD CREDIT</span>
         </button>
         <button type="button" class="dash-cat-tab-btn" data-tab="referrals" onclick="switchDashTab('referrals')">
-          <span>🎁</span> <span>REFER & EARN</span>
+          <span>🎁</span> <span>REFER OFFER</span>
         </button>
         <button type="button" class="dash-cat-tab-btn" data-tab="profile" onclick="switchDashTab('profile')">
-          <span>👤</span> <span>PROFILE & SETTINGS</span>
+          <span>👤</span> <span>EDIT PROFILE</span>
         </button>
       </div>
 
-      <!-- TAB 1: STORE CATALOG -->
-      <div id="tab-pane-catalog" class="tab-pane-content">
-        <!-- Quick Download Loader Banner -->
-        <div style="background: radial-gradient(ellipse at 85% 40%, rgba(0, 139, 163, 0.18) 0%, rgba(4, 18, 26, 0.95) 60%), #030c12; border: 1.5px solid rgba(0, 195, 255, 0.32); border-radius: var(--radius-lg); padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; box-shadow: 0 8px 25px rgba(0,0,0,0.7), inset 0 0 15px rgba(0,139,163,0.1);">
+      <!-- TAB 1: DASHBOARD OVERVIEW -->
+      <div id="tab-pane-dashboard" class="tab-pane-content">
+        <!-- 4 Quick Action Cards Grid -->
+        <div class="dash-overview-grid">
+          <div class="dash-quick-card" onclick="switchDashTab('keys')">
+            <div class="dash-quick-card-top">
+              <span class="dash-quick-card-title">Active Keys & Files</span>
+              <div class="dash-quick-card-icon" style="color:#00f0ff;">🔑</div>
+            </div>
+            <div>
+              <div class="dash-quick-card-val" id="overview-keys-count">0 Keys</div>
+              <div class="dash-quick-card-link">View Keys & Download Files ➔</div>
+            </div>
+          </div>
+
+          <div class="dash-quick-card card-pink" onclick="switchDashTab('deposit')">
+            <div class="dash-quick-card-top">
+              <span class="dash-quick-card-title">Live Balance</span>
+              <div class="dash-quick-card-icon" style="color:#ff0055;">💳</div>
+            </div>
+            <div>
+              <div class="dash-quick-card-val" id="overview-wallet-bal">NPR 0.00</div>
+              <div class="dash-quick-card-link" style="color:#ff0055;">+ Add Funds / Topup ➔</div>
+            </div>
+          </div>
+
+          <div class="dash-quick-card card-green" onclick="switchDashTab('referrals')">
+            <div class="dash-quick-card-top">
+              <span class="dash-quick-card-title">Referral Cash Offer</span>
+              <div class="dash-quick-card-icon" style="color:#34d399;">🎁</div>
+            </div>
+            <div>
+              <div class="dash-quick-card-val" style="color:#34d399;">Give 50, Get 50</div>
+              <div class="dash-quick-card-link" style="color:#34d399;">Invite & Earn Cash ➔</div>
+            </div>
+          </div>
+
+          <div class="dash-quick-card" onclick="window.location.href='/products.html'">
+            <div class="dash-quick-card-top">
+              <span class="dash-quick-card-title">Store Softwares</span>
+              <div class="dash-quick-card-icon" style="color:#fbbf24;">🛍️</div>
+            </div>
+            <div>
+              <div class="dash-quick-card-val">PC & Mobile</div>
+              <div class="dash-quick-card-link" style="color:#fbbf24;">Browse Softwares ➔</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- System Security & Cheat Undetected Live Status Indicator -->
+        <div class="product-card" style="padding: 1.5rem; margin-bottom: 1.6rem; background: radial-gradient(ellipse at 85% 20%, rgba(16, 185, 129, 0.06) 0%, rgba(8, 13, 24, 0.95) 75%), #050812; border: 1.5px solid rgba(16, 185, 129, 0.28);">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
+            <div style="display: flex; align-items: center; gap: 0.6rem;">
+              <span style="font-size: 1.3rem;">🛡️</span>
+              <h4 style="color: #fff; margin: 0; font-size: 1.1rem;">// LIVE ANTI-CHEAT BYPASS STATUS</h4>
+            </div>
+            <span class="badge badge-undetected" style="font-size: 0.78rem; padding: 4px 10px;">ALL ENGINES OPERATIONAL 🟢</span>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.85rem;">
+            <div style="background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 0.82rem; font-weight: 700; color: #cbd5e1;">Riot Vanguard</span>
+              <span style="color: #34d399; font-weight: 800; font-size: 0.78rem;">UNDETECTED 🟢</span>
+            </div>
+            <div style="background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 0.82rem; font-weight: 700; color: #cbd5e1;">Easy Anti-Cheat</span>
+              <span style="color: #34d399; font-weight: 800; font-size: 0.78rem;">UNDETECTED 🟢</span>
+            </div>
+            <div style="background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 0.82rem; font-weight: 700; color: #cbd5e1;">BattlEye</span>
+              <span style="color: #34d399; font-weight: 800; font-size: 0.78rem;">UNDETECTED 🟢</span>
+            </div>
+            <div style="background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 0.82rem; font-weight: 700; color: #cbd5e1;">Mobile BR Mods</span>
+              <span style="color: #34d399; font-weight: 800; font-size: 0.78rem;">UNDETECTED 🟢</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Download Loader Banner in Overview -->
+        <div style="background: radial-gradient(ellipse at 85% 40%, rgba(0, 139, 163, 0.18) 0%, rgba(4, 18, 26, 0.95) 60%), #030c12; border: 1.5px solid rgba(0, 195, 255, 0.32); border-radius: var(--radius-lg); padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; box-shadow: 0 8px 25px rgba(0,0,0,0.7);">
           <div style="display: flex; align-items: center; gap: 1rem;">
             <div style="font-size: 2rem;">💾</div>
             <div>
@@ -129,37 +205,14 @@
               </p>
             </div>
           </div>
-          <a href="https://github.com" target="_blank" class="btn btn-outline btn-sm">
+          <button type="button" onclick="triggerLoaderDownload()" class="btn btn-outline btn-sm" style="border-color:#00f0ff; color:#00f0ff;">
             Download Loader (.exe) ⬇
-          </a>
-        </div>
-
-        <!-- Catalog Filter Bar (Category Pills & Search) -->
-        <div class="product-card" style="padding: 1.5rem; margin-bottom: 1.5rem;">
-          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;">
-            <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;" id="catalog-category-pills">
-              <button type="button" class="btn btn-primary btn-sm cat-filter-btn active" data-cat="ALL" onclick="filterCatalogCategory('ALL')">ALL PRODUCTS</button>
-              <button type="button" class="btn btn-outline btn-sm cat-filter-btn" data-cat="FREE FIRE" onclick="filterCatalogCategory('FREE FIRE')">FREE FIRE / BR MODS</button>
-              <button type="button" class="btn btn-outline btn-sm cat-filter-btn" data-cat="BGMI" onclick="filterCatalogCategory('BGMI')">BGMI / PUBG</button>
-              <button type="button" class="btn btn-outline btn-sm cat-filter-btn" data-cat="VALORANT" onclick="filterCatalogCategory('VALORANT')">VALORANT</button>
-              <button type="button" class="btn btn-outline btn-sm cat-filter-btn" data-cat="FREE" onclick="filterCatalogCategory('FREE')">FREE PANEL ⭐</button>
-            </div>
-            <div style="min-width: 240px; flex: 1; max-width: 320px;">
-              <input type="text" id="catalog-search-input" class="form-input" placeholder="🔍 Search cheats & keys..." oninput="filterCatalogSearch()" style="width:100%; padding: 0.5rem 0.85rem;">
-            </div>
-          </div>
-
-          <!-- Catalog Products Grid -->
-          <div id="catalog-products-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 1.25rem;">
-            <div style="text-align: center; padding: 2.5rem; color: var(--text-dim); grid-column: 1 / -1;">
-              Loading store products...
-            </div>
-          </div>
+          </button>
         </div>
       </div>
 
-      <!-- TAB 2: MY ACTIVE LICENSE KEYS -->
-      <div id="tab-pane-licenses" class="tab-pane-content" style="display:none;">
+      <!-- TAB 2: MY KEYS & DOWNLOAD FILES (KEY AND FILE ONE DEDICATED SECTION) -->
+      <div id="tab-pane-keys" class="tab-pane-content" style="display:none;">
         <!-- Quick Download Loader Banner -->
         <div style="background: radial-gradient(ellipse at 85% 40%, rgba(0, 139, 163, 0.18) 0%, rgba(4, 18, 26, 0.95) 60%), #030c12; border: 1.5px solid rgba(0, 195, 255, 0.32); border-radius: var(--radius-lg); padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; box-shadow: 0 8px 25px rgba(0,0,0,0.7), inset 0 0 15px rgba(0,139,163,0.1);">
           <div style="display: flex; align-items: center; gap: 1rem;">
@@ -171,23 +224,23 @@
               </p>
             </div>
           </div>
-          <a href="https://github.com" target="_blank" class="btn btn-outline btn-sm">
+          <button type="button" onclick="triggerLoaderDownload()" class="btn btn-outline btn-sm" style="border-color:#00f0ff; color:#00f0ff;">
             Download Loader (.exe) ⬇
-          </a>
+          </button>
         </div>
 
         <div class="product-card" style="padding: 2rem; margin-bottom: 2rem;">
           <div class="section-head" style="margin-bottom: 1.25rem;">
             <div>
-              <h3 style="color: #fff;">// MY ACTIVE LICENSE KEYS</h3>
-              <p style="font-size: 0.88rem; color: var(--text-muted);">Click the key to copy. Auto-refreshes pending orders every 10s.</p>
+              <h3 style="color: #fff;">// MY ACTIVE LICENSE KEYS & DOWNLOAD FILES</h3>
+              <p style="font-size: 0.88rem; color: var(--text-muted);">All your purchased cheat keys and download files in one place. Auto-refreshes pending orders every 10s.</p>
             </div>
-            <button type="button" onclick="switchDashTab('catalog')" class="btn btn-primary btn-sm">+ Buy New Key</button>
+            <a href="/products.html" class="btn btn-primary btn-sm">+ Buy New Key</a>
           </div>
 
           <div id="keys-container">
             <div style="text-align: center; padding: 2rem; color: var(--text-dim);">
-              Loading keys...
+              Loading keys and download files...
             </div>
           </div>
         </div>
@@ -511,64 +564,87 @@
       </div>
     </div>
 
-      <!-- TAB 5: REFERRAL PROGRAM (INVITE & EARN) -->
+      <!-- TAB 5: REFERRAL PROGRAM (INVITE & EARN REWARDS OFFER) -->
       <div id="tab-pane-referrals" class="tab-pane-content" style="display:none;">
-        <div id="sec-referrals" class="product-card" style="padding: 2rem; margin-bottom: 2rem; border-color: rgba(52, 211, 153, 0.3); background: radial-gradient(ellipse at 90% 10%, rgba(52, 211, 153, 0.08) 0%, rgba(13, 13, 21, 0.95) 70%), #0a0e17; box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 20px rgba(52, 211, 153, 0.05);">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
-          <div>
-            <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.35rem;">
-              <span style="font-size: 1.5rem;">🎁</span>
-              <h3 style="color: #fff; margin: 0; font-size: 1.35rem;">// REFERRAL PROGRAM — INVITE & EARN</h3>
-              <span id="ref-reward-tag" class="badge" style="background: rgba(52, 211, 153, 0.2); border: 1px solid #34d399; color: #34d399; font-weight: 700; letter-spacing: 0.5px;">
-                BOTH GET REWARDED ON 1ST PURCHASE
-              </span>
+        <div id="sec-referrals" class="product-card" style="padding: 1.8rem; margin-bottom: 2rem; border-color: rgba(52, 211, 153, 0.35); background: radial-gradient(ellipse at 90% 10%, rgba(52, 211, 153, 0.08) 0%, rgba(10, 14, 24, 0.98) 70%), #070a14; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+          
+          <!-- Glowing Referral Offer Hero Banner -->
+          <div class="refer-offer-hero" style="margin-bottom: 1.6rem;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;">
+              <div>
+                <span id="ref-reward-tag" class="badge" style="background: rgba(255, 0, 85, 0.2); border: 1.5px solid #ff0055; color: #ff0055; font-weight: 800; letter-spacing: 1px; font-size: 0.76rem; margin-bottom: 0.5rem; display: inline-block;">
+                  🔥 DOUBLE WALLET CASH OFFER ACTIVE
+                </span>
+                <h2 style="font-family: var(--font-heading); color: #fff; font-size: 1.55rem; margin: 0 0 0.4rem 0; font-weight: 800;">
+                  GIVE NPR 50, GET NPR 50 FREE WALLET BALANCE!
+                </h2>
+                <p style="font-size: 0.88rem; color: #cbd5e1; margin: 0; max-width: 680px; line-height: 1.5;">
+                  Share your exclusive referral code or direct invite link with gamer friends. When your friend registers and makes their first purchase, <strong style="color: #34d399;">BOTH of you instantly receive free wallet credits</strong> directly into your accounts!
+                </p>
+              </div>
+              <div id="ref-quota-pill" style="padding: 0.5rem 1rem; border-radius: 999px; background: rgba(52, 211, 153, 0.12); border: 1px solid rgba(52, 211, 153, 0.35); color: #34d399; font-size: 0.82rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+                <span>🟢</span> <span id="ref-quota-text">Monthly Quota: 1 / 1 Available</span>
+              </div>
             </div>
-            <p style="font-size: 0.88rem; color: var(--text-muted); margin: 0; max-width: 720px;">
-              Share your exclusive referral code or link with other gamers. When your friend registers and <strong style="color: #34d399;">buys or claims any product from the store, BOTH of you instantly receive free NPR wallet bonus</strong>!
-            </p>
-          </div>
-          <div id="ref-quota-pill" style="padding: 0.5rem 1rem; border-radius: 999px; background: rgba(52, 211, 153, 0.12); border: 1px solid rgba(52, 211, 153, 0.35); color: #34d399; font-size: 0.82rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
-            <span>🟢</span> <span id="ref-quota-text">Monthly Quota: 1 / 1 Available</span>
-          </div>
-        </div>
 
-        <!-- Referral Link & Code Share Boxes -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.25rem; margin-bottom: 1.75rem;">
-          <!-- Card 1: Unique Code -->
-          <div style="background: #060913; border: 1px solid rgba(255, 255, 255, 0.09); border-radius: var(--radius-md); padding: 1.25rem;">
-            <div style="font-size: 0.76rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700; letter-spacing: 0.8px; margin-bottom: 0.5rem;">
-              Your Unique Referral Code
-            </div>
-            <div style="display: flex; gap: 0.5rem; align-items: center;">
-              <input type="text" id="dash-ref-code" readonly value="..." style="flex: 1; height: 42px; background: #0c1020; border: 1px solid rgba(52, 211, 153, 0.4); color: #34d399; font-family: var(--font-mono); font-size: 1.2rem; font-weight: 800; letter-spacing: 2px; text-align: center; border-radius: 6px; outline: none; cursor: pointer;" onclick="copyReferralCode()" title="Click to copy code">
-              <button type="button" id="btn-copy-ref-code" class="btn btn-primary btn-sm btn-glow" onclick="copyReferralCode()" style="height: 42px; white-space: nowrap; padding: 0 1.2rem;">
-                📋 Copy Code
-              </button>
-            </div>
-            <div style="font-size: 0.73rem; color: var(--text-dim); margin-top: 0.45rem;">
-              When your friend buys their first product, both of your wallet bonuses unlock instantly!
+            <!-- 3-Step Visual Offer Progression -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+              <div class="refer-step-box">
+                <div style="font-size: 1.8rem; margin-bottom: 0.3rem;">📤</div>
+                <div style="font-weight: 800; color: #00f0ff; font-size: 0.9rem;">1. Share Code / Link</div>
+                <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 0.25rem;">Send your unique referral code or link to your friends or gaming team.</div>
+              </div>
+              <div class="refer-step-box">
+                <div style="font-size: 1.8rem; margin-bottom: 0.3rem;">🎮</div>
+                <div style="font-weight: 800; color: #ff0055; font-size: 0.9rem;">2. Friend Buys Any Key</div>
+                <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 0.25rem;">Your friend registers and purchases or claims any game cheat from the store.</div>
+              </div>
+              <div class="refer-step-box">
+                <div style="font-size: 1.8rem; margin-bottom: 0.3rem;">💰</div>
+                <div style="font-weight: 800; color: #34d399; font-size: 0.9rem;">3. Both Get Instant Cash</div>
+                <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 0.25rem;">Free NPR credits unlocked immediately for both wallets with zero delay!</div>
+              </div>
             </div>
           </div>
 
-          <!-- Card 2: Unique Link & Quick Share -->
-          <div style="background: #060913; border: 1px solid rgba(255, 255, 255, 0.09); border-radius: var(--radius-md); padding: 1.25rem;">
-            <div style="font-size: 0.76rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700; letter-spacing: 0.8px; margin-bottom: 0.5rem;">
-              Your Direct Registration Link
+          <!-- Referral Link & Code Share Boxes -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.25rem; margin-bottom: 1.75rem;">
+            <!-- Card 1: Unique Code -->
+            <div style="background: #040814; border: 1.5px solid rgba(52, 211, 153, 0.4); border-radius: var(--radius-md); padding: 1.25rem; box-shadow: 0 0 15px rgba(52, 211, 153, 0.08);">
+              <div style="font-size: 0.76rem; color: #34d399; text-transform: uppercase; font-weight: 800; letter-spacing: 0.8px; margin-bottom: 0.5rem;">
+                YOUR UNIQUE REFERRAL CODE
+              </div>
+              <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <input type="text" id="dash-ref-code" readonly value="..." style="flex: 1; height: 44px; background: #080d1e; border: 1px solid rgba(52, 211, 153, 0.5); color: #34d399; font-family: var(--font-mono); font-size: 1.25rem; font-weight: 800; letter-spacing: 2px; text-align: center; border-radius: 8px; outline: none; cursor: pointer;" onclick="copyReferralCode()" title="Click to copy code">
+                <button type="button" id="btn-copy-ref-code" class="btn btn-primary btn-sm btn-glow" onclick="copyReferralCode()" style="height: 44px; white-space: nowrap; padding: 0 1.25rem; background: linear-gradient(135deg, #10b981, #059669); border-color: #34d399;">
+                  📋 Copy Code
+                </button>
+              </div>
+              <div style="font-size: 0.73rem; color: var(--text-dim); margin-top: 0.45rem;">
+                Tap code to copy instantly. Friend enters this during registration.
+              </div>
             </div>
-            <div style="display: flex; gap: 0.5rem; align-items: center;">
-              <input type="text" id="dash-ref-link" readonly value="..." style="flex: 1; height: 42px; background: #0c1020; border: 1px solid rgba(56, 189, 248, 0.35); color: #38bdf8; font-family: var(--font-mono); font-size: 0.84rem; padding: 0 0.75rem; border-radius: 6px; outline: none; cursor: pointer;" onclick="copyReferralLink()" title="Click to copy link">
-              <button type="button" id="btn-copy-ref-link" class="btn btn-outline btn-sm" onclick="copyReferralLink()" style="height: 42px; white-space: nowrap; padding: 0 1.2rem; border-color: #38bdf8; color: #38bdf8;">
-                🔗 Copy Link
-              </button>
-            </div>
-            <div style="display: flex; gap: 0.6rem; align-items: center; margin-top: 0.55rem; flex-wrap: wrap;">
-              <span style="font-size: 0.73rem; color: var(--text-dim);">Share:</span>
-              <a id="ref-share-wa" href="#" target="_blank" class="btn btn-outline btn-sm" style="padding: 2px 8px; font-size: 0.72rem; border-color: #25d366; color: #25d366;">
-                💬 WhatsApp
-              </a>
-              <a id="ref-share-tg" href="#" target="_blank" class="btn btn-outline btn-sm" style="padding: 2px 8px; font-size: 0.72rem; border-color: #0088cc; color: #0088cc;">
-                ✈️ Telegram
-              </a>
+
+            <!-- Card 2: Unique Link & Quick Share -->
+            <div style="background: #040814; border: 1.5px solid rgba(0, 240, 255, 0.4); border-radius: var(--radius-md); padding: 1.25rem; box-shadow: 0 0 15px rgba(0, 240, 255, 0.08);">
+              <div style="font-size: 0.76rem; color: #00f0ff; text-transform: uppercase; font-weight: 800; letter-spacing: 0.8px; margin-bottom: 0.5rem;">
+                YOUR DIRECT REGISTRATION LINK
+              </div>
+              <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <input type="text" id="dash-ref-link" readonly value="..." style="flex: 1; height: 44px; background: #080d1e; border: 1px solid rgba(0, 240, 255, 0.45); color: #38bdf8; font-family: var(--font-mono); font-size: 0.84rem; padding: 0 0.85rem; border-radius: 8px; outline: none; cursor: pointer;" onclick="copyReferralLink()" title="Click to copy link">
+                <button type="button" id="btn-copy-ref-link" class="btn btn-outline btn-sm" onclick="copyReferralLink()" style="height: 44px; white-space: nowrap; padding: 0 1.25rem; border-color: #00f0ff; color: #00f0ff;">
+                  🔗 Copy Link
+                </button>
+              </div>
+              <div style="display: flex; gap: 0.6rem; align-items: center; margin-top: 0.65rem; flex-wrap: wrap;">
+                <span style="font-size: 0.75rem; color: var(--text-dim); font-weight: 700;">1-Click Share:</span>
+                <a id="ref-share-wa" href="#" target="_blank" class="btn btn-outline btn-sm" style="padding: 3px 10px; font-size: 0.74rem; border-color: #25d366; color: #25d366;">
+                  💬 WhatsApp
+                </a>
+                <a id="ref-share-tg" href="#" target="_blank" class="btn btn-outline btn-sm" style="padding: 3px 10px; font-size: 0.74rem; border-color: #0088cc; color: #0088cc;">
+                  ✈️ Telegram
+                </a>
+              </div>
             </div>
           </div>
         </div>
@@ -684,7 +760,7 @@
   <script src="/assets/js/vanta.globe.min.js"></script>
   <script src="/assets/js/3d-scene.js"></script>
   <script>
-    let currentDashTab = 'catalog';
+    let currentDashTab = 'dashboard';
     let dashCatalogProducts = [];
     let currentCatalogCat = 'ALL';
     let pollingInterval = null;
@@ -707,9 +783,8 @@
       loadUserReferrals();
       startDeliveryPolling();
 
-      // Initialize tabs and load catalog
+      // Initialize tabs
       initDashHashRouting();
-      loadCatalogProducts();
     });
 
     function renderUserInfo(user) {
@@ -718,6 +793,10 @@
       document.getElementById('dash-user-email').textContent = user.email;
       document.getElementById('dash-user-phone').textContent = user.phone || 'N/A';
       document.getElementById('dash-wallet-bal').textContent = `NPR ${parseFloat(user.wallet_balance || 0).toLocaleString()}`;
+
+      // Overview Quick Card Balance
+      const overviewBal = document.getElementById('overview-wallet-bal');
+      if (overviewBal) overviewBal.textContent = `NPR ${parseFloat(user.wallet_balance || 0).toLocaleString()}`;
 
       // Initials badge (Figure 1 & 2)
       const initials = (typeof getUserInitials === 'function') ? getUserInitials(user.name) : 'WX';
@@ -770,34 +849,37 @@
       if (hash) {
         handleHashChange();
       } else {
-        switchDashTab('catalog', false);
+        switchDashTab('dashboard', false);
       }
       window.addEventListener('hashchange', handleHashChange);
     }
 
     function handleHashChange() {
       const hash = (window.location.hash || '').replace('#', '').toLowerCase();
-      if (!hash) return;
+      if (!hash) {
+        switchDashTab('dashboard', false);
+        return;
+      }
       let targetTab = hash;
-      if (targetTab === 'keys' || targetTab === 'my-keys' || targetTab === 'licenses') targetTab = 'licenses';
+      if (targetTab === 'keys' || targetTab === 'my-keys' || targetTab === 'licenses' || targetTab === 'file' || targetTab === 'files') targetTab = 'keys';
       else if (targetTab === 'orders' || targetTab === 'order-history' || targetTab === 'history') targetTab = 'history';
-      else if (targetTab === 'deposit' || targetTab === 'wallet' || targetTab === 'balance') targetTab = 'deposit';
-      else if (targetTab === 'sec-referrals' || targetTab === 'referrals' || targetTab === 'referral' || targetTab === 'invite') targetTab = 'referrals';
+      else if (targetTab === 'deposit' || targetTab === 'wallet' || targetTab === 'balance' || targetTab === 'credit') targetTab = 'deposit';
+      else if (targetTab === 'sec-referrals' || targetTab === 'referrals' || targetTab === 'referral' || targetTab === 'invite' || targetTab === 'offer') targetTab = 'referrals';
       else if (targetTab === 'profile' || targetTab === 'settings' || targetTab === 'account') targetTab = 'profile';
-      else if (targetTab === 'catalog' || targetTab === 'store' || targetTab === 'shop') targetTab = 'catalog';
+      else if (targetTab === 'dashboard' || targetTab === 'overview' || targetTab === 'home') targetTab = 'dashboard';
+      else targetTab = 'dashboard';
       switchDashTab(targetTab, false);
     }
 
     function switchDashTab(tabId, updateUrl = true) {
-      const validTabs = ['catalog', 'licenses', 'deposit', 'history', 'referrals', 'profile'];
+      const validTabs = ['dashboard', 'keys', 'history', 'deposit', 'referrals', 'profile'];
       if (!validTabs.includes(tabId)) {
-        if (tabId === 'keys' || tabId === 'my-keys') tabId = 'licenses';
+        if (tabId === 'licenses' || tabId === 'my-keys' || tabId === 'files') tabId = 'keys';
         else if (tabId === 'orders') tabId = 'history';
-        else if (tabId === 'wallet') tabId = 'deposit';
-        else if (tabId === 'sec-referrals' || tabId === 'referral') tabId = 'referrals';
+        else if (tabId === 'wallet' || tabId === 'credit') tabId = 'deposit';
+        else if (tabId === 'sec-referrals' || tabId === 'referral' || tabId === 'offer') tabId = 'referrals';
         else if (tabId === 'settings') tabId = 'profile';
-        else if (tabId === 'store') tabId = 'catalog';
-        else tabId = 'catalog';
+        else tabId = 'dashboard';
       }
       currentDashTab = tabId;
 
@@ -816,10 +898,9 @@
 
       // Sync Bottom Navigation
       document.querySelectorAll('.bottom-nav-item').forEach(b => b.classList.remove('active'));
-      if (tabId === 'catalog') {
+      if (tabId === 'dashboard') {
         const b = document.getElementById('bnav-store'); if (b) b.classList.add('active');
-        if (dashCatalogProducts.length === 0) loadCatalogProducts();
-      } else if (tabId === 'licenses') {
+      } else if (tabId === 'keys') {
         const b = document.getElementById('bnav-licenses'); if (b) b.classList.add('active');
       } else if (tabId === 'deposit') {
         const b = document.getElementById('bnav-deposit'); if (b) b.classList.add('active');
@@ -1068,6 +1149,9 @@
         });
         const tabKeysBadge = document.getElementById('tab-count-keys');
         if (tabKeysBadge) tabKeysBadge.textContent = totalDeliveredKeys;
+
+        const overviewKeysCount = document.getElementById('overview-keys-count');
+        if (overviewKeysCount) overviewKeysCount.textContent = `${totalDeliveredKeys} Key${totalDeliveredKeys === 1 ? '' : 's'}`;
 
         if (deliveredOrders.length === 0 && pendingOrderIds.size === 0) {
           keysContainer.innerHTML = `
