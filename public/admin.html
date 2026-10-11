@@ -1071,6 +1071,8 @@
             </tbody>
           </table>
         </div>
+      </section>
+
       <!-- TAB: RESELLER API SYSTEM & AUTOMATION ENGINE -->
       <section id="tab-reseller-api" class="admin-tab-content">
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
@@ -3356,6 +3358,33 @@ X-API-Key: wx_live_YOUR_KEY</pre>
       window.location.href = '/index.html';
     }
 
+    function triggerAdminTabLoader(tabId) {
+      if (tabId === 'tab-dashboard') loadDashboardData();
+      else if (tabId === 'tab-orders') loadAdminOrders();
+      else if (tabId === 'tab-wallets') loadAdminWallets();
+      else if (tabId === 'tab-payment-methods') loadAdminPaymentMethods();
+      else if (tabId === 'tab-products') loadAdminProducts();
+      else if (tabId === 'tab-plans') loadAdminPlans();
+      else if (tabId === 'tab-keys') loadAdminKeys();
+      else if (tabId === 'tab-supplier-apis') { loadAdminSupplierApis(); loadAdminSupplierMappings(); loadSvmDropdowns(); }
+      else if (tabId === 'tab-supplier-settings') loadSupplierSettings();
+      else if (tabId === 'tab-product-mappings') loadProductMappings();
+      else if (tabId === 'tab-deliveries') loadDeliveries();
+      else if (tabId === 'tab-hwid-reset') loadHwidLogs();
+      else if (tabId === 'tab-users') loadAdminUsers();
+      else if (tabId === 'tab-reseller-prices') loadAdminResellerPrices();
+      else if (tabId === 'tab-reseller-api') loadAdminResellerApi();
+      else if (tabId === 'tab-settings') loadAdminSettings();
+      else if (tabId === 'tab-admin-account') loadAdminAccountDetails();
+      else if (tabId === 'tab-social-links') loadAdminSocialLinks();
+      else if (tabId === 'tab-redeem-codes') loadAdminRedeemCodes();
+      else if (tabId === 'tab-referrals') loadAdminReferrals();
+      else if (tabId === 'tab-resets') loadAdminResets();
+      else if (tabId === 'tab-download-links') loadAdminDownloadLinks();
+      else if (tabId === 'tab-hero-banners') loadHeroBannersAdmin();
+    }
+    window.triggerAdminTabLoader = triggerAdminTabLoader;
+
     function initTabNavigation() {
       const buttons = document.querySelectorAll('#admin-nav-tabs button');
       buttons.forEach(btn => {
@@ -3365,68 +3394,47 @@ X-API-Key: wx_live_YOUR_KEY</pre>
 
           const tabId = btn.getAttribute('data-tab');
           document.querySelectorAll('.admin-tab-content').forEach(c => c.classList.remove('active'));
-          document.getElementById(tabId).classList.add('active');
+          const targetContent = document.getElementById(tabId);
+          if (targetContent) targetContent.classList.add('active');
 
           // Sync mobile drawer & bottom dock indicators
           if (typeof syncMobileTabIndicators === 'function') syncMobileTabIndicators(tabId);
           if (typeof closeAdminMobileDrawer === 'function') closeAdminMobileDrawer();
 
           // Trigger tab-specific loader
-          if (tabId === 'tab-dashboard') loadDashboardData();
-          if (tabId === 'tab-orders') loadAdminOrders();
-          if (tabId === 'tab-wallets') loadAdminWallets();
-          if (tabId === 'tab-payment-methods') loadAdminPaymentMethods();
-          if (tabId === 'tab-products') loadAdminProducts();
-          if (tabId === 'tab-plans') loadAdminPlans();
-          if (tabId === 'tab-keys') loadAdminKeys();
-          if (tabId === 'tab-supplier-apis') { loadAdminSupplierApis(); loadAdminSupplierMappings(); loadSvmDropdowns(); }
-          if (tabId === 'tab-supplier-settings') loadSupplierSettings();
-          if (tabId === 'tab-product-mappings') loadProductMappings();
-          if (tabId === 'tab-deliveries') loadDeliveries();
-          if (tabId === 'tab-hwid-reset') loadHwidLogs();
-          if (tabId === 'tab-users') loadAdminUsers();
-          if (tabId === 'tab-reseller-prices') loadAdminResellerPrices();
-          if (tabId === 'tab-reseller-api') loadAdminResellerApi();
-          if (tabId === 'tab-settings') loadAdminSettings();
-          if (tabId === 'tab-admin-account') loadAdminAccountDetails();
-          if (tabId === 'tab-social-links') loadAdminSocialLinks();
-          if (tabId === 'tab-redeem-codes') loadAdminRedeemCodes();
-          if (tabId === 'tab-referrals') loadAdminReferrals();
-          if (tabId === 'tab-resets') loadAdminResets();
-          if (tabId === 'tab-download-links') loadAdminDownloadLinks();
-          if (tabId === 'tab-hero-banners') loadHeroBannersAdmin();
+          triggerAdminTabLoader(tabId);
         });
       });
 
-      // Filter events
-      document.getElementById('orders-filter-status').addEventListener('change', loadAdminOrders);
-      document.getElementById('orders-search-input').addEventListener('input', loadAdminOrders);
-      document.getElementById('wallets-filter-status').addEventListener('change', loadAdminWallets);
-      document.getElementById('keys-filter-product').addEventListener('change', loadAdminKeys);
-      document.getElementById('keys-filter-status').addEventListener('change', loadAdminKeys);
-      document.getElementById('keys-search-input').addEventListener('input', loadAdminKeys);
-      document.getElementById('users-filter-type').addEventListener('change', loadAdminUsers);
-      document.getElementById('users-search-input').addEventListener('input', loadAdminUsers);
+      // Filter events with optional chaining
+      document.getElementById('orders-filter-status')?.addEventListener('change', loadAdminOrders);
+      document.getElementById('orders-search-input')?.addEventListener('input', loadAdminOrders);
+      document.getElementById('wallets-filter-status')?.addEventListener('change', loadAdminWallets);
+      document.getElementById('keys-filter-product')?.addEventListener('change', loadAdminKeys);
+      document.getElementById('keys-filter-status')?.addEventListener('change', loadAdminKeys);
+      document.getElementById('keys-search-input')?.addEventListener('input', loadAdminKeys);
+      document.getElementById('users-filter-type')?.addEventListener('change', loadAdminUsers);
+      document.getElementById('users-search-input')?.addEventListener('input', loadAdminUsers);
       document.getElementById('adm-ref-search-input')?.addEventListener('input', filterAdminReferrals);
 
-      // Forms
-      document.getElementById('form-add-product').addEventListener('submit', handleAddProductSubmit);
-      document.getElementById('form-add-plan').addEventListener('submit', handleAddPlanSubmit);
+      // Forms with optional chaining
+      document.getElementById('form-add-product')?.addEventListener('submit', handleAddProductSubmit);
+      document.getElementById('form-add-plan')?.addEventListener('submit', handleAddPlanSubmit);
       document.getElementById('form-edit-plan')?.addEventListener('submit', handleEditPlanSubmit);
-      document.getElementById('form-add-keys').addEventListener('submit', handleAddKeysSubmit);
-      document.getElementById('form-payment-method').addEventListener('submit', handlePaymentMethodSubmit);
+      document.getElementById('form-add-keys')?.addEventListener('submit', handleAddKeysSubmit);
+      document.getElementById('form-payment-method')?.addEventListener('submit', handlePaymentMethodSubmit);
       document.getElementById('form-supplier-api')?.addEventListener('submit', handleSupplierApiSubmit);
       document.getElementById('form-sv-mapping')?.addEventListener('submit', handleSvmMappingSubmit);
       document.getElementById('form-modal-sv-mapping')?.addEventListener('submit', handleModalSvmMappingSubmit);
-      document.getElementById('form-approve-order').addEventListener('submit', handleApproveOrderSubmit);
-      document.getElementById('form-reject-order').addEventListener('submit', handleRejectOrderSubmit);
-      document.getElementById('admin-settings-form').addEventListener('submit', handleSettingsSubmit);
+      document.getElementById('form-approve-order')?.addEventListener('submit', handleApproveOrderSubmit);
+      document.getElementById('form-reject-order')?.addEventListener('submit', handleRejectOrderSubmit);
+      document.getElementById('admin-settings-form')?.addEventListener('submit', handleSettingsSubmit);
       document.getElementById('form-adm-referral-settings')?.addEventListener('submit', handleAdminReferralSettingsSubmit);
       document.getElementById('form-admin-change-credentials')?.addEventListener('submit', handleAdminChangeCredentialsSubmit);
       document.getElementById('form-admin-stealth-key')?.addEventListener('submit', handleAdminStealthKeySubmit);
-      document.getElementById('form-add-category').addEventListener('submit', handleAddCategorySubmit);
-      document.getElementById('form-wallet-adjust').addEventListener('submit', handleWalletAdjustSubmit);
-      document.getElementById('form-add-download-link').addEventListener('submit', handleAddDownloadLinkSubmit);
+      document.getElementById('form-add-category')?.addEventListener('submit', handleAddCategorySubmit);
+      document.getElementById('form-wallet-adjust')?.addEventListener('submit', handleWalletAdjustSubmit);
+      document.getElementById('form-add-download-link')?.addEventListener('submit', handleAddDownloadLinkSubmit);
       document.getElementById('form-social-link')?.addEventListener('submit', handleSocialLinkSubmit);
       document.getElementById('form-redeem-code')?.addEventListener('submit', handleRedeemCodeSubmit);
 
@@ -6085,10 +6093,9 @@ X-API-Key: wx_live_YOUR_KEY</pre>
         document.querySelectorAll('.admin-tab-content').forEach(c => c.classList.remove('active'));
         const content = document.getElementById(targetTabId);
         if (content) content.classList.add('active');
-        if (targetTabId === 'tab-admin-account') loadAdminAccountDetails();
-        if (targetTabId === 'tab-social-links') loadAdminSocialLinks();
-        if (targetTabId === 'tab-referrals') loadAdminReferrals();
-        if (targetTabId === 'tab-reseller-api') loadAdminResellerApi();
+        if (typeof triggerAdminTabLoader === 'function') {
+          triggerAdminTabLoader(targetTabId);
+        }
       }
     }
     window.switchAdminTab = switchAdminTab;
