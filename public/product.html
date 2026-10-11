@@ -65,56 +65,111 @@
           <a href="/index.html">Home</a> / <a href="/products.html">Products</a> / <span id="bread-product-name" style="color: var(--text-main);">Product</span>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 2.5rem; align-items: start;" class="product-layout-grid">
+        <div style="display: grid; grid-template-columns: 1.15fr 1fr; gap: 2.5rem; align-items: start;" class="product-layout-grid">
           
-          <!-- Left Column: Media & Features -->
-          <div>
-            <div style="position: relative; border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--bg-card-border); margin-bottom: 2rem;">
-              <img id="detail-img" src="" alt="Cheat Preview" style="width: 100%; height: 380px; object-fit: cover;">
-              <div style="position: absolute; top: 15px; left: 15px; display: flex; gap: 0.5rem;">
+          <!-- Left Column: Media & Specifications -->
+          <div class="product-left-column">
+            <!-- Product Media Preview (Shown First on Mobile & Top Left on Desktop) -->
+            <div class="product-media-column" style="position: relative; border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--bg-card-border); box-shadow: 0 0 25px rgba(255, 42, 133, 0.15); margin-bottom: 2rem;">
+              <img id="detail-img" src="" alt="Cheat Preview" style="width: 100%; height: 380px; object-fit: cover; display: block;">
+              <div style="position: absolute; top: 15px; left: 15px; display: flex; gap: 0.5rem; z-index: 2;">
                 <span class="badge badge-undetected"><span class="pulse-dot"></span> 100% Undetected</span>
-                <span class="badge" id="detail-cat-badge" style="background: rgba(0,0,0,0.8); color: #fff;">FPS</span>
+                <span class="badge" id="detail-cat-badge" style="background: rgba(0,0,0,0.8); border: 1px solid rgba(255,42,133,0.4); color: #fff;">FPS</span>
               </div>
             </div>
 
-            <!-- Features Card -->
-            <div class="product-card" style="padding: 1.8rem; margin-bottom: 2rem;">
-              <h3 style="margin-bottom: 1rem; color: #fff;">// INCLUDED FEATURES & CAPABILITIES</h3>
-              <ul id="detail-features-list" style="list-style: none; display: flex; flex-direction: column; gap: 0.65rem;">
-                <!-- Populated dynamically -->
-              </ul>
-            </div>
+            <!-- Features & System Compatibility Cards -->
+            <div class="product-specs-column">
+              <!-- Features Card -->
+              <div class="product-card" style="padding: 1.8rem; margin-bottom: 2rem;">
+                <h3 style="margin-bottom: 1rem; color: #fff; font-family: var(--font-heading);">// INCLUDED FEATURES & CAPABILITIES</h3>
+                <ul id="detail-features-list" style="list-style: none; display: flex; flex-direction: column; gap: 0.65rem;">
+                  <!-- Populated dynamically -->
+                </ul>
+              </div>
 
-            <!-- System Requirements / Compatibility -->
-            <div class="product-card" style="padding: 1.8rem;">
-              <h3 style="margin-bottom: 1rem; color: #fff;">// SYSTEM COMPATIBILITY</h3>
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; font-size: 0.9rem;">
-                <div>
-                  <span style="color: var(--text-dim); font-size: 0.75rem; text-transform: uppercase;">Operating System</span>
-                  <div style="color: #fff; font-weight: 600;">Windows 10 & 11 (All Builds)</div>
-                </div>
-                <div>
-                  <span style="color: var(--text-dim); font-size: 0.75rem; text-transform: uppercase;">Processor</span>
-                  <div style="color: #fff; font-weight: 600;">Intel & AMD Supported</div>
-                </div>
-                <div>
-                  <span style="color: var(--text-dim); font-size: 0.75rem; text-transform: uppercase;">Overlay Mode</span>
-                  <div style="color: #fff; font-weight: 600;">Borderless / Windowed</div>
-                </div>
-                <div>
-                  <span style="color: var(--text-dim); font-size: 0.75rem; text-transform: uppercase;">Stream Proof</span>
-                  <div style="color: #10b981; font-weight: 600;">Yes (OBS, Discord, ShadowPlay)</div>
+              <!-- System Requirements / Compatibility -->
+              <div class="product-card" style="padding: 1.8rem;">
+                <h3 style="margin-bottom: 1rem; color: #fff; font-family: var(--font-heading);">// SYSTEM COMPATIBILITY</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; font-size: 0.9rem;">
+                  <div>
+                    <span style="color: var(--text-dim); font-size: 0.75rem; text-transform: uppercase;">Operating System</span>
+                    <div style="color: #fff; font-weight: 600;">Windows 10 & 11 (All Builds)</div>
+                  </div>
+                  <div>
+                    <span style="color: var(--text-dim); font-size: 0.75rem; text-transform: uppercase;">Processor</span>
+                    <div style="color: #fff; font-weight: 600;">Intel & AMD Supported</div>
+                  </div>
+                  <div>
+                    <span style="color: var(--text-dim); font-size: 0.75rem; text-transform: uppercase;">Overlay Mode</span>
+                    <div style="color: #fff; font-weight: 600;">Borderless / Windowed</div>
+                  </div>
+                  <div>
+                    <span style="color: var(--text-dim); font-size: 0.75rem; text-transform: uppercase;">Stream Proof</span>
+                    <div style="color: #10b981; font-weight: 600;">Yes (OBS, Discord, ShadowPlay)</div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Right Column: Purchasing & Plan Selection -->
-          <div>
+          <!-- Right Column: Purchasing & Plan Selection (Shown directly below Image on Mobile) -->
+          <div class="product-purchase-column">
             <div class="product-card" style="padding: 2rem; position: sticky; top: 90px;">
-              <div class="product-cat" id="detail-cat">Category</div>
-              <h1 id="detail-title" style="font-size: 2rem; margin-bottom: 0.8rem;">Game Title</h1>
-              <p id="detail-desc" style="font-size: 0.95rem; margin-bottom: 1.5rem;">Description</p>
+              
+              <!-- Category Badge with Glowing Icon -->
+              <div class="product-cat cat-glow" id="detail-cat-wrap">
+                <span class="cat-glow-icon" id="detail-cat-icon">🎯</span>
+                <span id="detail-cat">Category</span>
+              </div>
+
+              <!-- Product Title & Description -->
+              <h1 id="detail-title" style="font-size: 2rem; margin-bottom: 0.8rem; font-family: var(--font-heading); color: #fff;">Game Title</h1>
+              <p id="detail-desc" style="font-size: 0.95rem; margin-bottom: 1.25rem; color: var(--text-dim); line-height: 1.5;">Description</p>
+
+              <!-- Rating & Trust Metrics Row (Exact Match from Photo 1) -->
+              <div class="product-trust-rating-row">
+                <div class="rating-stars" style="color: #fbbf24; font-size: 1.15rem; letter-spacing: 2px; filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.6));">
+                  ★★★★★
+                </div>
+                <span style="color: #ffffff; font-weight: 800; font-size: 1rem; font-family: var(--font-cyber);">4.9</span>
+                <span id="detail-reviews-count" style="color: #94a3b8; font-size: 0.88rem;">(15,456 reviews)</span>
+                <span style="color: #475569; font-size: 0.9rem;">·</span>
+                <div style="display: inline-flex; align-items: center; gap: 4px; color: #00f0ff; font-weight: 700; font-size: 0.88rem;">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#00f0ff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0 0 5px #00f0ff);"><circle cx="12" cy="8" r="6"/><polyline points="8.21 13.89 7 22 12 19 17 22 15.79 13.88"/></svg>
+                  <span id="detail-purchases-count">15,847 purchases</span>
+                </div>
+              </div>
+
+              <!-- Three Glowing Figure Cards (Exact Match from Photo 1) -->
+              <div class="product-figures-grid">
+                <!-- Figure 1: Security -->
+                <div class="figure-card cyan-glow">
+                  <div class="figure-icon-wrap">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00f0ff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0 0 8px #00f0ff);"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                  </div>
+                  <div class="figure-label">SECURITY</div>
+                  <div class="figure-val">UNDETECTABLE</div>
+                </div>
+
+                <!-- Figure 2: Updates -->
+                <div class="figure-card cyan-glow">
+                  <div class="figure-icon-wrap">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00f0ff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0 0 8px #00f0ff);"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/></svg>
+                  </div>
+                  <div class="figure-label">UPDATES</div>
+                  <div class="figure-val">DAILY SYNC</div>
+                </div>
+
+                <!-- Figure 3: Support -->
+                <div class="figure-card purple-glow">
+                  <div class="figure-icon-wrap">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#c084fc" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0 0 8px #c084fc);"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
+                  </div>
+                  <div class="figure-label">SUPPORT</div>
+                  <div class="figure-val">24/7 VIP</div>
+                </div>
+              </div>
 
               <!-- Stock Alert -->
               <div id="stock-status-alert-box" style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: var(--radius-md); margin-bottom: 1.5rem;">
@@ -127,7 +182,7 @@
               </div>
 
               <!-- Plan Selector -->
-              <label class="form-label" style="font-size: 0.95rem;">Select Duration / Subscription Plan:</label>
+              <label class="form-label" style="font-size: 0.95rem; font-weight: 700; color: #fff;">SELECT DURATION / SUBSCRIPTION PLAN:</label>
               <div class="plans-grid" id="plans-container" style="margin-top: 0.5rem; margin-bottom: 1.5rem;">
                 <!-- Dynamically rendered plans -->
               </div>
@@ -147,8 +202,8 @@
               </div>
 
               <!-- Action Buttons -->
-              <button id="btn-proceed-checkout" class="btn btn-primary btn-block btn-lg btn-glow" style="margin-bottom: 0.8rem;">
-                Proceed to Checkout ⚡
+              <button id="btn-proceed-checkout" class="btn btn-primary btn-block btn-lg btn-glow" style="margin-bottom: 0.8rem; font-weight: 900; letter-spacing: 1px; font-size: 1.08rem;">
+                BUY NOW ⚡
               </button>
 
               <div style="text-align: center; font-size: 0.78rem; color: var(--text-dim);">
@@ -208,6 +263,18 @@
       });
     });
 
+    function getCategoryIcon(cat) {
+      const c = String(cat || '').toUpperCase();
+      if (c.includes('PC') || c.includes('DESKTOP') || c.includes('WINDOWS')) return '🖥️';
+      if (c.includes('PANEL')) return '⚡';
+      if (c.includes('IOS') || c.includes('APPLE')) return '🍏';
+      if (c.includes('ANDROID') || c.includes('MOBILE') || c.includes('APK')) return '📱';
+      if (c.includes('VIP') || c.includes('EXCLUSIVE')) return '👑';
+      if (c.includes('BYPASS')) return '🛡️';
+      if (c.includes('AIM') || c.includes('SHOOT') || c.includes('FPS')) return '🎯';
+      return '🎮';
+    }
+
     async function loadProduct(id) {
       try {
         const res = await fetch(`/api/products/${id}`, { credentials: 'include' });
@@ -230,6 +297,11 @@
         document.getElementById('detail-title').textContent = currentProduct.name;
         document.getElementById('detail-cat').textContent = currentProduct.category;
         document.getElementById('detail-cat-badge').textContent = currentProduct.category;
+        
+        const catIcon = getCategoryIcon(currentProduct.category);
+        const catIconEl = document.getElementById('detail-cat-icon');
+        if (catIconEl) catIconEl.textContent = catIcon;
+
         document.getElementById('detail-desc').textContent = currentProduct.description;
         document.getElementById('detail-img').src = currentProduct.image;
         
@@ -259,6 +331,13 @@
           }
         } else {
           stockCountEl.textContent = `${data.available_stock || 'Instant'} Available`;
+          if (checkoutBtn) {
+            checkoutBtn.disabled = false;
+            checkoutBtn.style.opacity = '1';
+            checkoutBtn.style.cursor = 'pointer';
+            checkoutBtn.style.background = '';
+            checkoutBtn.textContent = 'BUY NOW ⚡';
+          }
         }
 
         // Render Features

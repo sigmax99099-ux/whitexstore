@@ -3550,12 +3550,177 @@ a:hover {
 /* Product Detail Page Mobile Responsive Rules */
 @media (max-width: 900px) {
   .product-layout-grid {
-    grid-template-columns: 1fr !important;
-    gap: 1.5rem !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1.25rem !important;
   }
-  .product-layout-grid .product-card {
+  .product-left-column {
+    display: contents !important;
+  }
+  .product-media-column {
+    order: 1 !important;
+    margin-bottom: 0 !important;
+  }
+  .product-purchase-column {
+    order: 2 !important;
     position: static !important;
   }
+  .product-purchase-column .product-card {
+    position: static !important;
+  }
+  .product-specs-column {
+    order: 3 !important;
+  }
+}
+
+/* Category Glow Tags and Icons */
+.card-cat-tag.cat-glow,
+.product-cat.cat-glow {
+  background: rgba(255, 42, 133, 0.12) !important;
+  border: 1px solid rgba(255, 42, 133, 0.5) !important;
+  color: #ff2a85 !important;
+  box-shadow: 0 0 12px rgba(255, 42, 133, 0.35), inset 0 0 8px rgba(255, 42, 133, 0.15) !important;
+  text-shadow: 0 0 8px rgba(255, 42, 133, 0.7) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  border-radius: 6px !important;
+  letter-spacing: 0.8px !important;
+}
+
+.card-cat-tag.glow-vip {
+  background: rgba(0, 240, 255, 0.1) !important;
+  border: 1px solid rgba(0, 240, 255, 0.45) !important;
+  color: #00f0ff !important;
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.3), inset 0 0 8px rgba(0, 240, 255, 0.12) !important;
+  text-shadow: 0 0 8px rgba(0, 240, 255, 0.6) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  border-radius: 6px !important;
+}
+
+.cat-glow-icon {
+  display: inline-block !important;
+  font-size: 11px !important;
+  line-height: 1 !important;
+  filter: drop-shadow(0 0 6px currentColor) drop-shadow(0 0 10px currentColor) !important;
+  animation: pulse-glow-icon 2.2s infinite ease-in-out !important;
+}
+
+@keyframes pulse-glow-icon {
+  0%, 100% {
+    filter: drop-shadow(0 0 5px currentColor);
+    transform: scale(1);
+  }
+  50% {
+    filter: drop-shadow(0 0 10px currentColor) drop-shadow(0 0 14px currentColor);
+    transform: scale(1.12);
+  }
+}
+
+/* Product Detail Trust Rating Row */
+.product-trust-rating-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 1.15rem;
+}
+
+/* Three Figures Grid (Security, Updates, Support) */
+.product-figures-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 480px) {
+  .product-figures-grid {
+    gap: 6px;
+  }
+  .figure-card {
+    padding: 8px 4px !important;
+  }
+  .figure-card .figure-val {
+    font-size: 0.72rem !important;
+  }
+  .figure-card .figure-label {
+    font-size: 0.62rem !important;
+  }
+}
+
+.figure-card {
+  border-radius: 12px;
+  padding: 10px 8px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: all 0.25s ease;
+}
+
+.figure-card:hover {
+  transform: translateY(-2px);
+}
+
+.figure-card.cyan-glow {
+  background: rgba(0, 240, 255, 0.04);
+  border: 1.5px solid rgba(0, 240, 255, 0.35);
+  box-shadow: 0 0 16px rgba(0, 240, 255, 0.12), inset 0 0 8px rgba(0, 240, 255, 0.04);
+}
+
+.figure-card.cyan-glow:hover {
+  border-color: rgba(0, 240, 255, 0.65);
+  box-shadow: 0 0 22px rgba(0, 240, 255, 0.25), inset 0 0 12px rgba(0, 240, 255, 0.08);
+}
+
+.figure-card.purple-glow {
+  background: rgba(168, 85, 247, 0.04);
+  border: 1.5px solid rgba(168, 85, 247, 0.35);
+  box-shadow: 0 0 16px rgba(168, 85, 247, 0.12), inset 0 0 8px rgba(168, 85, 247, 0.04);
+}
+
+.figure-card.purple-glow:hover {
+  border-color: rgba(168, 85, 247, 0.65);
+  box-shadow: 0 0 22px rgba(168, 85, 247, 0.25), inset 0 0 12px rgba(168, 85, 247, 0.08);
+}
+
+.figure-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2px;
+}
+
+.figure-label {
+  font-size: 0.68rem;
+  letter-spacing: 1px;
+  color: #94a3b8;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-family: var(--font-cyber);
+}
+
+.figure-val {
+  font-size: 0.82rem;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  font-family: var(--font-cyber);
+}
+
+.figure-card.cyan-glow .figure-val {
+  color: #00f0ff;
+  text-shadow: 0 0 10px rgba(0, 240, 255, 0.7);
+}
+
+.figure-card.purple-glow .figure-val {
+  color: #c084fc;
+  text-shadow: 0 0 10px rgba(192, 132, 252, 0.7);
 }
 
 /* Product Plans Selector Grid */

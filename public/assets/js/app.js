@@ -870,6 +870,18 @@ function attachHeroSliderHoverEvents() {
   }, { passive: true });
 }
 
+function getCategoryIcon(cat) {
+  const c = String(cat || '').toUpperCase();
+  if (c.includes('PC') || c.includes('DESKTOP') || c.includes('WINDOWS')) return '🖥️';
+  if (c.includes('PANEL')) return '⚡';
+  if (c.includes('IOS') || c.includes('APPLE')) return '🍏';
+  if (c.includes('ANDROID') || c.includes('MOBILE') || c.includes('APK')) return '📱';
+  if (c.includes('VIP') || c.includes('EXCLUSIVE')) return '👑';
+  if (c.includes('BYPASS')) return '🛡️';
+  if (c.includes('AIM') || c.includes('SHOOT') || c.includes('FPS')) return '🎯';
+  return '🎮';
+}
+
 function render7SProductCardHtml(p) {
   const pName = p.name || 'Game Software';
   const pCat = p.category || 'PC PANEL';
@@ -909,8 +921,8 @@ function render7SProductCardHtml(p) {
         <h3 class="card-title" onclick="window.location.href='/product.html?id=${p.id}'" title="Click to view ${escapeHtml(pName)}">${escapeHtml(pName)}</h3>
         
         <div class="card-tags-row">
-          <span class="card-cat-tag">${escapeHtml(pCat)}</span>
-          <span class="card-cat-tag">PREMIUM</span>
+          <span class="card-cat-tag cat-glow" title="Category"><span class="cat-glow-icon">${getCategoryIcon(pCat)}</span> ${escapeHtml(pCat)}</span>
+          <span class="card-cat-tag glow-vip"><span class="cat-glow-icon">⚡</span> VIP</span>
         </div>
 
         ${durationChips}
@@ -945,3 +957,5 @@ window.heroSliderPrev = heroSliderPrev;
 window.heroSliderGoTo = heroSliderGoTo;
 window.setupHeroSliderAutoPlay = setupHeroSliderAutoPlay;
 window.render7SProductCardHtml = render7SProductCardHtml;
+window.getCategoryIcon = getCategoryIcon;
+
