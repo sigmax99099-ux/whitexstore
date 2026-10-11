@@ -2,11 +2,17 @@ import { query } from '../../lib/db.js';
 import { getAuthAdmin } from '../../lib/auth.js';
 import { uploadImage } from '../../lib/cloudinary.js';
 import { ensureProductCascadeSchema } from '../../lib/schema-migration.js';
+import adminAddProduct from './add-product.js';
 
 export default async function handler(req, res) {
   const admin = await getAuthAdmin(req);
   if (!admin) {
     return res.status(401).json({ success: false, message: 'Unauthorized' });
+  }
+
+  // POST: Create a new product (with automatic plans generation for Reseller API & Store)
+  if (req.method === 'POST') {
+    return adminAddProduct(req, res);
   }
 
   // GET: List all products with plans and key counts

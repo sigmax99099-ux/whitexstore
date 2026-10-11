@@ -2344,6 +2344,32 @@ X-API-Key: wx_live_YOUR_KEY</pre>
             <input type="checkbox" id="prod-in-stock" checked> 🟢 In Stock (Available for Instant Delivery)
           </label>
         </div>
+
+        <!-- Auto-generate plans for Reseller API & Store -->
+        <div id="prod-auto-plans-container" style="background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: var(--radius-md); padding: 1rem; margin-bottom: 1.25rem;">
+          <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: 700; color: #fff; cursor: pointer; font-size: 0.9rem; margin-bottom: 0.4rem;">
+            <input type="checkbox" id="prod-auto-plans" checked onchange="document.getElementById('prod-auto-plans-inputs').style.display = this.checked ? 'grid' : 'none'">
+            ⚡ Auto-Generate Product Plans for Reseller API & Store (1D / 7D / 30D)
+          </label>
+          <p style="font-size: 0.75rem; color: var(--text-dim); margin: 0 0 0.75rem 0; line-height: 1.4;">
+            When enabled, the system automatically creates 1-day, 7-day, and 30-day plans with live <code style="color: #38bdf8;">plan_id</code>s. Resellers can instantly create keys via the REST API (<code style="color: #38bdf8;">/api/v1/reseller/create-key</code>) and Developer Portal.
+          </p>
+          <div id="prod-auto-plans-inputs" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.75rem;">
+            <div>
+              <label style="display: block; font-size: 0.72rem; color: var(--text-dim); margin-bottom: 0.25rem; font-weight: 600;">1 Day Price ($ USD)</label>
+              <input type="number" id="prod-plan-price-1d" class="form-input" min="0" step="0.01" value="2.00" style="height: 38px; font-size: 0.88rem;">
+            </div>
+            <div>
+              <label style="display: block; font-size: 0.72rem; color: var(--text-dim); margin-bottom: 0.25rem; font-weight: 600;">7 Days Price ($ USD)</label>
+              <input type="number" id="prod-plan-price-7d" class="form-input" min="0" step="0.01" value="7.00" style="height: 38px; font-size: 0.88rem;">
+            </div>
+            <div>
+              <label style="display: block; font-size: 0.72rem; color: var(--text-dim); margin-bottom: 0.25rem; font-weight: 600;">30 Days Price ($ USD)</label>
+              <input type="number" id="prod-plan-price-30d" class="form-input" min="0" step="0.01" value="20.00" style="height: 38px; font-size: 0.88rem;">
+            </div>
+          </div>
+        </div>
+
         <button type="submit" id="btn-save-product" class="btn btn-primary btn-block btn-lg btn-glow">Create Product ⚡</button>
       </form>
     </div>
@@ -4575,6 +4601,17 @@ X-API-Key: wx_live_YOUR_KEY</pre>
       if (previewBox) previewBox.style.display = 'none';
       const inStockEl = document.getElementById('prod-in-stock');
       if (inStockEl) inStockEl.checked = true;
+
+      // Show and reset auto-plans container for new product
+      const autoPlansCont = document.getElementById('prod-auto-plans-container');
+      if (autoPlansCont) autoPlansCont.style.display = 'block';
+      const autoPlansCb = document.getElementById('prod-auto-plans');
+      if (autoPlansCb) autoPlansCb.checked = true;
+      const autoInputs = document.getElementById('prod-auto-plans-inputs');
+      if (autoInputs) autoInputs.style.display = 'grid';
+      if (document.getElementById('prod-plan-price-1d')) document.getElementById('prod-plan-price-1d').value = '2.00';
+      if (document.getElementById('prod-plan-price-7d')) document.getElementById('prod-plan-price-7d').value = '7.00';
+      if (document.getElementById('prod-plan-price-30d')) document.getElementById('prod-plan-price-30d').value = '20.00';
       
       // Load and populate categories
       loadCategories().then(() => {
@@ -4597,6 +4634,10 @@ X-API-Key: wx_live_YOUR_KEY</pre>
       if (titleEl) titleEl.textContent = '✏️ Edit Product';
       const btn = document.getElementById('btn-save-product');
       if (btn) btn.textContent = 'Save Changes 💾';
+
+      // Hide auto-plans container when editing existing product
+      const autoPlansCont = document.getElementById('prod-auto-plans-container');
+      if (autoPlansCont) autoPlansCont.style.display = 'none';
 
       document.getElementById('prod-name').value = p.name || '';
       document.getElementById('prod-desc').value = p.description || '';
@@ -4906,7 +4947,24 @@ X-API-Key: wx_live_YOUR_KEY</pre>
           if (!imageUrl) {
             imageUrl = 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800&q=80';
           }
-          await sendAddProduct({ name, category, description, features, image: imageUrl, featured, is_in_stock: isInStock });
+          const autoPlans = document.getElementById('prod-auto-plans') ? document.getElementById('prod-auto-plans').checked : true;
+          const price1d = parseFloat(document.getElementById('prod-plan-price-1d')?.value || '2.00');
+          const price7d = parseFloat(document.getElementById('prod-plan-price-7d')?.value || '7.00');
+          const price30d = parseFloat(document.getElementById('prod-plan-price-30d')?.value || '20.00');
+
+          await sendAddProduct({ 
+            name, 
+            category, 
+            description, 
+            features, 
+            image: imageUrl, 
+            featured, 
+            is_in_stock: isInStock,
+            auto_generate_plans: autoPlans,
+            price_1d: isNaN(price1d) ? 2.00 : price1d,
+            price_7d: isNaN(price7d) ? 7.00 : price7d,
+            price_30d: isNaN(price30d) ? 20.00 : price30d
+          });
         }
       } catch (err) {
         console.error('Add/Edit product error:', err);
@@ -4929,11 +4987,16 @@ X-API-Key: wx_live_YOUR_KEY</pre>
           showToast(data.message || 'Failed to create product', 'error');
           return;
         }
-        showToast('Product added successfully!', 'success');
+        showToast(data.message || 'Product and API plans created successfully!', 'success');
         closeModal('modal-add-product');
         await ensureProductsLoaded(true);
-        loadAdminProducts();
-        loadDashboardData();
+        if (typeof loadAdminProducts === 'function') loadAdminProducts();
+        if (typeof loadAdminPlans === 'function') loadAdminPlans();
+        if (typeof loadAdminKeys === 'function') loadAdminKeys();
+        if (typeof loadAdminSupplierMappings === 'function') loadAdminSupplierMappings();
+        if (typeof loadAdminResellerPrices === 'function') loadAdminResellerPrices();
+        if (typeof loadAdminResellerApi === 'function') loadAdminResellerApi();
+        if (typeof loadDashboardData === 'function') loadDashboardData();
       } catch (err) {
         showToast('Error adding product', 'error');
       }

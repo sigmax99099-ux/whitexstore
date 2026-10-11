@@ -13,7 +13,10 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { name, category, description, features, image, status, featured, sort_order, is_in_stock } = req.body || {};
+    const { 
+      name, category, description, features, image, status, featured, sort_order, is_in_stock,
+      auto_generate_plans, plans, price_1d, price_7d, price_30d
+    } = req.body || {};
 
     if (!name || !category || !description) {
       return res.status(400).json({ success: false, message: 'Name, category, and description are required.' });
@@ -61,10 +64,56 @@ export default async function handler(req, res) {
       ]
     );
 
+    const newProduct = insertRes.rows[0];
+
+    // Automatically generate product plans for API & Store if requested
+    const createdPlans = [];
+    let plansToCreate = [];
+
+    if (Array.isArray(plans) && plans.length > 0) {
+      plansToCreate = plans;
+    } else if (auto_generate_plans !== false && auto_generate_plans !== 'false') {
+      const p1 = parseFloat(price_1d) > 0 ? parseFloat(price_1d) : 2.00;
+      const p7 = parseFloat(price_7d) > 0 ? parseFloat(price_7d) : 7.00;
+      const p30 = parseFloat(price_30d) > 0 ? parseFloat(price_30d) : 20.00;
+
+      plansToCreate = [
+        { plan_name: '1 Day Key', duration_type: 'days', days: 1, price_usd: p1, discount_percent: 0 },
+        { plan_name: '7 Days Key', duration_type: 'days', days: 7, price_usd: p7, discount_percent: 0 },
+        { plan_name: '30 Days Key', duration_type: 'days', days: 30, price_usd: p30, discount_percent: 0 }
+      ];
+    }
+
+    if (plansToCreate.length > 0) {
+      for (const pl of plansToCreate) {
+        try {
+          const planRes = await query(
+            `INSERT INTO plans (product_id, plan_name, duration_type, days, price_usd, discount_percent)
+             VALUES ($1, $2, $3, $4, $5, $6)
+             RETURNING id, product_id, plan_name, duration_type, days, price_usd, discount_percent`,
+            [
+              newProduct.id,
+              String(pl.plan_name || `${pl.days} Days`).trim(),
+              pl.duration_type || 'days',
+              parseInt(pl.days, 10) || 1,
+              parseFloat(pl.price_usd || 0),
+              parseFloat(pl.discount_percent || 0)
+            ]
+          );
+          createdPlans.push(planRes.rows[0]);
+        } catch (planErr) {
+          console.error('Failed to auto-create plan:', planErr);
+        }
+      }
+    }
+
     return res.status(201).json({
       success: true,
-      message: 'Product created successfully!',
-      product: insertRes.rows[0]
+      message: createdPlans.length > 0 
+        ? `Product created with ${createdPlans.length} standard plans! API system updated automatically 🚀` 
+        : 'Product created successfully!',
+      product: newProduct,
+      plans: createdPlans
     });
   } catch (err) {
     console.error('Add product error:', err);
