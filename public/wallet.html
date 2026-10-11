@@ -173,6 +173,10 @@
                   <span style="font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase;">Account Holder Name</span>
                   <div id="gw-acc-name" style="color: #fff; font-weight: 600;">...</div>
                 </div>
+                <div style="margin-top: 0.65rem; padding-top: 0.65rem; border-top: 1px dashed var(--bg-card-border); display: flex; justify-content: space-between; align-items: center;">
+                  <span style="font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase;">Minimum Deposit</span>
+                  <strong id="gw-min-amount" style="color: var(--primary); font-size: 0.95rem;">...</strong>
+                </div>
               </div>
 
               <div style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5;" id="gw-instructions">
@@ -316,6 +320,10 @@
         document.getElementById('gw-instructions').textContent = displayText;
         
         document.getElementById('topup-currency-display').value = selectedMethod.currency;
+        const minAmt = parseFloat(selectedMethod.min_amount) || 100;
+        document.getElementById('gw-min-amount').textContent = `${selectedMethod.currency} ${minAmt.toLocaleString()}`;
+        document.getElementById('topup-amount').placeholder = `e.g. ${minAmt}`;
+        document.getElementById('topup-amount').min = minAmt > 0 ? minAmt : 1;
 
         if (selectedMethod.qr_image) {
           document.getElementById('gw-qr-img').src = selectedMethod.qr_image;
@@ -405,6 +413,11 @@
       }
 
       const amount = parseFloat(document.getElementById('topup-amount').value);
+      const methodMin = parseFloat(selectedMethod.min_amount) || 0;
+      if (methodMin > 0 && amount < methodMin) {
+        showToast(`Minimum deposit amount for ${selectedMethod.method_name} is ${selectedMethod.currency} ${methodMin.toLocaleString()}.`, 'warning');
+        return;
+      }
       const ref = document.getElementById('topup-ref').value.trim();
       const btn = document.getElementById('btn-topup-submit');
 

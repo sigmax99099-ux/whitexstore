@@ -27,7 +27,7 @@ export default async function handler(req, res) {
 
     // Verify payment method
     const methodRes = await query(
-      'SELECT id, method_name, currency FROM payment_methods WHERE id = $1 AND status = $2',
+      'SELECT id, method_name, currency, min_amount FROM payment_methods WHERE id = $1 AND status = $2',
       [payment_method_id, 'active']
     );
 
@@ -48,22 +48,31 @@ export default async function handler(req, res) {
 
     const nprRate = parseFloat(ratesMap.npr_usd_rate || '134.50');
     const inrRate = parseFloat(ratesMap.inr_usd_rate || '84.00');
-    const minTopupNpr = parseFloat(ratesMap.min_topup_npr || '200');
+    const globalMinTopupNpr = parseFloat(ratesMap.min_topup_npr || '200');
 
-    // Calculate equivalent NPR amount
-    let equivalentNpr = numAmount;
-    if (currency === 'USD') {
-      equivalentNpr = numAmount * nprRate;
-    } else if (currency === 'INR') {
-      // 1 USD = inrRate INR, 1 USD = nprRate NPR => 1 INR = (nprRate / inrRate) NPR
-      equivalentNpr = (numAmount / inrRate) * nprRate;
-    }
-
-    if (equivalentNpr < minTopupNpr) {
-      return res.status(400).json({
-        success: false,
-        message: `Minimum deposit amount is NPR ${minTopupNpr} equivalent.`
-      });
+    // Check method-specific minimum amount if defined, otherwise fallback to global minimum
+    const methodMin = parseFloat(method.min_amount);
+    if (!isNaN(methodMin) && methodMin > 0) {
+      if (numAmount < methodMin) {
+        return res.status(400).json({
+          success: false,
+          message: `Minimum deposit amount for ${method.method_name} is ${method.currency} ${methodMin.toLocaleString()}.`
+        });
+      }
+    } else {
+      // Calculate equivalent NPR amount against global min
+      let equivalentNpr = numAmount;
+      if (currency === 'USD') {
+        equivalentNpr = numAmount * nprRate;
+      } else if (currency === 'INR') {
+        equivalentNpr = (numAmount / inrRate) * nprRate;
+      }
+      if (equivalentNpr < globalMinTopupNpr) {
+        return res.status(400).json({
+          success: false,
+          message: `Minimum deposit amount is NPR ${globalMinTopupNpr} equivalent.`
+        });
+      }
     }
 
     // Upload screenshot if provided

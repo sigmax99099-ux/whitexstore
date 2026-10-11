@@ -2568,12 +2568,12 @@ X-API-Key: wx_live_YOUR_KEY</pre>
               <option value="">-- Choose Gateway --</option>
             </select>
             <div id="pm-custom-method-wrap" style="display: none; margin-top: 0.5rem;">
-              <input type="text" id="pm-custom-method" class="form-input" placeholder="Custom method name">
+              <input type="text" id="pm-custom-method" class="form-input" placeholder="Custom method name (e.g. Binance Pay, Bkash, PayPal)">
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.5rem;" class="admin-modal-grid">
-                <select id="pm-custom-currency" class="form-select">
-                  <option value="NPR">NPR</option>
-                  <option value="INR">INR</option>
-                  <option value="USD">USD</option>
+                <select id="pm-custom-currency" class="form-select" onchange="onPaymentMethodSelect()">
+                  <option value="NPR">NPR (Nepali Rupee)</option>
+                  <option value="INR">INR (Indian Rupee)</option>
+                  <option value="USD">USD (US Dollar / Crypto)</option>
                 </select>
               </div>
             </div>
@@ -2583,7 +2583,7 @@ X-API-Key: wx_live_YOUR_KEY</pre>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;" class="admin-modal-grid">
           <div class="form-group">
             <label class="form-label">Identifier / Account No *</label>
-            <input type="text" id="pm-identifier" class="form-input" required placeholder="e.g. 98XXXXXXXX / ID">
+            <input type="text" id="pm-identifier" class="form-input" required placeholder="e.g. 98XXXXXXXX / Wallet / Address">
           </div>
           <div class="form-group">
             <label class="form-label">Account Holder Name *</label>
@@ -2599,11 +2599,11 @@ X-API-Key: wx_live_YOUR_KEY</pre>
 
         <!-- QR Code Upload -->
         <div class="form-group">
-          <label class="form-label">QR Code Image *</label>
+          <label class="form-label">QR Code Image (Optional)</label>
           <div style="display: flex; flex-direction: column; gap: 0.75rem;">
             <div id="pm-qr-upload-area">
               <input type="file" id="pm-qr-file" class="form-input" accept="image/png,image/jpeg,image/webp" style="padding: 0.5rem;" onchange="handleQRFileSelect(event)">
-              <div style="font-size: 0.72rem; color: var(--text-dim);">PNG, JPG, WEBP • Max 2MB</div>
+              <div style="font-size: 0.72rem; color: var(--text-dim);">PNG, JPG, WEBP • Max 2MB (Optional)</div>
             </div>
             <div id="pm-qr-preview" style="display: none; align-items: center; gap: 1rem; padding: 0.75rem; background: #0d0d15; border-radius: var(--radius-md); border: 1px solid var(--bg-card-border);">
               <img id="pm-qr-preview-img" src="" alt="QR Preview" style="max-height: 100px; border-radius: 4px; border: 1px solid var(--bg-card-border);">
@@ -2654,8 +2654,8 @@ X-API-Key: wx_live_YOUR_KEY</pre>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
           <div class="form-group">
-            <label class="form-label">Minimum Deposit Amount (NPR)</label>
-            <input type="number" id="pm-min" class="form-input" value="100" min="0">
+            <label class="form-label" id="pm-min-label">Minimum Deposit Amount (NPR)</label>
+            <input type="number" id="pm-min" class="form-input" value="100" min="0" step="any">
           </div>
           <div class="form-group">
             <label class="form-label">Sort Display Order</label>
@@ -3825,6 +3825,7 @@ X-API-Key: wx_live_YOUR_KEY</pre>
 
     async function loadAdminPaymentMethods() {
       const tbody = document.getElementById('admin-payment-methods-tbody');
+      if (!tbody) return;
       try {
         const res = await fetch('/api/admin/payment-methods', { credentials: "include" });
         const data = await res.json();
@@ -3836,23 +3837,36 @@ X-API-Key: wx_live_YOUR_KEY</pre>
         }
 
         tbody.innerHTML = globalPaymentMethods.map(pm => {
-          const logoOrQr = pm.logo_url 
-            ? `<img src="${pm.logo_url}" alt="" style="width: 38px; height: 38px; border-radius: 4px; object-fit: contain; background: #fff; padding: 2px;">`
-            : (pm.qr_code ? `<button class="btn btn-outline btn-sm" onclick="viewProof('${pm.qr_code}')">QR ↗</button>` : '-');
-
+          const methodName = pm.method_name || pm.name || 'Unnamed Gateway';
+          const identifier = pm.account_id || pm.identifier || '';
+          const holder = pm.account_holder || '';
+          const currency = pm.currency || 'NPR';
+          const qrImg = pm.qr_image || pm.qr_code || null;
           const isVis = pm.checkout_visible !== false;
-          const isAct = pm.is_active !== false;
+          const isAct = pm.status ? pm.status === 'active' : (pm.is_active !== false);
+          const minAmt = parseFloat(pm.min_amount !== null && pm.min_amount !== undefined ? pm.min_amount : 100);
+
+          let logoOrQr = '-';
+          if (pm.logo_url) {
+            logoOrQr = `<img src="${escapeHtml(pm.logo_url)}" alt="" style="width: 38px; height: 38px; border-radius: 4px; object-fit: contain; background: #fff; padding: 2px;">`;
+          } else if (qrImg) {
+            logoOrQr = `<button class="btn btn-outline btn-sm" onclick="viewProof('${escapeHtml(qrImg)}')">QR ↗</button>`;
+          }
 
           return `
             <tr>
               <td>#${pm.id}</td>
               <td>${logoOrQr}</td>
               <td>
-                <strong style="color: #fff;">${escapeHtml(pm.name)}</strong>
-                <div style="font-size: 0.78rem; color: var(--text-dim); font-family: monospace;">${escapeHtml(pm.identifier || '')}</div>
+                <div style="display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;">
+                  <strong style="color: #fff;">${escapeHtml(methodName)}</strong>
+                  <span class="badge badge-outline" style="font-size: 0.68rem; padding: 1px 6px;">${escapeHtml(currency)}</span>
+                </div>
+                <div style="font-size: 0.78rem; color: var(--text-dim); font-family: monospace;">${escapeHtml(identifier)}</div>
+                ${holder ? `<div style="font-size: 0.72rem; color: var(--text-muted);">${escapeHtml(holder)}</div>` : ''}
               </td>
               <td><code>${escapeHtml(pm.api_key ? (pm.api_key.length > 10 ? pm.api_key.substring(0, 8) + '...' : pm.api_key) : '-')}</code></td>
-              <td>NPR ${parseFloat(pm.min_amount || 0).toLocaleString()}</td>
+              <td><strong style="color: var(--primary);">${escapeHtml(currency)} ${minAmt.toLocaleString()}</strong></td>
               <td>${pm.sort_order || 0}</td>
               <td>
                 <span class="badge ${isVis ? 'badge-undetected' : 'badge-warning'}">
@@ -3860,8 +3874,8 @@ X-API-Key: wx_live_YOUR_KEY</pre>
                 </span>
               </td>
               <td>
-                <button class="btn btn-sm ${isAct ? 'btn-success' : 'btn-outline'}" onclick="togglePaymentMethod(${pm.id}, ${isAct})">
-                  ${isAct ? 'Active' : 'Disabled'}
+                <button class="btn btn-sm ${isAct ? 'btn-success' : 'btn-outline'}" onclick="togglePaymentMethod(${pm.id}, ${isAct})" style="min-width: 75px;">
+                  ${isAct ? '🟢 Active' : '⚪ Disabled'}
                 </button>
               </td>
               <td>
@@ -3894,7 +3908,7 @@ X-API-Key: wx_live_YOUR_KEY</pre>
       
       select.innerHTML = '<option value="">-- Choose Gateway --</option>' +
         PAYMENT_GATEWAYS.map(g => `<option value="${g.key}" data-currency="${g.currency}">${g.name} (${g.currency})</option>`).join('') +
-        '<option value="__CUSTOM__">Other / Custom...</option>';
+        '<option value="__CUSTOM__">Other / Custom Gateway...</option>';
     }
 
     function onPaymentMethodSelect() {
@@ -3904,6 +3918,7 @@ X-API-Key: wx_live_YOUR_KEY</pre>
       const customCurrency = document.getElementById('pm-custom-currency');
       const identifierInput = document.getElementById('pm-identifier');
       const holderInput = document.getElementById('pm-holder');
+      const minLabel = document.getElementById('pm-min-label');
       
       if (!select) return;
       
@@ -3914,10 +3929,11 @@ X-API-Key: wx_live_YOUR_KEY</pre>
       if (customMethod) customMethod.required = isCustom;
       if (customCurrency) customCurrency.required = isCustom;
       
+      let curr = 'NPR';
       if (!isCustom && value) {
         const gateway = PAYMENT_GATEWAYS.find(g => g.key === value);
         if (gateway) {
-          // Auto-fill identifier placeholder based on gateway
+          curr = gateway.currency || 'NPR';
           const placeholders = {
             'esewa': 'eSewa ID (e.g. 98XXXXXXXX)',
             'khalti': 'Khalti Wallet ID/Phone',
@@ -3937,9 +3953,12 @@ X-API-Key: wx_live_YOUR_KEY</pre>
           if (holderInput) holderInput.placeholder = holderPlaceholders[gateway.key] || 'Account Holder Name';
         }
       } else if (isCustom) {
-        if (identifierInput) identifierInput.placeholder = 'Account ID / Number';
+        curr = customCurrency?.value || 'NPR';
+        if (identifierInput) identifierInput.placeholder = 'Account ID / Number / Address';
         if (holderInput) holderInput.placeholder = 'Account Holder Name';
       }
+
+      if (minLabel) minLabel.textContent = `Minimum Deposit Amount (${curr})`;
     }
 
     function getSelectedGatewayKey() {
@@ -3975,6 +3994,8 @@ X-API-Key: wx_live_YOUR_KEY</pre>
       document.getElementById('pm-id').value = '';
       document.getElementById('pm-checkout-visible').checked = true;
       document.getElementById('pm-is-active').checked = true;
+      document.getElementById('pm-min').value = '100';
+      document.getElementById('pm-sort').value = '0';
       
       // Reset file previews
       document.getElementById('pm-qr-preview').style.display = 'none';
@@ -4008,34 +4029,37 @@ X-API-Key: wx_live_YOUR_KEY</pre>
 
       initPaymentMethodDropdown();
       
-      document.getElementById('pm-modal-title').textContent = `Edit Gateway: ${pm.name}`;
+      const mName = pm.method_name || pm.name || '';
+      document.getElementById('pm-modal-title').textContent = `Edit Gateway: ${mName}`;
       document.getElementById('pm-id').value = pm.id;
       
       // Find matching gateway key
-      const gateway = PAYMENT_GATEWAYS.find(g => g.name === pm.method_name);
+      const gateway = PAYMENT_GATEWAYS.find(g => g.name === mName || g.key === mName.toLowerCase());
       
       if (gateway) {
         document.getElementById('pm-method-select').value = gateway.key;
+        document.getElementById('pm-custom-method-wrap').style.display = 'none';
       } else {
-        // Custom gateway - use "Other" option
+        // Custom gateway
         document.getElementById('pm-method-select').value = '__CUSTOM__';
         document.getElementById('pm-custom-method-wrap').style.display = 'block';
-        document.getElementById('pm-custom-method').value = pm.method_name;
+        document.getElementById('pm-custom-method').value = mName;
         document.getElementById('pm-custom-currency').value = pm.currency || 'NPR';
       }
       
-      document.getElementById('pm-identifier').value = pm.identifier || pm.account_id || '';
+      document.getElementById('pm-identifier').value = pm.account_id || pm.identifier || '';
       document.getElementById('pm-holder').value = pm.account_holder || '';
-      document.getElementById('pm-description').value = pm.description || '';
+      document.getElementById('pm-description').value = pm.description || pm.instructions || '';
       document.getElementById('pm-apikey').value = pm.api_key || '';
-      document.getElementById('pm-min').value = pm.min_amount || 100;
+      document.getElementById('pm-min').value = pm.min_amount !== undefined && pm.min_amount !== null ? pm.min_amount : 100;
       document.getElementById('pm-sort').value = pm.sort_order || 0;
       document.getElementById('pm-checkout-visible').checked = pm.checkout_visible !== false;
-      document.getElementById('pm-is-active').checked = pm.is_active !== false;
+      document.getElementById('pm-is-active').checked = pm.status ? pm.status === 'active' : (pm.is_active !== false);
       
       // Handle QR image - show preview if exists
-      if (pm.qr_image) {
-        document.getElementById('pm-qr-preview-img').src = pm.qr_image;
+      const qrImg = pm.qr_image || pm.qr_code;
+      if (qrImg) {
+        document.getElementById('pm-qr-preview-img').src = qrImg;
         document.getElementById('pm-qr-preview-name').textContent = 'Current QR Code';
         document.getElementById('pm-qr-preview').style.display = 'flex';
         document.getElementById('pm-qr-upload-area').style.display = 'none';
@@ -4072,12 +4096,19 @@ X-API-Key: wx_live_YOUR_KEY</pre>
 
     async function togglePaymentMethod(id, isCurrentlyActive) {
       try {
+        const newStatus = isCurrentlyActive ? 'inactive' : 'active';
         const res = await fetch('/api/admin/payment-methods', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify({ id, is_active: !isCurrentlyActive })
+          body: JSON.stringify({ id, status: newStatus, is_active: !isCurrentlyActive })
         });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          showToast(data.message || 'Status update failed', 'error');
+          return;
+        }
+        showToast(`Payment method ${newStatus === 'active' ? 'enabled' : 'disabled'}!`, 'success');
         loadAdminPaymentMethods();
       } catch (err) {
         showToast('Status toggle failed', 'error');
@@ -4085,29 +4116,48 @@ X-API-Key: wx_live_YOUR_KEY</pre>
     }
 
     async function deletePaymentMethod(id) {
-      if (!confirm('Are you sure you want to delete this payment method?')) return;
+      if (!confirm('Are you sure you want to delete this payment method? Existing transaction records will be preserved.')) return;
       try {
-        await fetch(`/api/admin/payment-methods?id=${id}`, { method: 'DELETE', credentials: 'include' });
-        showToast('Payment method deleted', 'info');
+        const res = await fetch(`/api/admin/payment-methods?id=${id}`, { method: 'DELETE', credentials: 'include' });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          showToast(data.message || 'Failed to delete payment method', 'error');
+          return;
+        }
+        showToast(data.message || 'Payment method deleted successfully!', 'info');
         loadAdminPaymentMethods();
       } catch (err) {
         showToast('Failed to delete payment method', 'error');
       }
     }
 
+    // Helper: read file as Base64 Data URI (fail-safe fallback)
+    function readFileAsDataUri(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
     // File upload handlers
     async function uploadGatewayImage(file, type, gatewayId) {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('type', type);
-      if (gatewayId) formData.append('gateway_id', gatewayId);
-      
-      const res = await fetch('/api/admin/upload/gateway-image', {
-        method: 'POST',
-        body: formData,
-        credentials: 'include'
-      });
-      return res.json();
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('type', type);
+        if (gatewayId) formData.append('gateway_id', gatewayId);
+        
+        const res = await fetch('/api/admin/upload/gateway-image', {
+          method: 'POST',
+          body: formData,
+          credentials: 'include'
+        });
+        return await res.json();
+      } catch (e) {
+        return { success: false, message: e.message };
+      }
     }
 
     function handleQRFileSelect(event) {
@@ -4256,76 +4306,91 @@ X-API-Key: wx_live_YOUR_KEY</pre>
       }
       
       const btn = document.querySelector('#form-payment-method button[type="submit"]');
-      if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
+      if (btn) { btn.disabled = true; btn.textContent = 'Saving Payment Gateway...'; }
       
       try {
-        // Handle image uploads first
         let qrUrl = null;
         let logoUrl = null;
         const gatewayId = id ? parseInt(id, 10) : null;
         const isNewGateway = !gatewayId;
         
-        // Upload QR image if file selected
+        // Handle QR image
         const qrFile = document.getElementById('pm-qr-file').files[0];
         const useQrUrl = document.getElementById('pm-qr-use-url').checked;
         const hasExistingQr = document.getElementById('pm-qr-preview').style.display === 'flex';
         
         if (qrFile && qrFile.size > 0) {
-          // Upload new QR file
-          const uploadRes = await uploadGatewayImage(qrFile, 'qr', gatewayId);
-          if (!uploadRes.success) {
-            showToast('QR upload failed: ' + uploadRes.message, 'error');
-            if (btn) { btn.disabled = false; btn.textContent = 'Save Payment Gateway 💾'; }
-            return;
+          // Try upload endpoint, fallback to data URI if upload fails
+          try {
+            const uploadRes = await uploadGatewayImage(qrFile, 'qr', gatewayId);
+            if (uploadRes && uploadRes.success && uploadRes.url) {
+              qrUrl = uploadRes.url;
+            } else {
+              qrUrl = await readFileAsDataUri(qrFile);
+            }
+          } catch (upErr) {
+            qrUrl = await readFileAsDataUri(qrFile);
           }
-          qrUrl = uploadRes.url;
         } else if (useQrUrl) {
-          // Use URL fallback
           const urlValue = document.getElementById('pm-qrcode').value.trim();
           if (urlValue) qrUrl = urlValue;
         } else if (hasExistingQr && !isNewGateway) {
-          // Keep existing image (already shown in preview)
           const pm = globalPaymentMethods.find(p => p.id === gatewayId);
-          qrUrl = pm?.qr_image || null;
+          qrUrl = pm?.qr_image || pm?.qr_code || null;
         }
-        // If no file, no URL, and no existing image -> qrUrl stays null (optional)
         
-        // Upload Logo image if file selected
+        // Handle Logo image
         const logoFile = document.getElementById('pm-logo-file').files[0];
         const useLogoUrl = document.getElementById('pm-logo-use-url').checked;
         const hasExistingLogo = document.getElementById('pm-logo-preview').style.display === 'flex';
         
         if (logoFile && logoFile.size > 0) {
-          const uploadRes = await uploadGatewayImage(logoFile, 'logo', gatewayId);
-          if (!uploadRes.success) {
-            showToast('Logo upload failed: ' + uploadRes.message, 'error');
-            if (btn) { btn.disabled = false; btn.textContent = 'Save Payment Gateway 💾'; }
-            return;
+          try {
+            const uploadRes = await uploadGatewayImage(logoFile, 'logo', gatewayId);
+            if (uploadRes && uploadRes.success && uploadRes.url) {
+              logoUrl = uploadRes.url;
+            } else {
+              logoUrl = await readFileAsDataUri(logoFile);
+            }
+          } catch (upErr) {
+            logoUrl = await readFileAsDataUri(logoFile);
           }
-          logoUrl = uploadRes.url;
+        } else if (useLogoUrl) {
+          const urlValue = document.getElementById('pm-logo').value.trim();
+          if (urlValue) logoUrl = urlValue;
+        } else if (hasExistingLogo && !isNewGateway) {
+          const pm = globalPaymentMethods.find(p => p.id === gatewayId);
+          logoUrl = pm?.logo_url || null;
         }
         
+        const minVal = parseFloat(document.getElementById('pm-min').value);
+        const minAmount = !isNaN(minVal) && minVal >= 0 ? minVal : 100;
+
         const payload = {
           method_name: methodName,
+          name: methodName,
           currency: currency,
           account_id: identifier,
+          identifier: identifier,
           account_holder: holder,
-          instructions: document.getElementById('pm-instructions')?.value?.trim() || '',
+          instructions: description,
           description: description,
-          qr_image: qrUrl || null,
-          logo_url: logoUrl || null,
+          qr_image: qrUrl,
+          logo_url: logoUrl,
           api_key: document.getElementById('pm-apikey').value.trim() || null,
-          min_amount: parseFloat(document.getElementById('pm-min').value) || 0,
+          min_amount: minAmount,
           sort_order: parseInt(document.getElementById('pm-sort').value, 10) || 0,
           checkout_visible: document.getElementById('pm-checkout-visible').checked,
+          status: document.getElementById('pm-is-active').checked ? 'active' : 'inactive',
           is_active: document.getElementById('pm-is-active').checked
         };
         
         if (id) payload.id = parseInt(id, 10);
         
-        const res = await fetch('/api/admin/payment-methods', { method: id ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+        const res = await fetch('/api/admin/payment-methods', {
           method: id ? 'PUT' : 'POST',
-          headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify(payload)
         });
         
@@ -4335,12 +4400,12 @@ X-API-Key: wx_live_YOUR_KEY</pre>
           return;
         }
         
-        showToast('Payment gateway saved successfully!', 'success');
+        showToast(data.message || 'Payment gateway saved successfully!', 'success');
         closeModal('modal-payment-method');
         loadAdminPaymentMethods();
       } catch (err) {
         console.error('Payment method save error:', err);
-        showToast('Network error saving payment method', 'error');
+        showToast('Network error saving payment method: ' + err.message, 'error');
       } finally {
         if (btn) { btn.disabled = false; btn.textContent = 'Save Payment Gateway 💾'; }
       }

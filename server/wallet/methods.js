@@ -7,7 +7,7 @@ export default async function handler(req, res) {
 
   try {
     const methodsRes = await query(
-      "SELECT id, method_name, currency, account_id, account_holder, instructions, description, qr_image, logo_url, checkout_visible FROM payment_methods WHERE status = 'active' ORDER BY sort_order ASC, id ASC"
+      "SELECT id, method_name, currency, account_id, account_holder, instructions, description, qr_image, logo_url, min_amount, checkout_visible FROM payment_methods WHERE status = 'active' ORDER BY sort_order ASC, id ASC"
     );
 
     const settingsRes = await query(
@@ -21,7 +21,10 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       success: true,
-      methods: methodsRes.rows,
+      methods: (methodsRes.rows || []).map(m => ({
+        ...m,
+        min_amount: parseFloat(m.min_amount !== null && m.min_amount !== undefined ? m.min_amount : 100)
+      })),
       rates: {
         USD: 1,
         NPR: parseFloat(settingsMap.npr_usd_rate || '134.50'),
