@@ -1049,27 +1049,209 @@
 
       <!-- TAB 8: RESELLER PRICES -->
       <section id="tab-reseller-prices" class="admin-tab-content">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-          <h2 style="color: #fff;">// CUSTOM RESELLER OVERRIDE PRICING</h2>
-          <button class="btn btn-primary btn-sm" onclick="openAddResellerPriceModal()">+ Add Custom Reseller Price</button>
+        <!-- Top Title Bar -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <h2 style="color: #fff; margin: 0 0 0.35rem 0;">// RESELLER CUSTOM PRICING & PLAN MATRIX</h2>
+            <p style="color: var(--text-dim); margin: 0; font-size: 0.88rem;">
+              Set dedicated custom rates per reseller. Resellers automatically receive these prices when ordering from the storefront, reseller portal, or via the REST API.
+            </p>
+          </div>
+          <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+            <button type="button" class="btn btn-primary btn-sm btn-glow" onclick="openAddResellerPriceModal()">
+              ➕ Add Single Price Override
+            </button>
+            <button type="button" class="btn btn-outline btn-sm" onclick="loadAdminResellerPrices()">
+              🔄 Refresh
+            </button>
+          </div>
         </div>
 
-        <div class="table-responsive">
-          <table class="table-custom">
-            <thead>
-              <tr>
-                <th>Reseller</th>
-                <th>Product</th>
-                <th>Plan</th>
-                <th>Normal Price</th>
-                <th>Custom Override (USD)</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="admin-reseller-prices-tbody">
-              <tr><td colspan="6" style="text-align: center; padding: 2rem;">Loading custom prices...</td></tr>
-            </tbody>
-          </table>
+        <!-- 1. RESELLER SELECTION CARD -->
+        <div class="card" style="background: rgba(13, 18, 30, 0.95); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 10px 30px rgba(0,0,0,0.4);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
+            <div style="display: flex; align-items: center; gap: 0.6rem;">
+              <span style="font-size: 1.3rem;">👤</span>
+              <h3 style="margin: 0; color: #fff; font-size: 1.15rem; font-weight: 700;">
+                STEP 1: SELECT RESELLER ACCOUNT
+              </h3>
+            </div>
+            <div style="font-size: 0.82rem; color: var(--text-dim);">
+              Select any reseller to view and customize their prices across all plans
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
+            <div style="flex: 2; min-width: 280px;">
+              <label class="form-label" style="font-size: 0.78rem; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.4rem; display: block;">
+                Select Reseller:
+              </label>
+              <select id="rp-reseller-select" class="form-select" onchange="onResellerSelect(this.value)" style="font-size: 0.95rem; font-weight: 600; padding: 0.7rem 1rem; background: #080c14; border: 1px solid rgba(56, 189, 248, 0.4); color: #fff; width: 100%;">
+                <option value="">-- Choose a Reseller to View & Customize Pricing --</option>
+              </select>
+            </div>
+            <div style="flex: 1; min-width: 220px;">
+              <label class="form-label" style="font-size: 0.78rem; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.4rem; display: block;">
+                Quick Filter Resellers:
+              </label>
+              <input type="text" id="rp-reseller-filter" class="form-input" placeholder="🔍 Search reseller name or email..." oninput="filterResellerOptions(this.value)" style="padding: 0.7rem 1rem; font-size: 0.88rem; width: 100%;">
+            </div>
+          </div>
+
+          <!-- Active Selected Reseller Badge/Info Banner -->
+          <div id="rp-reseller-info-banner" style="display: none; margin-top: 1.25rem; padding: 1rem 1.25rem; background: rgba(56, 189, 248, 0.06); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 8px; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+              <div style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #38bdf8, #818cf8); display: flex; align-items: center; justify-content: center; font-size: 1.3rem; font-weight: 800; color: #fff;">
+                <span id="rp-banner-avatar">R</span>
+              </div>
+              <div>
+                <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.2rem;">
+                  <strong id="rp-banner-name" style="color: #fff; font-size: 1.1rem;">-</strong>
+                  <span id="rp-banner-type-badge" class="badge" style="background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid #38bdf8; font-size: 0.75rem;">Reseller</span>
+                  <span id="rp-banner-api-badge" class="badge" style="background: rgba(52, 211, 153, 0.15); color: #34d399; border: 1px solid #34d399; font-size: 0.75rem;">API Active</span>
+                </div>
+                <div style="color: var(--text-dim); font-size: 0.85rem;">
+                  <span id="rp-banner-email">-</span> • Wallet Balance: <strong id="rp-banner-wallet" style="color: #34d399;">$0.00</strong> • Base Discount: <strong id="rp-banner-discount" style="color: #fbbf24;">0%</strong>
+                </div>
+              </div>
+            </div>
+            <div style="display: flex; gap: 0.6rem; align-items: center;">
+              <span id="rp-banner-override-count" class="badge" style="background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #f87171; padding: 6px 12px; font-weight: 700; font-size: 0.82rem;">
+                0 Custom Overrides
+              </span>
+              <button type="button" class="btn btn-outline btn-sm" onclick="clearAllResellerOverrides()" style="color: var(--danger); border-color: rgba(239,68,68,0.4);" title="Remove all custom prices and return to store defaults">
+                🗑️ Clear All Overrides
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. RESELLER PLAN PRICING MATRIX CARD -->
+        <div id="rp-matrix-section" class="card" style="display: none; background: rgba(13, 18, 30, 0.95); border: 1px solid rgba(129, 140, 248, 0.35); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 10px 30px rgba(0,0,0,0.4);">
+          <!-- Matrix Header & Actions -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+              <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.25rem;">
+                <span style="font-size: 1.3rem;">⚡</span>
+                <h3 style="margin: 0; color: #fff; font-size: 1.15rem; font-weight: 700;">
+                  STEP 2: PLAN PRICING MATRIX FOR <span id="rp-matrix-user-heading" style="color: #38bdf8;"></span>
+                </h3>
+              </div>
+              <p style="margin: 0; font-size: 0.85rem; color: var(--text-dim);">
+                Edit custom prices directly in the table below. Click <strong>"Save"</strong> on any plan or <strong>"SAVE ALL PLAN PRICING"</strong> to batch update all plans at once. Leave blank to use store default price.
+              </p>
+            </div>
+
+            <!-- Batch Action Button -->
+            <button type="button" class="btn btn-primary btn-md btn-glow" onclick="saveAllResellerPrices()" style="font-weight: 700; font-size: 0.95rem; padding: 0.7rem 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+              <span>💾</span>
+              <span>SAVE ALL PLAN PRICING FOR RESELLER</span>
+            </button>
+          </div>
+
+          <!-- Quick Bulk Discount Applicator Toolbar -->
+          <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 0.9rem 1.25rem; margin-bottom: 1.25rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+              <span style="font-size: 0.85rem; font-weight: 700; color: #e2e8f0;">⚡ Quick Bulk Discount:</span>
+              <div style="display: flex; align-items: center; gap: 0.4rem;">
+                <input type="number" id="rp-bulk-discount-input" class="form-input" placeholder="20" min="1" max="99" style="width: 70px; text-align: center; padding: 0.4rem 0.5rem; font-weight: 700;">
+                <span style="color: var(--text-dim); font-weight: 700;">% OFF</span>
+              </div>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="applyBulkDiscount()" style="font-weight: 600;">
+                Apply to All Plans 🪄
+              </button>
+              <div style="display: flex; gap: 0.35rem; align-items: center;">
+                <button type="button" class="btn btn-outline btn-xs" onclick="setAndApplyBulkDiscount(10)">-10%</button>
+                <button type="button" class="btn btn-outline btn-xs" onclick="setAndApplyBulkDiscount(15)">-15%</button>
+                <button type="button" class="btn btn-outline btn-xs" onclick="setAndApplyBulkDiscount(20)">-20%</button>
+                <button type="button" class="btn btn-outline btn-xs" onclick="setAndApplyBulkDiscount(25)">-25%</button>
+                <button type="button" class="btn btn-outline btn-xs" onclick="setAndApplyBulkDiscount(30)">-30%</button>
+              </div>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 0.6rem;">
+              <button type="button" class="btn btn-outline btn-sm" onclick="resetMatrixToStorePrices()" style="color: var(--text-muted);">
+                ↺ Clear All (Store Defaults)
+              </button>
+            </div>
+          </div>
+
+          <!-- Product / Game Filter & Plan Search Bar -->
+          <div style="display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; align-items: center;">
+            <div style="flex: 1; min-width: 220px;">
+              <select id="rp-matrix-product-filter" class="form-select" onchange="filterMatrixRows()" style="padding: 0.5rem 0.8rem; font-size: 0.85rem;">
+                <option value="all">🎮 All Products / Games</option>
+              </select>
+            </div>
+            <div style="flex: 2; min-width: 240px;">
+              <input type="text" id="rp-matrix-search" class="form-input" placeholder="🔍 Search plan name or product..." oninput="filterMatrixRows()" style="padding: 0.5rem 0.8rem; font-size: 0.85rem;">
+            </div>
+            <div id="rp-matrix-counter" style="color: var(--text-dim); font-size: 0.85rem; font-weight: 600;">
+              Showing all plans
+            </div>
+          </div>
+
+          <!-- Matrix Table -->
+          <div class="table-responsive" style="border: 1px solid rgba(255,255,255,0.08); border-radius: 8px;">
+            <table class="table-custom">
+              <thead>
+                <tr>
+                  <th style="min-width: 180px;">Product / Game</th>
+                  <th style="min-width: 140px;">Plan & Duration</th>
+                  <th style="min-width: 120px; text-align: right;">Standard Store Price</th>
+                  <th style="min-width: 170px;">Reseller Custom Price ($ USD)</th>
+                  <th style="min-width: 140px; text-align: center;">Price Impact / Discount</th>
+                  <th style="min-width: 110px; text-align: center;">Status</th>
+                  <th style="min-width: 140px; text-align: center;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="rp-matrix-tbody">
+                <tr><td colspan="7" style="text-align: center; padding: 2rem;">Loading plans matrix...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 3. STOREWIDE OVERRIDES OVERVIEW CARD -->
+        <div class="card" style="background: rgba(13, 18, 30, 0.95); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: var(--radius-lg); padding: 1.5rem; box-shadow: 0 10px 30px rgba(0,0,0,0.4);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+              <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.25rem;">
+                <span style="font-size: 1.3rem;">📋</span>
+                <h3 style="margin: 0; color: #fff; font-size: 1.15rem; font-weight: 700;">
+                  ALL ACTIVE CUSTOM OVERRIDES STOREWIDE
+                </h3>
+                <span id="rp-overview-count-badge" class="badge" style="background: rgba(56, 189, 248, 0.15); border: 1px solid #38bdf8; color: #38bdf8; font-size: 0.8rem; font-weight: 700;">
+                  0 Active Overrides
+                </span>
+              </div>
+              <p style="margin: 0; font-size: 0.85rem; color: var(--text-dim);">
+                Bird's-eye view of all custom overrides currently configured across all resellers.
+              </p>
+            </div>
+            <div>
+              <input type="text" id="rp-overview-search" class="form-input" placeholder="🔍 Filter by reseller or product..." oninput="filterOverviewTable(this.value)" style="padding: 0.5rem 0.8rem; font-size: 0.85rem; min-width: 250px;">
+            </div>
+          </div>
+
+          <div class="table-responsive" style="border: 1px solid rgba(255,255,255,0.08); border-radius: 8px;">
+            <table class="table-custom">
+              <thead>
+                <tr>
+                  <th>Reseller Account</th>
+                  <th>Product / Game</th>
+                  <th>Plan</th>
+                  <th style="text-align: right;">Normal Price</th>
+                  <th style="text-align: right;">Custom Reseller Price</th>
+                  <th style="text-align: center;">Discount / Margin</th>
+                  <th style="text-align: center;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="admin-reseller-prices-tbody">
+                <tr><td colspan="7" style="text-align: center; padding: 2rem;">Loading custom prices...</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
 
@@ -3021,6 +3203,83 @@ X-API-Key: wx_live_YOUR_KEY</pre>
             Generate Redeem Code 💾
           </button>
           <button type="button" class="btn btn-outline btn-lg" onclick="closeModal('modal-redeem-code')" style="flex: 1;">
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Quick Add Custom Reseller Price Override -->
+  <div id="modal-add-reseller-price" class="modal-backdrop">
+    <div class="modal-box" style="max-width: 580px; width: 95%;">
+      <button class="modal-close" onclick="closeModal('modal-add-reseller-price')">✕</button>
+      <h3 style="color: #fff; margin-bottom: 0.35rem; display: flex; align-items: center; gap: 0.5rem;">
+        <span>🏷️</span>
+        <span>Set Reseller Custom Price</span>
+      </h3>
+      <p style="color: var(--text-dim); font-size: 0.85rem; margin-bottom: 1.25rem;">
+        Assign a dedicated custom rate for a specific reseller on any product plan.
+      </p>
+
+      <form id="form-add-reseller-price" onsubmit="event.preventDefault(); submitAddResellerPriceModal(event);">
+        <!-- Reseller Select -->
+        <div class="form-group" style="margin-bottom: 1.1rem;">
+          <label class="form-label" for="arp-reseller-select">SELECT RESELLER *</label>
+          <select id="arp-reseller-select" class="form-select" required onchange="onModalResellerChange()">
+            <option value="">-- Choose Reseller --</option>
+          </select>
+        </div>
+
+        <!-- Product Select -->
+        <div class="form-group" style="margin-bottom: 1.1rem;">
+          <label class="form-label" for="arp-product-select">PRODUCT / GAME *</label>
+          <select id="arp-product-select" class="form-select" required onchange="onModalProductChange()">
+            <option value="">-- Choose Product --</option>
+          </select>
+        </div>
+
+        <!-- Plan Select -->
+        <div class="form-group" style="margin-bottom: 1.1rem;">
+          <label class="form-label" for="arp-plan-select">TARGET PLAN *</label>
+          <select id="arp-plan-select" class="form-select" required onchange="onModalPlanChange()">
+            <option value="">-- Choose Plan --</option>
+          </select>
+        </div>
+
+        <!-- Normal Price Reference Display -->
+        <div style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 1.1rem; display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 0.85rem; color: var(--text-dim);">Standard Store Price:</span>
+          <strong id="arp-normal-price-display" style="font-size: 1.05rem; color: #fff;">$0.00</strong>
+        </div>
+
+        <!-- Custom Price USD Input -->
+        <div class="form-group" style="margin-bottom: 0.75rem;">
+          <label class="form-label" for="arp-custom-price">CUSTOM RESELLER PRICE ($ USD) *</label>
+          <input type="number" id="arp-custom-price" class="form-input" step="0.01" min="0" placeholder="e.g. 12.00" required oninput="updateModalDiscountPreview()" style="font-size: 1.1rem; font-weight: 700; color: #38bdf8;">
+        </div>
+
+        <!-- Quick Discount Percentage Buttons -->
+        <div style="display: flex; gap: 0.4rem; margin-bottom: 1.25rem; align-items: center; flex-wrap: wrap;">
+          <span style="font-size: 0.75rem; color: var(--text-dim); margin-right: 0.2rem;">Quick %:</span>
+          <button type="button" class="btn btn-outline btn-xs" onclick="setModalPricePercent(10)">-10%</button>
+          <button type="button" class="btn btn-outline btn-xs" onclick="setModalPricePercent(15)">-15%</button>
+          <button type="button" class="btn btn-outline btn-xs" onclick="setModalPricePercent(20)">-20%</button>
+          <button type="button" class="btn btn-outline btn-xs" onclick="setModalPricePercent(25)">-25%</button>
+          <button type="button" class="btn btn-outline btn-xs" onclick="setModalPricePercent(30)">-30%</button>
+          <button type="button" class="btn btn-outline btn-xs" onclick="setModalPricePercent(50)">-50%</button>
+        </div>
+
+        <!-- Live Impact Preview -->
+        <div id="arp-impact-preview" style="display: none; padding: 0.6rem 0.9rem; border-radius: 6px; margin-bottom: 1.25rem; font-size: 0.85rem; font-weight: 600;">
+        </div>
+
+        <!-- Modal Action Buttons -->
+        <div style="display: flex; gap: 1rem; align-items: center;">
+          <button type="submit" id="btn-save-arp" class="btn btn-primary btn-block btn-lg btn-glow" style="flex: 2;">
+            Save Custom Reseller Price 💾
+          </button>
+          <button type="button" class="btn btn-outline btn-lg" onclick="closeModal('modal-add-reseller-price')" style="flex: 1;">
             Cancel
           </button>
         </div>
@@ -6138,70 +6397,816 @@ X-API-Key: wx_live_YOUR_KEY</pre>
     }
 
     /* ==============================================================
-       8. RESELLER PRICES
+       8. RESELLER PRICES & PLAN MATRIX ENGINE
        ============================================================== */
+    let allResellersList = [];
+    let allPlansCatalog = [];
+    let currentSelectedResellerId = null;
+    let currentMatrixPlans = [];
+    let allActiveOverridesList = [];
+
     async function loadAdminResellerPrices() {
       const tbody = document.getElementById('admin-reseller-prices-tbody');
       try {
         const res = await fetch('/api/admin/reseller-prices', { credentials: "include" });
         const data = await res.json();
 
-        if (!data.reseller_prices || data.reseller_prices.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 2rem;">No custom override prices set.</td></tr>`;
-          return;
+        allResellersList = data.resellers || [];
+        allPlansCatalog = data.plans || [];
+        allActiveOverridesList = data.reseller_prices || [];
+
+        // 1. Render Reseller Dropdown in Step 1
+        renderResellerDropdown(currentSelectedResellerId);
+
+        // 2. Render Modal Reseller & Product Dropdowns
+        populateModalResellersAndProducts();
+
+        // 3. Render Overview Table
+        renderResellerOverridesOverview(allActiveOverridesList);
+
+        // 4. Update Overview Badge
+        const badge = document.getElementById('rp-overview-count-badge');
+        if (badge) {
+          badge.textContent = `${allActiveOverridesList.length} Active Override${allActiveOverridesList.length === 1 ? '' : 's'}`;
         }
 
-        tbody.innerHTML = data.reseller_prices.map(rp => `
-          <tr>
-            <td>${escapeHtml(rp.user_name)} (${escapeHtml(rp.user_email)})</td>
-            <td>${escapeHtml(rp.product_name)}</td>
-            <td>${escapeHtml(rp.plan_name)}</td>
-            <td>$${parseFloat(rp.normal_price_usd).toFixed(2)}</td>
-            <td><strong style="color:var(--primary);">$${parseFloat(rp.custom_price_usd).toFixed(2)}</strong></td>
-            <td>
-              <button class="btn btn-outline btn-sm" onclick="deleteResellerPrice(${rp.id})" style="color:var(--danger)">Remove</button>
-            </td>
-          </tr>
-        `).join('');
+        // 5. If a reseller is currently selected, refresh their matrix silently
+        if (currentSelectedResellerId) {
+          onResellerSelect(currentSelectedResellerId, true);
+        }
       } catch (err) {
-        tbody.innerHTML = `<tr><td colspan="6" style="color:var(--danger); text-align:center;">Failed to load reseller prices.</td></tr>`;
+        console.error('loadAdminResellerPrices error:', err);
+        if (tbody) {
+          tbody.innerHTML = `<tr><td colspan="7" style="color:var(--danger); text-align:center; padding: 2rem;">Failed to load reseller pricing data.</td></tr>`;
+        }
       }
     }
 
-    async function openAddResellerPriceModal() {
-      const email = prompt('Enter reseller user email address:');
-      if (!email) return;
+    function renderResellerDropdown(selectedId = null, filterText = '') {
+      const select = document.getElementById('rp-reseller-select');
+      if (!select) return;
 
-      // Find user
-      const uRes = await fetch(`/api/admin/users?search=${encodeURIComponent(email)}`, { credentials: "include" });
-      const uData = await uRes.json();
-      const user = (uData.users || []).find(u => u.email.toLowerCase() === email.toLowerCase());
-      if (!user) {
-        showToast('Reseller user not found.', 'error');
+      const normFilter = (filterText || '').toLowerCase().trim();
+      let filtered = allResellersList;
+      if (normFilter) {
+        filtered = allResellersList.filter(r => 
+          (r.name && r.name.toLowerCase().includes(normFilter)) ||
+          (r.email && r.email.toLowerCase().includes(normFilter))
+        );
+      }
+
+      const resellers = filtered.filter(u => u.user_type === 'reseller');
+      const others = filtered.filter(u => u.user_type !== 'reseller');
+
+      // Count overrides per user
+      const overrideCounts = {};
+      allActiveOverridesList.forEach(rp => {
+        overrideCounts[rp.user_id] = (overrideCounts[rp.user_id] || 0) + 1;
+      });
+
+      let html = `<option value="">-- Choose a Reseller to View & Customize Pricing --</option>`;
+
+      if (resellers.length > 0) {
+        html += `<optgroup label="👑 Resellers (${resellers.length})">`;
+        resellers.forEach(r => {
+          const count = overrideCounts[r.id] || 0;
+          const overrideTag = count > 0 ? ` [${count} Overrides Active]` : '';
+          const isSelected = selectedId && String(r.id) === String(selectedId) ? 'selected' : '';
+          html += `<option value="${r.id}" ${isSelected}>${escapeHtml(r.name)} (${escapeHtml(r.email)}) - Balance: $${parseFloat(r.wallet_balance || 0).toFixed(2)}${overrideTag}</option>`;
+        });
+        html += `</optgroup>`;
+      }
+
+      if (others.length > 0) {
+        html += `<optgroup label="👥 Other Accounts (${others.length})">`;
+        others.forEach(r => {
+          const count = overrideCounts[r.id] || 0;
+          const overrideTag = count > 0 ? ` [${count} Overrides Active]` : '';
+          const isSelected = selectedId && String(r.id) === String(selectedId) ? 'selected' : '';
+          html += `<option value="${r.id}" ${isSelected}>${escapeHtml(r.name)} (${escapeHtml(r.email)}) - Balance: $${parseFloat(r.wallet_balance || 0).toFixed(2)}${overrideTag}</option>`;
+        });
+        html += `</optgroup>`;
+      }
+
+      select.innerHTML = html;
+      if (selectedId) select.value = selectedId;
+    }
+
+    function filterResellerOptions(filterText) {
+      renderResellerDropdown(currentSelectedResellerId, filterText);
+    }
+
+    async function onResellerSelect(userId, isSilentRefresh = false) {
+      currentSelectedResellerId = userId ? String(userId) : null;
+      const banner = document.getElementById('rp-reseller-info-banner');
+      const matrixSec = document.getElementById('rp-matrix-section');
+      const tbody = document.getElementById('rp-matrix-tbody');
+
+      if (!currentSelectedResellerId) {
+        if (banner) banner.style.display = 'none';
+        if (matrixSec) matrixSec.style.display = 'none';
         return;
       }
 
-      const planId = prompt('Enter Plan ID:');
-      if (!planId) return;
+      if (banner) banner.style.display = 'flex';
+      if (matrixSec) matrixSec.style.display = 'block';
 
-      const customPrice = prompt('Enter custom price in USD:');
-      if (!customPrice) return;
+      if (!isSilentRefresh && tbody) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 2rem;"><span class="spinner-border spinner-border-sm"></span> Loading plan matrix for reseller...</td></tr>`;
+      }
 
-      await fetch('/api/admin/reseller-prices', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: user.id, plan_id: parseInt(planId, 10), custom_price_usd: parseFloat(customPrice) })
+      try {
+        const res = await fetch(`/api/admin/reseller-prices?user_id=${encodeURIComponent(currentSelectedResellerId)}`, { credentials: "include" });
+        const data = await res.json();
+
+        if (!data.success) {
+          showToast(data.message || 'Failed to load reseller plans', 'error');
+          return;
+        }
+
+        const user = data.user || {};
+        currentMatrixPlans = data.plans || [];
+
+        // Update Banner Details
+        const nameEl = document.getElementById('rp-banner-name');
+        const emailEl = document.getElementById('rp-banner-email');
+        const avatarEl = document.getElementById('rp-banner-avatar');
+        const typeBadge = document.getElementById('rp-banner-type-badge');
+        const apiBadge = document.getElementById('rp-banner-api-badge');
+        const walletEl = document.getElementById('rp-banner-wallet');
+        const discountEl = document.getElementById('rp-banner-discount');
+        const countEl = document.getElementById('rp-banner-override-count');
+        const headingEl = document.getElementById('rp-matrix-user-heading');
+
+        if (nameEl) nameEl.textContent = user.name || 'Reseller';
+        if (headingEl) headingEl.textContent = (user.name || 'Reseller').toUpperCase();
+        if (emailEl) emailEl.textContent = user.email || '';
+        if (avatarEl) avatarEl.textContent = (user.name || 'R').charAt(0).toUpperCase();
+
+        if (typeBadge) {
+          typeBadge.textContent = user.user_type === 'reseller' ? '👑 Reseller Tier' : '👤 Customer';
+          typeBadge.style.background = user.user_type === 'reseller' ? 'rgba(56, 189, 248, 0.2)' : 'rgba(255, 255, 255, 0.1)';
+        }
+
+        if (apiBadge) {
+          const apiOn = user.api_access_enabled !== false;
+          apiBadge.textContent = apiOn ? '⚡ API Enabled 🟢' : '⚡ API Disabled 🔴';
+          apiBadge.style.color = apiOn ? '#34d399' : '#f87171';
+          apiBadge.style.borderColor = apiOn ? '#34d399' : '#f87171';
+          apiBadge.style.background = apiOn ? 'rgba(52, 211, 153, 0.15)' : 'rgba(239, 68, 68, 0.15)';
+        }
+
+        if (walletEl) walletEl.textContent = `$${parseFloat(user.wallet_balance || 0).toFixed(2)}`;
+        if (discountEl) discountEl.textContent = `${user.reseller_discount || 0}%`;
+
+        const customCount = currentMatrixPlans.filter(p => p.custom_price_usd !== null && p.custom_price_usd !== undefined && p.custom_price_usd !== '').length;
+        if (countEl) {
+          countEl.textContent = `${customCount} Custom Override${customCount === 1 ? '' : 's'}`;
+          countEl.style.background = customCount > 0 ? 'rgba(52, 211, 153, 0.15)' : 'rgba(255, 255, 255, 0.08)';
+          countEl.style.borderColor = customCount > 0 ? '#34d399' : 'rgba(255, 255, 255, 0.2)';
+          countEl.style.color = customCount > 0 ? '#34d399' : 'var(--text-dim)';
+        }
+
+        // Populate Product Filter Dropdown
+        const prodFilter = document.getElementById('rp-matrix-product-filter');
+        if (prodFilter) {
+          const currentVal = prodFilter.value;
+          const uniqueProducts = [];
+          const seen = new Set();
+          currentMatrixPlans.forEach(p => {
+            if (!seen.has(p.product_id)) {
+              seen.add(p.product_id);
+              uniqueProducts.push({ id: p.product_id, name: p.product_name });
+            }
+          });
+
+          let optHtml = `<option value="all">🎮 All Products / Games (${uniqueProducts.length})</option>`;
+          uniqueProducts.forEach(pr => {
+            optHtml += `<option value="${pr.id}">${escapeHtml(pr.name)}</option>`;
+          });
+          prodFilter.innerHTML = optHtml;
+          if (seen.has(parseInt(currentVal, 10))) {
+            prodFilter.value = currentVal;
+          }
+        }
+
+        // Render Matrix Table
+        renderMatrixRows();
+
+        if (!isSilentRefresh) {
+          matrixSec.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      } catch (err) {
+        console.error('onResellerSelect error:', err);
+        if (tbody) {
+          tbody.innerHTML = `<tr><td colspan="7" style="color:var(--danger); text-align: center; padding: 2rem;">Error loading pricing matrix for this reseller.</td></tr>`;
+        }
+      }
+    }
+
+    function renderMatrixRows() {
+      const tbody = document.getElementById('rp-matrix-tbody');
+      const counterEl = document.getElementById('rp-matrix-counter');
+      if (!tbody) return;
+
+      const prodFilterVal = document.getElementById('rp-matrix-product-filter')?.value || 'all';
+      const searchVal = (document.getElementById('rp-matrix-search')?.value || '').toLowerCase().trim();
+
+      const filtered = currentMatrixPlans.filter(p => {
+        if (prodFilterVal !== 'all' && String(p.product_id) !== String(prodFilterVal)) return false;
+        if (searchVal) {
+          const matchName = (p.product_name || '').toLowerCase().includes(searchVal);
+          const matchPlan = (p.plan_name || '').toLowerCase().includes(searchVal);
+          const matchCat = (p.product_category || '').toLowerCase().includes(searchVal);
+          if (!matchName && !matchPlan && !matchCat) return false;
+        }
+        return true;
       });
 
-      showToast('Custom reseller price saved!', 'success');
-      loadAdminResellerPrices();
+      if (counterEl) {
+        counterEl.textContent = `Showing ${filtered.length} of ${currentMatrixPlans.length} plans`;
+      }
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-dim);">No plans match your current filter.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(p => {
+        const hasCustom = p.custom_price_usd !== null && p.custom_price_usd !== undefined && p.custom_price_usd !== '';
+        const normalVal = parseFloat(p.normal_price_usd || 0);
+        const customVal = hasCustom ? parseFloat(p.custom_price_usd) : null;
+        const valStr = customVal !== null ? customVal.toFixed(2) : '';
+
+        const badgeHtml = getPriceDiffBadgeHtml(normalVal, customVal);
+        const statusBadge = hasCustom
+          ? `<span class="badge" style="background: rgba(52, 211, 153, 0.15); border: 1px solid #34d399; color: #34d399; font-weight: 700; font-size: 0.72rem;">Custom 🏷️</span>`
+          : `<span class="badge" style="background: rgba(255, 255, 255, 0.05); color: var(--text-dim); font-size: 0.72rem;">Default ⚪</span>`;
+
+        return `
+          <tr id="rp-row-${p.plan_id}">
+            <td>
+              <div style="font-weight: 700; color: #fff; font-size: 0.95rem;">${escapeHtml(p.product_name)}</div>
+              <div style="font-size: 0.75rem; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.5px;">${escapeHtml(p.product_category || 'Game Cheat')}</div>
+            </td>
+            <td>
+              <div style="font-weight: 600; color: #e2e8f0;">${escapeHtml(p.plan_name)}</div>
+              <div style="font-size: 0.75rem; color: var(--text-dim);">${p.days ? `${p.days} Day${p.days === 1 ? '' : 's'}` : (p.duration_type || 'Access')}</div>
+            </td>
+            <td style="text-align: right; font-weight: 700; color: #94a3b8; font-size: 0.95rem;">
+              $${normalVal.toFixed(2)}
+            </td>
+            <td>
+              <div style="display: flex; align-items: center; gap: 0.4rem;">
+                <span style="font-weight: 700; color: #38bdf8; font-size: 1rem;">$</span>
+                <input 
+                  type="number" 
+                  step="0.01" 
+                  min="0" 
+                  id="rp-input-${p.plan_id}" 
+                  class="form-input rp-matrix-input" 
+                  data-plan-id="${p.plan_id}" 
+                  data-normal-price="${normalVal}" 
+                  value="${valStr}" 
+                  placeholder="${normalVal.toFixed(2)}" 
+                  oninput="onMatrixInputPriceChange(this)"
+                  style="width: 110px; font-weight: 700; color: #38bdf8; text-align: right; padding: 0.45rem 0.6rem; font-size: 0.95rem;"
+                >
+              </div>
+            </td>
+            <td style="text-align: center;" id="rp-badge-cell-${p.plan_id}">
+              ${badgeHtml}
+            </td>
+            <td style="text-align: center;" id="rp-status-cell-${p.plan_id}">
+              ${statusBadge}
+            </td>
+            <td style="text-align: center;">
+              <div style="display: flex; gap: 0.4rem; justify-content: center; align-items: center;">
+                <button type="button" class="btn btn-primary btn-xs" onclick="saveSingleResellerPrice(${p.plan_id})" style="padding: 4px 10px; font-weight: 700;" title="Save price for this plan">
+                  💾 Save
+                </button>
+                <button type="button" class="btn btn-outline btn-xs" onclick="resetSingleResellerPrice(${p.plan_id})" style="padding: 4px 8px; color: var(--danger); border-color: rgba(239,68,68,0.35);" title="Remove override and reset to default store price">
+                  ↺ Reset
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function filterMatrixRows() {
+      renderMatrixRows();
+    }
+
+    function onMatrixInputPriceChange(inputEl) {
+      const planId = inputEl.dataset.planId;
+      const normalPrice = parseFloat(inputEl.dataset.normalPrice || 0);
+      const valStr = inputEl.value.trim();
+      const customPrice = valStr !== '' && !isNaN(parseFloat(valStr)) ? parseFloat(valStr) : null;
+
+      const badgeCell = document.getElementById(`rp-badge-cell-${planId}`);
+      if (badgeCell) {
+        badgeCell.innerHTML = getPriceDiffBadgeHtml(normalPrice, customPrice);
+      }
+
+      const statusCell = document.getElementById(`rp-status-cell-${planId}`);
+      if (statusCell) {
+        if (customPrice !== null) {
+          statusCell.innerHTML = `<span class="badge" style="background: rgba(56, 189, 248, 0.2); border: 1px solid #38bdf8; color: #38bdf8; font-weight: 700; font-size: 0.72rem;">Pending Save ⚡</span>`;
+        } else {
+          statusCell.innerHTML = `<span class="badge" style="background: rgba(255, 255, 255, 0.05); color: var(--text-dim); font-size: 0.72rem;">Default ⚪</span>`;
+        }
+      }
+    }
+
+    function getPriceDiffBadgeHtml(normalPrice, customPrice) {
+      if (customPrice === null || customPrice === undefined || isNaN(customPrice)) {
+        return `<span class="badge" style="background: rgba(255,255,255,0.06); color: var(--text-dim); font-size: 0.74rem;">Store Default</span>`;
+      }
+
+      if (customPrice < normalPrice) {
+        const diff = normalPrice - customPrice;
+        const pct = normalPrice > 0 ? ((diff / normalPrice) * 100).toFixed(1) : '0';
+        return `<span class="badge" style="background: rgba(52, 211, 153, 0.15); border: 1px solid #34d399; color: #34d399; font-weight: 800; font-size: 0.75rem;">-${pct}% (-$${diff.toFixed(2)})</span>`;
+      }
+
+      if (customPrice > normalPrice) {
+        const diff = customPrice - normalPrice;
+        return `<span class="badge" style="background: rgba(251, 191, 36, 0.15); border: 1px solid #fbbf24; color: #fbbf24; font-weight: 800; font-size: 0.75rem;">+$${diff.toFixed(2)} (Markup)</span>`;
+      }
+
+      return `<span class="badge" style="background: rgba(255,255,255,0.1); color: #fff; font-size: 0.74rem;">= Same as Store</span>`;
+    }
+
+    async function saveSingleResellerPrice(planId) {
+      if (!currentSelectedResellerId) {
+        showToast('Please select a reseller first.', 'error');
+        return;
+      }
+
+      const input = document.getElementById(`rp-input-${planId}`);
+      if (!input) return;
+
+      const valStr = input.value.trim();
+      const customPrice = valStr !== '' ? parseFloat(valStr) : null;
+
+      try {
+        const res = await fetch('/api/admin/reseller-prices', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: currentSelectedResellerId,
+            plan_id: parseInt(planId, 10),
+            custom_price_usd: customPrice
+          })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          showToast(customPrice !== null ? 'Custom plan price saved successfully! 💾' : 'Price override removed (store default restored)', 'success');
+          loadAdminResellerPrices();
+        } else {
+          showToast(data.message || 'Failed to save price', 'error');
+        }
+      } catch (err) {
+        showToast('Error connecting to server', 'error');
+      }
+    }
+
+    async function resetSingleResellerPrice(planId) {
+      if (!currentSelectedResellerId) return;
+      const input = document.getElementById(`rp-input-${planId}`);
+      if (input) input.value = '';
+
+      try {
+        const res = await fetch(`/api/admin/reseller-prices?user_id=${encodeURIComponent(currentSelectedResellerId)}&plan_id=${parseInt(planId, 10)}`, {
+          method: 'DELETE',
+          credentials: 'include'
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('Override removed! Reverted to store default price.', 'info');
+          loadAdminResellerPrices();
+        } else {
+          showToast(data.message || 'Failed to reset price', 'error');
+        }
+      } catch (err) {
+        showToast('Error resetting price', 'error');
+      }
+    }
+
+    async function saveAllResellerPrices() {
+      if (!currentSelectedResellerId) {
+        showToast('Please select a reseller first.', 'error');
+        return;
+      }
+
+      const inputs = document.querySelectorAll('.rp-matrix-input');
+      if (!inputs || inputs.length === 0) {
+        showToast('No plans available to save.', 'warning');
+        return;
+      }
+
+      const batch = [];
+      inputs.forEach(inp => {
+        const planId = parseInt(inp.dataset.planId, 10);
+        const valStr = inp.value.trim();
+        const customPrice = valStr !== '' && !isNaN(parseFloat(valStr)) ? parseFloat(valStr) : null;
+        batch.push({ plan_id: planId, custom_price_usd: customPrice });
+      });
+
+      try {
+        const res = await fetch('/api/admin/reseller-prices', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: currentSelectedResellerId,
+            batch
+          })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          showToast(`All plan prices updated successfully for reseller! ⚡ (${batch.length} plans)`, 'success');
+          loadAdminResellerPrices();
+        } else {
+          showToast(data.message || 'Failed to save batch pricing', 'error');
+        }
+      } catch (err) {
+        showToast('Network error while saving batch pricing', 'error');
+      }
+    }
+
+    function applyBulkDiscount() {
+      const discInput = document.getElementById('rp-bulk-discount-input');
+      const pct = parseFloat(discInput?.value || 0);
+      if (isNaN(pct) || pct <= 0 || pct >= 100) {
+        showToast('Please enter a valid discount percentage between 1% and 99%.', 'warning');
+        return;
+      }
+      setAndApplyBulkDiscount(pct);
+    }
+
+    function setAndApplyBulkDiscount(pct) {
+      const discInput = document.getElementById('rp-bulk-discount-input');
+      if (discInput) discInput.value = pct;
+
+      const inputs = document.querySelectorAll('.rp-matrix-input');
+      if (!inputs || inputs.length === 0) {
+        showToast('No plans to apply discount to.', 'warning');
+        return;
+      }
+
+      inputs.forEach(inp => {
+        const normalPrice = parseFloat(inp.dataset.normalPrice || 0);
+        const newPrice = Math.max(0, parseFloat((normalPrice * (1 - pct / 100)).toFixed(2)));
+        inp.value = newPrice.toFixed(2);
+        onMatrixInputPriceChange(inp);
+      });
+
+      showToast(`Applied ${pct}% discount to all plan inputs. Click "SAVE ALL PLAN PRICING" to commit! 🪄`, 'info');
+    }
+
+    function resetMatrixToStorePrices() {
+      const inputs = document.querySelectorAll('.rp-matrix-input');
+      if (!inputs || inputs.length === 0) return;
+
+      inputs.forEach(inp => {
+        inp.value = '';
+        onMatrixInputPriceChange(inp);
+      });
+
+      showToast('Cleared all inputs. Click "SAVE ALL PLAN PRICING" to remove all overrides and revert to store defaults.', 'warning');
+    }
+
+    async function clearAllResellerOverrides() {
+      if (!currentSelectedResellerId) return;
+
+      if (!confirm('Are you sure you want to remove ALL custom prices for this reseller and revert every single plan to standard store pricing?')) {
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/admin/reseller-prices?user_id=${encodeURIComponent(currentSelectedResellerId)}&all=true`, {
+          method: 'DELETE',
+          credentials: 'include'
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('All custom overrides removed for this reseller.', 'success');
+          loadAdminResellerPrices();
+        } else {
+          showToast(data.message || 'Failed to remove overrides', 'error');
+        }
+      } catch (err) {
+        showToast('Error removing overrides', 'error');
+      }
+    }
+
+    function renderResellerOverridesOverview(overrides) {
+      const tbody = document.getElementById('admin-reseller-prices-tbody');
+      if (!tbody) return;
+
+      if (!overrides || overrides.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 2.5rem; color: var(--text-dim);">No custom override prices set storewide. Select a reseller above to customize plan pricing.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = overrides.map(rp => {
+        const normalVal = parseFloat(rp.normal_price_usd || 0);
+        const customVal = parseFloat(rp.custom_price_usd || 0);
+        const badgeHtml = getPriceDiffBadgeHtml(normalVal, customVal);
+
+        return `
+          <tr>
+            <td>
+              <div style="font-weight: 700; color: #fff;">${escapeHtml(rp.user_name || 'Reseller')}</div>
+              <div style="font-size: 0.78rem; color: #38bdf8;">${escapeHtml(rp.user_email || '')}</div>
+            </td>
+            <td>
+              <strong style="color: #fff;">${escapeHtml(rp.product_name || '-')}</strong>
+              <div style="font-size: 0.72rem; color: var(--text-dim);">${escapeHtml(rp.product_category || '')}</div>
+            </td>
+            <td style="color: #cbd5e1;">${escapeHtml(rp.plan_name || '-')}</td>
+            <td style="text-align: right; color: #94a3b8; font-weight: 600;">$${normalVal.toFixed(2)}</td>
+            <td style="text-align: right;"><strong style="color: #38bdf8; font-size: 1rem;">$${customVal.toFixed(2)}</strong></td>
+            <td style="text-align: center;">${badgeHtml}</td>
+            <td style="text-align: center;">
+              <div style="display: flex; gap: 0.4rem; justify-content: center; align-items: center;">
+                <button class="btn btn-outline btn-xs" onclick="selectResellerFromOverview('${rp.user_id}')" style="color: #38bdf8; border-color: rgba(56, 189, 248, 0.4);" title="Open matrix for this reseller">
+                  ✏️ Edit Matrix
+                </button>
+                <button class="btn btn-outline btn-xs" onclick="deleteResellerPrice(${rp.id})" style="color: var(--danger); border-color: rgba(239, 68, 68, 0.35);" title="Delete override">
+                  🗑️ Remove
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function selectResellerFromOverview(userId) {
+      const select = document.getElementById('rp-reseller-select');
+      if (select) {
+        select.value = userId;
+      }
+      onResellerSelect(userId);
+    }
+
+    function filterOverviewTable(query) {
+      const q = (query || '').toLowerCase().trim();
+      if (!q) {
+        renderResellerOverridesOverview(allActiveOverridesList);
+        return;
+      }
+
+      const filtered = allActiveOverridesList.filter(rp =>
+        (rp.user_name && rp.user_name.toLowerCase().includes(q)) ||
+        (rp.user_email && rp.user_email.toLowerCase().includes(q)) ||
+        (rp.product_name && rp.product_name.toLowerCase().includes(q)) ||
+        (rp.plan_name && rp.plan_name.toLowerCase().includes(q))
+      );
+      renderResellerOverridesOverview(filtered);
     }
 
     async function deleteResellerPrice(id) {
-      if (!confirm('Remove this custom price override?')) return;
-      await fetch(`/api/admin/reseller-prices?id=${id}`, { method: 'DELETE', credentials: 'include' });
-      loadAdminResellerPrices();
+      if (!confirm('Remove this custom price override and restore the standard store price?')) return;
+      try {
+        const res = await fetch(`/api/admin/reseller-prices?id=${id}`, { method: 'DELETE', credentials: 'include' });
+        const data = await res.json();
+        if (data.success) {
+          showToast('Custom price override removed!', 'info');
+          loadAdminResellerPrices();
+        } else {
+          showToast(data.message || 'Failed to delete override', 'error');
+        }
+      } catch (err) {
+        showToast('Error removing override', 'error');
+      }
+    }
+
+    /* Modal Add Reseller Price Helpers */
+    function populateModalResellersAndProducts() {
+      const rSelect = document.getElementById('arp-reseller-select');
+      const pSelect = document.getElementById('arp-product-select');
+
+      if (rSelect) {
+        let rHtml = `<option value="">-- Choose Reseller --</option>`;
+        const resellers = allResellersList.filter(u => u.user_type === 'reseller');
+        const others = allResellersList.filter(u => u.user_type !== 'reseller');
+
+        if (resellers.length > 0) {
+          rHtml += `<optgroup label="👑 Resellers (${resellers.length})">`;
+          resellers.forEach(r => {
+            rHtml += `<option value="${r.id}">${escapeHtml(r.name)} (${escapeHtml(r.email)})</option>`;
+          });
+          rHtml += `</optgroup>`;
+        }
+        if (others.length > 0) {
+          rHtml += `<optgroup label="👥 Other Accounts (${others.length})">`;
+          others.forEach(r => {
+            rHtml += `<option value="${r.id}">${escapeHtml(r.name)} (${escapeHtml(r.email)})</option>`;
+          });
+          rHtml += `</optgroup>`;
+        }
+        rSelect.innerHTML = rHtml;
+      }
+
+      if (pSelect) {
+        const uniqueProducts = [];
+        const seen = new Set();
+        allPlansCatalog.forEach(p => {
+          if (!seen.has(p.product_id)) {
+            seen.add(p.product_id);
+            uniqueProducts.push({ id: p.product_id, name: p.product_name, category: p.product_category });
+          }
+        });
+
+        let pHtml = `<option value="">-- Choose Product / Game --</option>`;
+        uniqueProducts.forEach(pr => {
+          pHtml += `<option value="${pr.id}">${escapeHtml(pr.name)} (${escapeHtml(pr.category || 'Cheat')})</option>`;
+        });
+        pSelect.innerHTML = pHtml;
+      }
+    }
+
+    function openAddResellerPriceModal(presetUserId = null) {
+      populateModalResellersAndProducts();
+
+      const rSelect = document.getElementById('arp-reseller-select');
+      const targetId = presetUserId || currentSelectedResellerId;
+      if (rSelect && targetId) {
+        rSelect.value = targetId;
+      }
+
+      const pSelect = document.getElementById('arp-product-select');
+      if (pSelect) pSelect.value = '';
+
+      const planSelect = document.getElementById('arp-plan-select');
+      if (planSelect) planSelect.innerHTML = `<option value="">-- Choose Product First --</option>`;
+
+      const priceDisplay = document.getElementById('arp-normal-price-display');
+      if (priceDisplay) priceDisplay.textContent = '$0.00';
+
+      const customInput = document.getElementById('arp-custom-price');
+      if (customInput) customInput.value = '';
+
+      const impactPreview = document.getElementById('arp-impact-preview');
+      if (impactPreview) impactPreview.style.display = 'none';
+
+      openModal('modal-add-reseller-price');
+    }
+
+    function onModalResellerChange() {
+      // noop
+    }
+
+    function onModalProductChange() {
+      const pSelect = document.getElementById('arp-product-select');
+      const planSelect = document.getElementById('arp-plan-select');
+      if (!pSelect || !planSelect) return;
+
+      const pId = parseInt(pSelect.value, 10);
+      if (!pId) {
+        planSelect.innerHTML = `<option value="">-- Choose Product First --</option>`;
+        return;
+      }
+
+      const matchingPlans = allPlansCatalog.filter(p => p.product_id === pId);
+      if (matchingPlans.length === 0) {
+        planSelect.innerHTML = `<option value="">No plans found for this product</option>`;
+        return;
+      }
+
+      let plHtml = `<option value="">-- Choose Plan --</option>`;
+      matchingPlans.forEach(pl => {
+        plHtml += `<option value="${pl.plan_id}" data-normal-price="${pl.normal_price_usd}">${escapeHtml(pl.plan_name)} (${pl.days ? `${pl.days} Days` : 'Access'}) - $${parseFloat(pl.normal_price_usd).toFixed(2)}</option>`;
+      });
+      planSelect.innerHTML = plHtml;
+      onModalPlanChange();
+    }
+
+    function onModalPlanChange() {
+      const planSelect = document.getElementById('arp-plan-select');
+      const priceDisplay = document.getElementById('arp-normal-price-display');
+      if (!planSelect || !priceDisplay) return;
+
+      const selectedOpt = planSelect.options[planSelect.selectedIndex];
+      const normalPrice = selectedOpt ? parseFloat(selectedOpt.dataset.normalPrice || 0) : 0;
+      priceDisplay.textContent = `$${normalPrice.toFixed(2)}`;
+
+      updateModalDiscountPreview();
+    }
+
+    function setModalPricePercent(pct) {
+      const planSelect = document.getElementById('arp-plan-select');
+      const customInput = document.getElementById('arp-custom-price');
+      if (!planSelect || !customInput) return;
+
+      const selectedOpt = planSelect.options[planSelect.selectedIndex];
+      const normalPrice = selectedOpt ? parseFloat(selectedOpt.dataset.normalPrice || 0) : 0;
+      if (normalPrice <= 0) {
+        showToast('Please select a product plan first.', 'warning');
+        return;
+      }
+
+      const discounted = Math.max(0, parseFloat((normalPrice * (1 - pct / 100)).toFixed(2)));
+      customInput.value = discounted.toFixed(2);
+      updateModalDiscountPreview();
+    }
+
+    function updateModalDiscountPreview() {
+      const planSelect = document.getElementById('arp-plan-select');
+      const customInput = document.getElementById('arp-custom-price');
+      const previewEl = document.getElementById('arp-impact-preview');
+      if (!planSelect || !customInput || !previewEl) return;
+
+      const selectedOpt = planSelect.options[planSelect.selectedIndex];
+      const normalPrice = selectedOpt ? parseFloat(selectedOpt.dataset.normalPrice || 0) : 0;
+      const customPriceStr = customInput.value.trim();
+
+      if (!customPriceStr || isNaN(parseFloat(customPriceStr))) {
+        previewEl.style.display = 'none';
+        return;
+      }
+
+      const customPrice = parseFloat(customPriceStr);
+      previewEl.style.display = 'block';
+
+      if (customPrice < normalPrice) {
+        const diff = normalPrice - customPrice;
+        const pct = normalPrice > 0 ? ((diff / normalPrice) * 100).toFixed(1) : 0;
+        previewEl.style.background = 'rgba(52, 211, 153, 0.15)';
+        previewEl.style.border = '1px solid #34d399';
+        previewEl.style.color = '#34d399';
+        previewEl.innerHTML = `🟢 Reseller Discount: <strong>${pct}% OFF</strong> (Reseller saves $${diff.toFixed(2)} per key)`;
+      } else if (customPrice > normalPrice) {
+        const diff = customPrice - normalPrice;
+        previewEl.style.background = 'rgba(251, 191, 36, 0.15)';
+        previewEl.style.border = '1px solid #fbbf24';
+        previewEl.style.color = '#fbbf24';
+        previewEl.innerHTML = `🟡 Markup Price: <strong>+$${diff.toFixed(2)} higher</strong> than standard store price`;
+      } else {
+        previewEl.style.background = 'rgba(255, 255, 255, 0.08)';
+        previewEl.style.border = '1px solid rgba(255, 255, 255, 0.2)';
+        previewEl.style.color = '#fff';
+        previewEl.innerHTML = `⚪ Equal to standard store price ($${normalPrice.toFixed(2)})`;
+      }
+    }
+
+    async function submitAddResellerPriceModal(event) {
+      if (event) event.preventDefault();
+
+      const userId = document.getElementById('arp-reseller-select')?.value;
+      const planId = document.getElementById('arp-plan-select')?.value;
+      const customPrice = document.getElementById('arp-custom-price')?.value;
+
+      if (!userId) {
+        showToast('Please select a reseller account.', 'error');
+        return;
+      }
+      if (!planId) {
+        showToast('Please select a product plan.', 'error');
+        return;
+      }
+      if (customPrice === '' || isNaN(parseFloat(customPrice)) || parseFloat(customPrice) < 0) {
+        showToast('Please enter a valid price amount.', 'error');
+        return;
+      }
+
+      const btn = document.getElementById('btn-save-arp');
+      if (btn) btn.disabled = true;
+
+      try {
+        const res = await fetch('/api/admin/reseller-prices', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: userId,
+            plan_id: parseInt(planId, 10),
+            custom_price_usd: parseFloat(customPrice)
+          })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          showToast('Custom reseller price saved successfully! 🏷️', 'success');
+          closeModal('modal-add-reseller-price');
+          currentSelectedResellerId = userId;
+          loadAdminResellerPrices();
+        } else {
+          showToast(data.message || 'Failed to save custom price', 'error');
+        }
+      } catch (err) {
+        showToast('Error saving custom price', 'error');
+      } finally {
+        if (btn) btn.disabled = false;
+      }
     }
 
     /* ==============================================================
