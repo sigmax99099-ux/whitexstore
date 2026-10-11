@@ -201,7 +201,17 @@ async function attemptDelivery(client, order, mapping, deliveryId) {
     let expiresAt = null;
     let supplierResult = null;
 
-    if (mapping.supplierApiType === 'keylicense' || (mapping.supplierApiUrl && mapping.supplierApiUrl.includes('keylicense'))) {
+    const isKeyLicense = mapping.supplierApiType === 'keylicense'
+      || (mapping.supplierApiUrl && mapping.supplierApiUrl.includes('keylicense'))
+      || (mapping.supplierProductName && mapping.supplierProductName.toLowerCase().includes('keylicense'));
+
+    const isAuthZen = mapping.supplierApiType === 'authzen'
+      || (mapping.supplierApiUrl && mapping.supplierApiUrl.includes('authzen'))
+      || (mapping.supplierApiKey && mapping.supplierApiKey.startsWith('sk_'))
+      || (mapping.supplierProductName && mapping.supplierProductName.toLowerCase().includes('authzen'))
+      || (!isKeyLicense && (supProdId > 0 || /^\d+$/.test(String(mapping.variantId || '').trim())));
+
+    if (isKeyLicense && !isAuthZen) {
       console.log(`[Delivery] Using KeyLicense API for Order #${order.id}, variant: ${mapping.variantId}`);
       const klRes = await callSupplierForKey(mapping.variantId, order.plan_id, {
         apiUrl: mapping.supplierApiUrl,
@@ -221,20 +231,45 @@ async function attemptDelivery(client, order, mapping, deliveryId) {
       unitPrice = parseFloat(mapping.supplierPlanPrice || 0);
       totalCost = unitPrice * supCount;
     } else {
-      // AuthZen or default supplier
+      // AuthZen supplier
+      console.log(`[Delivery] Using AuthZen API for Order #${order.id}: Product ${supProdId}, Days ${supDays}`);
       const customConfig = {};
       if (mapping.supplierApiUrl) customConfig.baseUrl = mapping.supplierApiUrl;
       if (mapping.supplierApiKey) customConfig.apiKey = mapping.supplierApiKey;
 
+      let targetAuthzenProd = supProdId;
+      let targetAuthzenDays = supDays;
+
+      if ((!targetAuthzenProd || targetAuthzenProd <= 0) && mapping.variantId) {
+        const vId = String(mapping.variantId).trim();
+        const knownPlans = {
+          '226': { productId: 46, days: 1 },
+          '228': { productId: 46, days: 7 },
+          '229': { productId: 46, days: 15 },
+          '230': { productId: 46, days: 30 },
+          '263': { productId: 55, days: 1 },
+          '264': { productId: 55, days: 7 },
+          '265': { productId: 55, days: 30 }
+        };
+        if (knownPlans[vId]) {
+          targetAuthzenProd = knownPlans[vId].productId;
+          targetAuthzenDays = knownPlans[vId].days;
+        }
+      }
+
+      if (!targetAuthzenDays || targetAuthzenDays <= 0) {
+        targetAuthzenDays = parseInt(order.days, 10) || 1;
+      }
+
       supplierResult = await createLicenses({
-        productId: supProdId,
-        days: supDays,
+        productId: targetAuthzenProd,
+        days: targetAuthzenDays,
         count: supCount,
         note
       }, customConfig);
       keys = supplierResult.keys;
-      unitPrice = supplierResult.unitPrice;
-      totalCost = supplierResult.totalCost;
+      unitPrice = supplierResult.unitPrice || 0;
+      totalCost = supplierResult.totalCost || 0;
       balanceLeft = supplierResult.balanceLeft;
       expiresAt = supplierResult.expiresAt;
     }
@@ -264,15 +299,19 @@ async function attemptDelivery(client, order, mapping, deliveryId) {
     
     // 7. Store keys in license_keys table for customer access
     for (const key of keys) {
-      await client.query(
-        `INSERT INTO license_keys (product_id, key_code, duration_type, days, status, assigned_order_id, assigned_user_id)
-         VALUES ($1, $2, 'days', $3, 'sold', $4, $5)
-         ON CONFLICT (key_code) DO UPDATE SET
-           status = 'sold',
-           assigned_order_id = EXCLUDED.assigned_order_id,
-           assigned_user_id = EXCLUDED.assigned_user_id`,
-        [order.product_id, key, supDays, order.id, order.user_id]
-      );
+      try {
+        await client.query(
+          `INSERT INTO license_keys (product_id, key_code, duration_type, days, status, assigned_order_id, assigned_user_id)
+           VALUES ($1, $2, 'days', $3, 'sold', $4, $5)
+           ON CONFLICT (key_code) DO UPDATE SET
+             status = 'sold',
+             assigned_order_id = EXCLUDED.assigned_order_id,
+             assigned_user_id = EXCLUDED.assigned_user_id`,
+          [order.product_id, key, supDays, order.id, order.user_id]
+        );
+      } catch (lkErr) {
+        console.warn('[Delivery] Notice inserting key into license_keys:', lkErr.message);
+      }
     }
     
     // 8. Mark order as approved
