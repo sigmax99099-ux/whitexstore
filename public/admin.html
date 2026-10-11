@@ -7515,20 +7515,63 @@
       }
     }
 
-    function handleSlideFilePick(event) {
+    function compressDataUrl(dataUrl, maxWidth = 1400, maxHeight = 500, quality = 0.82) {
+      return new Promise((resolve) => {
+        if (!dataUrl || !dataUrl.startsWith('data:image/') || dataUrl.length < 200000) {
+          return resolve(dataUrl);
+        }
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let w = img.width;
+          let h = img.height;
+          if (w > maxWidth || h > maxHeight) {
+            if (w > h) {
+              h = Math.round((h * maxWidth) / w);
+              w = maxWidth;
+            } else {
+              w = Math.round((w * maxHeight) / h);
+              h = maxHeight;
+            }
+          }
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = () => resolve(dataUrl);
+        img.src = dataUrl;
+      });
+    }
+
+    async function handleSlideFilePick(event) {
       const file = event.target.files && event.target.files[0];
       if (!file) return;
 
-      const reader = new FileReader();
-      reader.onload = function(e) {
+      try {
+        showToast('Compressing image for lightning-fast loading...', 'info');
+        const compressed = await compressImageFile(file, 1400, 500, 0.82);
         const bgInput = document.getElementById('slide-bg-image');
         if (bgInput) {
-          bgInput.value = e.target.result;
+          bgInput.value = compressed || '';
           updateSlideModalPreview();
-          showToast('Image loaded into banner slide preview!', 'success');
+          const approxKb = Math.round(((compressed || '').length * 3) / 4 / 1024);
+          showToast(`Image loaded & compressed (~${approxKb} KB)! ⚡`, 'success');
         }
-      };
-      reader.readAsDataURL(file);
+      } catch (err) {
+        console.warn('File pick compression fallback:', err);
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const bgInput = document.getElementById('slide-bg-image');
+          if (bgInput) {
+            bgInput.value = e.target.result;
+            updateSlideModalPreview();
+            showToast('Image loaded into banner slide preview!', 'success');
+          }
+        };
+        reader.readAsDataURL(file);
+      }
     }
 
     async function handleSaveSlideModal(e) {
@@ -7539,11 +7582,21 @@
       const badge = document.getElementById('slide-badge')?.value.trim() || '';
       const image_fit = document.getElementById('slide-image-fit')?.value || 'cover';
       const desc = document.getElementById('slide-desc')?.value.trim() || '';
-      const bg_image = document.getElementById('slide-bg-image')?.value.trim() || '/assets/images/store-hero-clean.png';
+      let bg_image = document.getElementById('slide-bg-image')?.value.trim() || '/assets/images/store-hero-clean.png';
       const show_buy = document.getElementById('slide-show-buy')?.checked !== false;
       const buy_text = document.getElementById('slide-buy-text')?.value.trim() || 'ORDER VIP ACCESS';
       const buy_url = document.getElementById('slide-buy-url')?.value.trim() || '/products.html';
       const active = document.getElementById('slide-active')?.checked !== false;
+
+      // Auto-compress if base64 image exceeds 200KB
+      if (bg_image.startsWith('data:image/') && bg_image.length > 200000) {
+        try {
+          showToast('Optimizing slide artwork before saving...', 'info');
+          bg_image = await compressDataUrl(bg_image, 1400, 500, 0.82);
+        } catch (compErr) {
+          console.warn('Canvas compression fallback:', compErr);
+        }
+      }
 
       const slideObj = {
         id: editId || ('slide_' + Date.now()),
@@ -7559,21 +7612,52 @@
         active
       };
 
-      if (!adminHeroConfig.slides) adminHeroConfig.slides = [];
+      try {
+        // Send atomic single-slide save request (~80KB or less)
+        const res = await fetch('/api/admin/banners', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'save_slide', slide: slideObj })
+        });
 
-      if (editId) {
-        const idx = adminHeroConfig.slides.findIndex(s => s.id === editId || String(s.id) === String(editId));
-        if (idx !== -1) {
-          adminHeroConfig.slides[idx] = slideObj;
-        } else {
-          adminHeroConfig.slides.push(slideObj);
+        const text = await res.text();
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch (pErr) {
+          if (res.status === 413 || text.includes('Request Entity Too Large')) {
+            throw new Error('Image size exceeds server limits. Please use a compressed image or image URL.');
+          }
+          throw new Error(text.slice(0, 100) || `Server returned HTTP ${res.status}`);
         }
-      } else {
-        adminHeroConfig.slides.push(slideObj);
-      }
 
-      closeModal('modal-banner-slide');
-      await saveHeroBannersToServer(`Slide "${title || 'Graphic Slide'}" saved successfully! 💾`);
+        if (!res.ok || !data.success) {
+          showToast(data.message || 'Failed to save banner slide', 'error');
+          return;
+        }
+
+        // Update local state
+        if (!adminHeroConfig.slides) adminHeroConfig.slides = [];
+        if (data.banners && Array.isArray(data.banners.slides)) {
+          adminHeroConfig.slides = data.banners.slides;
+        } else {
+          const idx = adminHeroConfig.slides.findIndex(s => s.id === slideObj.id || String(s.id) === String(slideObj.id));
+          if (idx !== -1) {
+            adminHeroConfig.slides[idx] = slideObj;
+          } else {
+            adminHeroConfig.slides.push(slideObj);
+          }
+        }
+
+        closeModal('modal-banner-slide');
+        showToast(data.message || `Slide "${title || 'Graphic Slide'}" saved successfully! 💾`, 'success');
+        renderAdminSlidesTable();
+        renderAdminLivePreview();
+      } catch (err) {
+        console.error('Error saving slide:', err);
+        showToast('Error saving slide: ' + err.message, 'error');
+      }
     }
 
     async function handleSaveGlobalBanners(e) {
@@ -7595,11 +7679,57 @@
       adminHeroConfig.interval = interval;
       adminSiteNotice = site_notice;
 
-      await saveHeroBannersToServer('Global banner board settings saved & synced! 🚀');
+      try {
+        // Send lightweight settings-only payload (~200 bytes)
+        const res = await fetch('/api/admin/banners', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'settings',
+            settings: {
+              enabled,
+              height,
+              mobile_height,
+              fit,
+              autoplay,
+              interval
+            },
+            site_notice
+          })
+        });
+
+        const text = await res.text();
+        let data;
+        try { data = JSON.parse(text); } catch (e) { throw new Error(text.slice(0, 100)); }
+
+        if (!res.ok || !data.success) {
+          showToast(data.message || 'Failed to save global banner settings', 'error');
+          return;
+        }
+
+        showToast('Global banner board settings saved & synced! 🚀', 'success');
+        renderAdminSlidesTable();
+        renderAdminLivePreview();
+      } catch (err) {
+        console.error('Error saving banner settings:', err);
+        showToast('Error saving banner settings: ' + err.message, 'error');
+      }
     }
 
     async function saveHeroBannersToServer(customSuccessMsg) {
       try {
+        // Automatically compress any oversized base64 slides before sending full payload
+        if (adminHeroConfig && Array.isArray(adminHeroConfig.slides)) {
+          for (const s of adminHeroConfig.slides) {
+            if (s.bg_image && s.bg_image.startsWith('data:image/') && s.bg_image.length > 200000) {
+              try {
+                s.bg_image = await compressDataUrl(s.bg_image, 1400, 500, 0.82);
+              } catch (e) {}
+            }
+          }
+        }
+
         const res = await fetch('/api/admin/banners', {
           method: 'POST',
           credentials: 'include',
@@ -7610,10 +7740,24 @@
           })
         });
 
-        const data = await res.json();
+        const text = await res.text();
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch (e) {
+          if (res.status === 413 || text.includes('Request Entity Too Large')) {
+            throw new Error('Image files are too large for server. Please use compressed images or URLs.');
+          }
+          throw new Error(text.slice(0, 100) || `Server returned HTTP ${res.status}`);
+        }
+
         if (!res.ok || !data.success) {
           showToast(data.message || 'Failed to save hero banners configuration', 'error');
           return;
+        }
+
+        if (data.banners && Array.isArray(data.banners.slides)) {
+          adminHeroConfig.slides = data.banners.slides;
         }
 
         showToast(customSuccessMsg || 'Banner changes saved successfully! 💾', 'success');
@@ -7628,8 +7772,38 @@
     async function toggleSlideActive(idx) {
       if (!adminHeroConfig.slides || !adminHeroConfig.slides[idx]) return;
       const slide = adminHeroConfig.slides[idx];
-      slide.active = slide.active === false ? true : false;
-      await saveHeroBannersToServer(`Slide status updated to ${slide.active ? 'Active ✓' : 'Hidden ✕'}.`);
+      const targetState = slide.active === false ? true : false;
+
+      try {
+        // Send lightweight toggle request (~35 bytes payload)
+        const res = await fetch('/api/admin/banners', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'toggle', id: slide.id })
+        });
+
+        const text = await res.text();
+        let data;
+        try { data = JSON.parse(text); } catch (e) { throw new Error(text.slice(0, 100)); }
+
+        if (!res.ok || !data.success) {
+          showToast(data.message || 'Failed to update slide status', 'error');
+          return;
+        }
+
+        slide.active = targetState;
+        if (data.banners && Array.isArray(data.banners.slides)) {
+          adminHeroConfig.slides = data.banners.slides;
+        }
+
+        showToast(`Slide status updated to ${slide.active ? 'Active ✓' : 'Hidden ✕'}.`, 'success');
+        renderAdminSlidesTable();
+        renderAdminLivePreview();
+      } catch (err) {
+        console.error('Error toggling slide:', err);
+        showToast('Error toggling slide: ' + err.message, 'error');
+      }
     }
 
     async function moveSlide(idx, delta) {
@@ -7641,7 +7815,31 @@
       slides[idx] = slides[newIdx];
       slides[newIdx] = temp;
 
-      await saveHeroBannersToServer('Slide order updated & saved.');
+      try {
+        // Send lightweight reorder request (~60 bytes payload)
+        const res = await fetch('/api/admin/banners', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'reorder', ids: slides.map(s => s.id) })
+        });
+
+        const text = await res.text();
+        let data;
+        try { data = JSON.parse(text); } catch (e) { throw new Error(text.slice(0, 100)); }
+
+        if (!res.ok || !data.success) {
+          showToast(data.message || 'Failed to save slide order', 'error');
+          return;
+        }
+
+        showToast('Slide order updated & saved.', 'success');
+        renderAdminSlidesTable();
+        renderAdminLivePreview();
+      } catch (err) {
+        console.error('Error reordering slides:', err);
+        showToast('Error reordering slides: ' + err.message, 'error');
+      }
     }
 
     async function deleteSlide(slideId) {
@@ -7652,8 +7850,41 @@
         return;
       }
 
-      adminHeroConfig.slides = (adminHeroConfig.slides || []).filter(s => s.id !== slideId && String(s.id) !== String(slideId));
-      await saveHeroBannersToServer('Banner slide deleted.');
+      try {
+        // Send lightweight atomic delete request (~35 bytes payload)
+        const res = await fetch('/api/admin/banners', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'delete', id: slideId })
+        });
+
+        const text = await res.text();
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch (e) {
+          throw new Error(text.slice(0, 100) || `Server returned status ${res.status}`);
+        }
+
+        if (!res.ok || !data.success) {
+          showToast(data.message || 'Failed to delete banner slide', 'error');
+          return;
+        }
+
+        // Update local state
+        adminHeroConfig.slides = (adminHeroConfig.slides || []).filter(s => s.id !== slideId && String(s.id) !== String(slideId));
+        if (data.banners && Array.isArray(data.banners.slides)) {
+          adminHeroConfig.slides = data.banners.slides;
+        }
+
+        showToast('Banner slide deleted successfully! 🗑️', 'success');
+        renderAdminSlidesTable();
+        renderAdminLivePreview();
+      } catch (err) {
+        console.error('Error deleting slide:', err);
+        showToast('Error deleting banner slide: ' + err.message, 'error');
+      }
     }
 
     async function load7SPresets() {
