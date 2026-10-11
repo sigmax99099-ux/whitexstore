@@ -879,6 +879,48 @@ function getCategoryIcon(cat) {
   return '🔥';
 }
 
+function formatCompactNumber(num) {
+  const n = Number(num) || 0;
+  if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+  if (n >= 1000) return (n / 1000).toFixed(1) + 'k';
+  return String(n);
+}
+
+function getProductSocialProof(productOrId) {
+  let id = typeof productOrId === 'object' && productOrId !== null
+    ? (productOrId.id || productOrId.name || '1')
+    : (productOrId || '1');
+  
+  let hash = 0;
+  const str = String(id);
+  for (let i = 0; i < str.length; i++) {
+    hash = Math.imul(hash ^ str.charCodeAt(i), 2654435761);
+  }
+  const seed = Math.abs(hash);
+
+  const ratingPresets = ['4.9', '4.8', '5.0', '4.9', '4.8', '5.0', '4.7', '4.9', '4.8', '5.0', '4.8', '4.9'];
+  const purchaseBases = [15840, 12410, 21350, 9640, 14910, 8320, 18240, 11750, 23100, 7890, 16450, 13200, 19800, 10560, 24800, 17300];
+  
+  const rating = (typeof productOrId === 'object' && productOrId?.rating) || ratingPresets[seed % ratingPresets.length];
+  const purchasesBase = purchaseBases[seed % purchaseBases.length];
+  const purchases = (typeof productOrId === 'object' && productOrId?.purchases_count)
+    || (purchasesBase + ((seed % 34) * 10) + (seed % 9));
+  
+  const reviewRatio = 0.88 + ((seed % 8) * 0.012);
+  const reviews = (typeof productOrId === 'object' && productOrId?.reviews_count)
+    || Math.round(purchases * reviewRatio);
+
+  return {
+    rating: String(rating),
+    reviews: Number(reviews),
+    purchases: Number(purchases),
+    reviewsFormatted: `(${Number(reviews).toLocaleString()} reviews)`,
+    purchasesFormatted: `${Number(purchases).toLocaleString()} purchases`,
+    reviewsCompact: formatCompactNumber(reviews),
+    purchasesCompact: formatCompactNumber(purchases)
+  };
+}
+
 function render7SProductCardHtml(p) {
   const pName = p.name || 'Game Software';
   const pCat = p.category || 'PC PANEL';
@@ -889,6 +931,7 @@ function render7SProductCardHtml(p) {
   const imgUrl = p.image || '/assets/images/store-hero-clean.png';
   const isOutOfStock = p.is_in_stock === false || (p.available_keys_count === 0 && (p.total_plans > 0) && p.is_in_stock !== true);
   const stockText = isOutOfStock ? 'OUT OF STOCK' : 'IN STOCK';
+  const proof = getProductSocialProof(p);
 
   let durationList = [];
   if (Array.isArray(p.plans) && p.plans.length > 0) {
@@ -920,6 +963,18 @@ function render7SProductCardHtml(p) {
         <div class="card-tags-row">
           <span class="card-cat-tag cat-glow" title="Category"><span class="cat-glow-icon">${getCategoryIcon(pCat)}</span> ${escapeHtml(pCat)}</span>
           <span class="card-cat-tag glow-vip"><span class="cat-glow-icon">⚡</span> VIP</span>
+        </div>
+
+        <div class="card-proof-row" style="display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 11px; margin-bottom: 10px; padding: 2px 0;">
+          <div style="display: flex; align-items: center; gap: 4px; color: #fbbf24; font-weight: 800;">
+            <span style="font-size: 12px; filter: drop-shadow(0 0 4px rgba(251,191,36,0.7));">★</span>
+            <span style="color: #fff; font-family: var(--font-cyber); font-size: 11px;">${proof.rating}</span>
+            <span style="color: #8fa0b5; font-weight: 500; font-size: 10.5px;">(${proof.reviewsCompact})</span>
+          </div>
+          <div style="display: inline-flex; align-items: center; gap: 4px; color: #00f0ff; font-weight: 700; font-size: 10.5px; font-family: var(--font-cyber);">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#00f0ff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0 0 4px #00f0ff);"><circle cx="12" cy="8" r="6"/><polyline points="8.21 13.89 7 22 12 19 17 22 15.79 13.88"/></svg>
+            <span>${proof.purchasesCompact} bought</span>
+          </div>
         </div>
 
         ${durationChips}
@@ -955,4 +1010,6 @@ window.heroSliderGoTo = heroSliderGoTo;
 window.setupHeroSliderAutoPlay = setupHeroSliderAutoPlay;
 window.render7SProductCardHtml = render7SProductCardHtml;
 window.getCategoryIcon = getCategoryIcon;
+window.getProductSocialProof = getProductSocialProof;
+window.formatCompactNumber = formatCompactNumber;
 

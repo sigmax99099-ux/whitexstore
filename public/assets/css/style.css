@@ -3791,6 +3791,19 @@ a:hover {
   margin-top: 4px;
 }
 
+/* Product Card Social Proof Bar (Different Rating, Reviews, Purchases) */
+.card-proof-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 11px;
+  margin-bottom: 10px;
+  padding: 4px 6px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+}
 
 /* ==============================================================
    VANTA.JS 3D BACKGROUND ANIMATION & NEON RED-PINK GLOW SYSTEM

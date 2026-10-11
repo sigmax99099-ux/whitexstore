@@ -129,10 +129,10 @@
 
               <!-- Rating & Trust Metrics Row (Exact Match from Photo 1) -->
               <div class="product-trust-rating-row">
-                <div class="rating-stars" style="color: #fbbf24; font-size: 1.15rem; letter-spacing: 2px; filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.6));">
+                <div class="rating-stars" id="detail-rating-stars" style="color: #fbbf24; font-size: 1.15rem; letter-spacing: 2px; filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.6));">
                   ★★★★★
                 </div>
-                <span style="color: #ffffff; font-weight: 800; font-size: 1rem; font-family: var(--font-cyber);">4.9</span>
+                <span id="detail-rating-score" style="color: #ffffff; font-weight: 800; font-size: 1rem; font-family: var(--font-cyber);">4.9</span>
                 <span id="detail-reviews-count" style="color: #94a3b8; font-size: 0.88rem;">(15,456 reviews)</span>
                 <span style="color: #475569; font-size: 0.9rem;">·</span>
                 <div style="display: inline-flex; align-items: center; gap: 4px; color: #00f0ff; font-weight: 700; font-size: 0.88rem;">
@@ -263,6 +263,37 @@
       });
     });
 
+    function getProductSocialProof(productOrId) {
+      if (typeof window.getProductSocialProof === 'function' && window.getProductSocialProof !== getProductSocialProof) {
+        return window.getProductSocialProof(productOrId);
+      }
+      let id = typeof productOrId === 'object' && productOrId !== null
+        ? (productOrId.id || productOrId.name || '1')
+        : (productOrId || '1');
+      let hash = 0;
+      const str = String(id);
+      for (let i = 0; i < str.length; i++) {
+        hash = Math.imul(hash ^ str.charCodeAt(i), 2654435761);
+      }
+      const seed = Math.abs(hash);
+      const ratingPresets = ['4.9', '4.8', '5.0', '4.9', '4.8', '5.0', '4.7', '4.9', '4.8', '5.0', '4.8', '4.9'];
+      const purchaseBases = [15840, 12410, 21350, 9640, 14910, 8320, 18240, 11750, 23100, 7890, 16450, 13200, 19800, 10560, 24800, 17300];
+      const rating = (typeof productOrId === 'object' && productOrId?.rating) || ratingPresets[seed % ratingPresets.length];
+      const purchasesBase = purchaseBases[seed % purchaseBases.length];
+      const purchases = (typeof productOrId === 'object' && productOrId?.purchases_count)
+        || (purchasesBase + ((seed % 34) * 10) + (seed % 9));
+      const reviewRatio = 0.88 + ((seed % 8) * 0.012);
+      const reviews = (typeof productOrId === 'object' && productOrId?.reviews_count)
+        || Math.round(purchases * reviewRatio);
+      return {
+        rating: String(rating),
+        reviews: Number(reviews),
+        purchases: Number(purchases),
+        reviewsFormatted: `(${Number(reviews).toLocaleString()} reviews)`,
+        purchasesFormatted: `${Number(purchases).toLocaleString()} purchases`
+      };
+    }
+
     function getCategoryIcon(cat) {
       const c = String(cat || '').toUpperCase();
       if (c.includes('IOS') || c.includes('APPLE')) return '🍏';
@@ -298,6 +329,29 @@
         const catIcon = getCategoryIcon(currentProduct.category);
         const catIconEl = document.getElementById('detail-cat-icon');
         if (catIconEl) catIconEl.textContent = catIcon;
+
+        // Dynamic Unique Product Social Proof (Rating, Reviews & Purchases)
+        const proof = getProductSocialProof(currentProduct);
+        const scoreEl = document.getElementById('detail-rating-score');
+        if (scoreEl) scoreEl.textContent = proof.rating;
+
+        const revEl = document.getElementById('detail-reviews-count');
+        if (revEl) revEl.textContent = proof.reviewsFormatted;
+
+        const purEl = document.getElementById('detail-purchases-count');
+        if (purEl) purEl.textContent = proof.purchasesFormatted;
+
+        const starsEl = document.getElementById('detail-rating-stars');
+        if (starsEl) {
+          const r = parseFloat(proof.rating) || 5.0;
+          if (r >= 4.95) {
+            starsEl.innerHTML = '★★★★★';
+          } else if (r >= 4.75) {
+            starsEl.innerHTML = '★★★★<span style="opacity: 0.85;">★</span>';
+          } else {
+            starsEl.innerHTML = '★★★★<span style="opacity: 0.55;">★</span>';
+          }
+        }
 
         document.getElementById('detail-desc').textContent = currentProduct.description;
         document.getElementById('detail-img').src = currentProduct.image;
