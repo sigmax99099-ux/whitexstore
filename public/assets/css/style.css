@@ -791,8 +791,9 @@ a:hover {
 
 .cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
-  gap: 1.75rem;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1.25rem;
+  align-items: stretch;
 }
 
 .card, .product-card {
@@ -802,6 +803,8 @@ a:hover {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  height: 100%;
+  box-sizing: border-box;
   transition: var(--transition);
   position: relative;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
@@ -3094,24 +3097,29 @@ a:hover {
 /* ==============================================================
    7S EXACT PRODUCT CARDS (1:1 FROM USER SCREENSHOT)
    ============================================================== */
-.store-grid {
+.store-grid,
+.cards-grid {
   display: grid !important;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)) !important;
   gap: 16px !important;
-  align-items: start !important;
+  align-items: stretch !important;
 }
 
 @media (max-width: 680px) {
-  .store-grid {
+  .store-grid,
+  .cards-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 10px !important;
+    align-items: stretch !important;
   }
 }
 
 @media (max-width: 374px) {
-  .store-grid {
+  .store-grid,
+  .cards-grid {
     grid-template-columns: 1fr !important;
     gap: 12px !important;
+    align-items: stretch !important;
   }
 }
 
@@ -3122,6 +3130,9 @@ a:hover {
   overflow: hidden !important;
   display: flex !important;
   flex-direction: column !important;
+  height: 100% !important;
+  min-height: 100% !important;
+  box-sizing: border-box !important;
   transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease !important;
   position: relative !important;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6) !important;
@@ -3133,17 +3144,19 @@ a:hover {
   box-shadow: 0 12px 35px rgba(0, 0, 0, 0.85), 0 0 30px rgba(255, 42, 133, 0.25) !important;
 }
 
-/* Cover Image Wrap */
+/* Cover Image Wrap - Uniform Aspect Ratio & Fixed Frame */
 .card-cover-wrap {
   position: relative !important;
   width: 100% !important;
   aspect-ratio: 16 / 9.2 !important;
   height: auto !important;
-  min-height: 0 !important;
+  min-height: 155px !important;
+  max-height: 180px !important;
   background: #0c0414 !important;
   overflow: hidden !important;
   cursor: pointer !important;
   display: block !important;
+  flex-shrink: 0 !important;
 }
 
 .card-cover-img {
@@ -3187,38 +3200,52 @@ a:hover {
   box-shadow: 0 2px 10px rgba(255, 51, 75, 0.3) !important;
 }
 
-/* Card Body */
+/* Card Body - Equalized Flex Layout */
 .card-body {
   padding: 14px 16px 16px !important;
   display: flex !important;
   flex-direction: column !important;
-  flex: 1 !important;
+  flex: 1 1 auto !important;
+  box-sizing: border-box !important;
 }
 
-/* Title */
+/* Title - Uniform 2-Line Height Across All Cards */
 .card-title {
   font-family: var(--font-heading) !important;
-  font-size: 16.5px !important;
+  font-size: 15.5px !important;
   font-weight: 900 !important;
   letter-spacing: 0.5px !important;
   color: #ffffff !important;
   text-transform: uppercase !important;
-  margin: 0 0 10px 0 !important;
+  margin: 0 0 8px 0 !important;
   line-height: 1.25 !important;
   cursor: pointer !important;
   transition: color 0.18s ease !important;
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  height: 38px !important;
+  min-height: 38px !important;
+  max-height: 38px !important;
 }
 
 .card-title:hover {
   color: #ff2a85 !important;
 }
 
-/* Tags Row (Category & Premium) */
+/* Tags Row (Category & Premium) - Uniform Height */
 .card-tags-row {
   display: flex !important;
   gap: 6px !important;
-  flex-wrap: wrap !important;
-  margin-bottom: 12px !important;
+  flex-wrap: nowrap !important;
+  overflow: hidden !important;
+  align-items: center !important;
+  height: 22px !important;
+  min-height: 22px !important;
+  max-height: 22px !important;
+  margin-bottom: 8px !important;
 }
 
 .card-cat-tag {
@@ -3233,15 +3260,26 @@ a:hover {
   padding: 2.5px 8px !important;
   border-radius: 4px !important;
   display: inline-block !important;
+  white-space: nowrap !important;
 }
 
-/* Duration Plans Row */
+/* Duration Plans Row - Single Line Scroll, Uniform Height */
 .card-duration-row {
   display: flex !important;
-  gap: 8px !important;
-  flex-wrap: wrap !important;
+  gap: 6px !important;
+  flex-wrap: nowrap !important;
   align-items: center !important;
-  margin-bottom: 14px !important;
+  margin-bottom: 12px !important;
+  height: 24px !important;
+  min-height: 24px !important;
+  max-height: 24px !important;
+  overflow-x: auto !important;
+  scrollbar-width: none !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+.card-duration-row::-webkit-scrollbar {
+  display: none !important;
 }
 
 .duration-chip {
@@ -3252,6 +3290,8 @@ a:hover {
   font-weight: 700 !important;
   color: #a0aec0 !important;
   letter-spacing: 0.2px !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
 }
 
 .duration-chip .chip-icon {
@@ -3259,15 +3299,21 @@ a:hover {
   color: #ff2a85 !important;
 }
 
-/* Starting At Price Box */
+/* Starting At Price Box - Pinned to Bottom, Exact Height */
 .card-price-box {
   background: #170826 !important;
   border: 1px solid #2a0f44 !important;
   border-radius: 8px !important;
-  padding: 10px 14px !important;
-  margin-bottom: 14px !important;
+  padding: 8px 12px !important;
+  margin-bottom: 12px !important;
   margin-top: auto !important;
-  display: block !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  height: 60px !important;
+  min-height: 60px !important;
+  max-height: 60px !important;
+  box-sizing: border-box !important;
   width: 100% !important;
 }
 
@@ -3285,7 +3331,7 @@ a:hover {
 .price-box-val {
   color: #ff2a85 !important;
   text-shadow: 0 0 12px rgba(255, 42, 133, 0.35) !important;
-  font-size: 22px !important;
+  font-size: 21px !important;
   font-weight: 900 !important;
   font-family: var(--font-heading) !important;
   line-height: 1.15 !important;
@@ -3295,13 +3341,17 @@ a:hover {
   margin: 0 !important;
 }
 
-/* Action Buttons Row */
+/* Action Buttons Row - Uniform Height */
 .card-actions-row {
   display: flex !important;
   gap: 8px !important;
   align-items: center !important;
   margin-top: 0 !important;
   width: 100% !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  max-height: 36px !important;
+  box-sizing: border-box !important;
 }
 
 .card-details-btn {
@@ -3313,7 +3363,9 @@ a:hover {
   font-weight: 800 !important;
   letter-spacing: 0.5px !important;
   text-transform: uppercase !important;
-  padding: 8px 14px !important;
+  padding: 0 14px !important;
+  height: 36px !important;
+  box-sizing: border-box !important;
   border-radius: 6px !important;
   cursor: pointer !important;
   display: flex !important;
@@ -3341,7 +3393,9 @@ a:hover {
   font-weight: 800 !important;
   letter-spacing: 0.5px !important;
   text-transform: uppercase !important;
-  padding: 8px 16px !important;
+  padding: 0 16px !important;
+  height: 36px !important;
+  box-sizing: border-box !important;
   border-radius: 6px !important;
   cursor: pointer !important;
   flex: 1 !important;
@@ -3443,11 +3497,27 @@ a:hover {
 }
 
 @media (max-width: 680px) {
+  .store-grid,
+  .cards-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    align-items: stretch !important;
+  }
   .card.product-card {
     border-radius: 11px !important;
+    height: 100% !important;
+    min-height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    box-sizing: border-box !important;
   }
   .card-cover-wrap {
     aspect-ratio: 16 / 9.6 !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 100px !important;
+    max-height: 125px !important;
+    flex-shrink: 0 !important;
   }
   .stock-pill {
     top: 6px !important;
@@ -3458,33 +3528,63 @@ a:hover {
   }
   .card-body {
     padding: 9px 9px 11px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 auto !important;
+    box-sizing: border-box !important;
   }
   .card-title {
-    font-size: 13.5px !important;
+    font-size: 13px !important;
     line-height: 1.22 !important;
     margin: 0 0 6px 0 !important;
     display: -webkit-box !important;
     -webkit-line-clamp: 2 !important;
     -webkit-box-orient: vertical !important;
     overflow: hidden !important;
-    min-height: 33px !important;
+    text-overflow: ellipsis !important;
+    height: 32px !important;
+    min-height: 32px !important;
+    max-height: 32px !important;
   }
   .card-tags-row {
     margin-bottom: 6px !important;
     gap: 4px !important;
+    height: 18px !important;
+    min-height: 18px !important;
+    max-height: 18px !important;
+    flex-wrap: nowrap !important;
+    overflow: hidden !important;
+    align-items: center !important;
   }
   .card-cat-tag {
     font-size: 8px !important;
     padding: 2px 5px !important;
     letter-spacing: 0.4px !important;
   }
+  .card-proof-row {
+    height: 22px !important;
+    min-height: 22px !important;
+    max-height: 22px !important;
+    padding: 2px 4px !important;
+    margin-bottom: 6px !important;
+    font-size: 9.5px !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+  }
+  .card-proof-row * {
+    font-size: 9px !important;
+  }
   .card-duration-row {
-    margin-bottom: 8px !important;
+    margin-bottom: 6px !important;
     gap: 4px !important;
+    height: 20px !important;
+    min-height: 20px !important;
+    max-height: 20px !important;
     overflow-x: auto !important;
     scrollbar-width: none !important;
     -webkit-overflow-scrolling: touch !important;
     flex-wrap: nowrap !important;
+    align-items: center !important;
   }
   .card-duration-row::-webkit-scrollbar {
     display: none !important;
@@ -3499,9 +3599,17 @@ a:hover {
     font-size: 8px !important;
   }
   .card-price-box {
-    padding: 6px 8px !important;
+    padding: 5px 8px !important;
     margin-bottom: 8px !important;
     border-radius: 6px !important;
+    height: 48px !important;
+    min-height: 48px !important;
+    max-height: 48px !important;
+    box-sizing: border-box !important;
+    margin-top: auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
   }
   .price-box-label {
     font-size: 8px !important;
@@ -3509,18 +3617,24 @@ a:hover {
     margin-bottom: 2px !important;
   }
   .price-box-val {
-    font-size: 17px !important;
+    font-size: 16px !important;
   }
   .card-actions-row {
     flex-direction: column !important;
     gap: 5px !important;
     width: 100% !important;
+    height: auto !important;
+    min-height: 64px !important;
+    max-height: 64px !important;
+    box-sizing: border-box !important;
   }
   .card-details-btn,
   .card-buy-btn {
     width: 100% !important;
     font-size: 10.5px !important;
-    padding: 7px 8px !important;
+    padding: 0 8px !important;
+    height: 29px !important;
+    box-sizing: border-box !important;
     border-radius: 5px !important;
     justify-content: center !important;
     letter-spacing: 0.3px !important;
@@ -3529,22 +3643,28 @@ a:hover {
 }
 
 @media (max-width: 374px) {
-  .store-grid {
+  .store-grid,
+  .cards-grid {
     grid-template-columns: 1fr !important;
     gap: 12px !important;
+    align-items: stretch !important;
   }
   .card-actions-row {
     flex-direction: row !important;
     gap: 6px !important;
+    min-height: 36px !important;
+    max-height: 36px !important;
   }
   .card-details-btn {
     width: auto !important;
-    padding: 8px 12px !important;
+    padding: 0 12px !important;
+    height: 34px !important;
   }
   .card-buy-btn {
     flex: 1 !important;
     width: auto !important;
-    padding: 8px 12px !important;
+    padding: 0 12px !important;
+    height: 34px !important;
   }
 }
 
@@ -3673,6 +3793,9 @@ a:hover {
   align-items: center;
   justify-content: center;
   gap: 4px;
+  height: 100% !important;
+  min-height: 84px !important;
+  box-sizing: border-box !important;
   transition: all 0.25s ease;
 }
 
@@ -3738,9 +3861,10 @@ a:hover {
 
 /* Product Plans Selector Grid */
 .plans-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-  gap: 10px;
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)) !important;
+  gap: 10px !important;
+  align-items: stretch !important;
 }
 
 .plan-item {
@@ -3750,6 +3874,12 @@ a:hover {
   border-radius: 10px;
   padding: 12px;
   cursor: pointer;
+  height: 100% !important;
+  min-height: 86px !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
   transition: all 0.2s ease;
   text-align: center;
 }

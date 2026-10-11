@@ -965,7 +965,7 @@ function render7SProductCardHtml(p) {
           <span class="card-cat-tag glow-vip"><span class="cat-glow-icon">⚡</span> VIP</span>
         </div>
 
-        <div class="card-proof-row" style="display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 11px; margin-bottom: 10px; padding: 2px 0;">
+        <div class="card-proof-row">
           <div style="display: flex; align-items: center; gap: 4px; color: #fbbf24; font-weight: 800;">
             <span style="font-size: 12px; filter: drop-shadow(0 0 4px rgba(251,191,36,0.7));">★</span>
             <span style="color: #fff; font-family: var(--font-cyber); font-size: 11px;">${proof.rating}</span>
