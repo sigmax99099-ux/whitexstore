@@ -74,7 +74,7 @@
               <img id="detail-img" src="" alt="Cheat Preview" style="width: 100%; height: 380px; object-fit: cover; display: block;">
               <div style="position: absolute; top: 15px; left: 15px; display: flex; gap: 0.5rem; z-index: 2;">
                 <span class="badge badge-undetected"><span class="pulse-dot"></span> 100% Undetected</span>
-                <span class="badge" id="detail-cat-badge" style="background: rgba(0,0,0,0.8); border: 1px solid rgba(255,42,133,0.4); color: #fff;">FPS</span>
+                <span class="badge" id="detail-cat-badge" style="background: rgba(0,0,0,0.85); border: 1.5px solid rgba(255,106,0,0.7); box-shadow: 0 0 14px rgba(255,80,0,0.45); color: #ff8800; font-weight: 800; letter-spacing: 0.8px;">FPS</span>
               </div>
             </div>
 
@@ -265,14 +265,11 @@
 
     function getCategoryIcon(cat) {
       const c = String(cat || '').toUpperCase();
-      if (c.includes('PC') || c.includes('DESKTOP') || c.includes('WINDOWS')) return '🖥️';
-      if (c.includes('PANEL')) return '⚡';
       if (c.includes('IOS') || c.includes('APPLE')) return '🍏';
       if (c.includes('ANDROID') || c.includes('MOBILE') || c.includes('APK')) return '📱';
       if (c.includes('VIP') || c.includes('EXCLUSIVE')) return '👑';
       if (c.includes('BYPASS')) return '🛡️';
-      if (c.includes('AIM') || c.includes('SHOOT') || c.includes('FPS')) return '🎯';
-      return '🎮';
+      return '🔥';
     }
 
     async function loadProduct(id) {

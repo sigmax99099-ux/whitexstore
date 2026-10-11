@@ -872,14 +872,11 @@ function attachHeroSliderHoverEvents() {
 
 function getCategoryIcon(cat) {
   const c = String(cat || '').toUpperCase();
-  if (c.includes('PC') || c.includes('DESKTOP') || c.includes('WINDOWS')) return '🖥️';
-  if (c.includes('PANEL')) return '⚡';
   if (c.includes('IOS') || c.includes('APPLE')) return '🍏';
   if (c.includes('ANDROID') || c.includes('MOBILE') || c.includes('APK')) return '📱';
   if (c.includes('VIP') || c.includes('EXCLUSIVE')) return '👑';
   if (c.includes('BYPASS')) return '🛡️';
-  if (c.includes('AIM') || c.includes('SHOOT') || c.includes('FPS')) return '🎯';
-  return '🎮';
+  return '🔥';
 }
 
 function render7SProductCardHtml(p) {

@@ -851,7 +851,8 @@ a:hover {
 
 .product-cat {
   font-size: 0.78rem;
-  color: #ff2a85;
+  color: #ff6a00;
+  text-shadow: 0 0 10px rgba(255, 106, 0, 0.7), 0 0 18px rgba(255, 60, 0, 0.4);
   font-family: var(--font-cyber);
   font-weight: 800;
   text-transform: uppercase;
@@ -3221,9 +3222,9 @@ a:hover {
 }
 
 .card-cat-tag {
-  background: rgba(255, 255, 255, 0.04) !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
-  color: #8fa0b5 !important;
+  background: rgba(255, 106, 0, 0.08) !important;
+  border: 1px solid rgba(255, 106, 0, 0.35) !important;
+  color: #ff9933 !important;
   font-family: var(--font-cyber) !important;
   font-size: 9.5px !important;
   font-weight: 800 !important;
@@ -3573,19 +3574,20 @@ a:hover {
   }
 }
 
-/* Category Glow Tags and Icons */
+/* Category Fire Glow Tags and Icons */
 .card-cat-tag.cat-glow,
 .product-cat.cat-glow {
-  background: rgba(255, 42, 133, 0.12) !important;
-  border: 1px solid rgba(255, 42, 133, 0.5) !important;
-  color: #ff2a85 !important;
-  box-shadow: 0 0 12px rgba(255, 42, 133, 0.35), inset 0 0 8px rgba(255, 42, 133, 0.15) !important;
-  text-shadow: 0 0 8px rgba(255, 42, 133, 0.7) !important;
+  background: linear-gradient(135deg, rgba(255, 69, 0, 0.22), rgba(255, 140, 0, 0.14)) !important;
+  border: 1.5px solid rgba(255, 106, 0, 0.7) !important;
+  color: #ff8800 !important;
+  box-shadow: 0 0 14px rgba(255, 80, 0, 0.5), 0 0 26px rgba(255, 40, 0, 0.25), inset 0 0 10px rgba(255, 140, 0, 0.22) !important;
+  text-shadow: 0 0 8px rgba(255, 90, 0, 0.95), 0 0 16px rgba(255, 50, 0, 0.65) !important;
   display: inline-flex !important;
   align-items: center !important;
   gap: 5px !important;
   border-radius: 6px !important;
   letter-spacing: 0.8px !important;
+  animation: fire-flicker 2.6s infinite ease-in-out !important;
 }
 
 .card-cat-tag.glow-vip {
@@ -3604,18 +3606,29 @@ a:hover {
   display: inline-block !important;
   font-size: 11px !important;
   line-height: 1 !important;
-  filter: drop-shadow(0 0 6px currentColor) drop-shadow(0 0 10px currentColor) !important;
-  animation: pulse-glow-icon 2.2s infinite ease-in-out !important;
+  filter: drop-shadow(0 0 6px #ff4500) drop-shadow(0 0 12px #ff8c00) !important;
+  animation: pulse-fire-icon 2s infinite ease-in-out !important;
 }
 
-@keyframes pulse-glow-icon {
+@keyframes fire-flicker {
   0%, 100% {
-    filter: drop-shadow(0 0 5px currentColor);
+    box-shadow: 0 0 12px rgba(255, 80, 0, 0.45), 0 0 22px rgba(255, 40, 0, 0.2), inset 0 0 8px rgba(255, 140, 0, 0.2);
+    border-color: rgba(255, 106, 0, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(255, 100, 0, 0.75), 0 0 35px rgba(255, 60, 0, 0.38), inset 0 0 14px rgba(255, 160, 0, 0.32);
+    border-color: rgba(255, 145, 0, 0.95);
+  }
+}
+
+@keyframes pulse-fire-icon {
+  0%, 100% {
+    filter: drop-shadow(0 0 5px #ff4500) drop-shadow(0 0 10px #ff8c00);
     transform: scale(1);
   }
   50% {
-    filter: drop-shadow(0 0 10px currentColor) drop-shadow(0 0 14px currentColor);
-    transform: scale(1.12);
+    filter: drop-shadow(0 0 10px #ff2200) drop-shadow(0 0 18px #ffaa00);
+    transform: scale(1.15);
   }
 }
 
