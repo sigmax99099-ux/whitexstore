@@ -328,9 +328,12 @@ function renderLoggedInNav(user) {
   const isReseller = user.user_type === 'reseller';
 
   container.innerHTML = `
-    <div style="display: flex; align-items: center; gap: 0.75rem;">
+    <div style="display: flex; align-items: center; gap: 0.6rem;">
       <a href="/wallet.html" class="btn btn-outline btn-sm" title="Topup / Manage Wallet" style="border-color: rgba(255, 42, 133, 0.45); background: rgba(255, 42, 133, 0.08); color: #ff2a85;">
         <span style="color: var(--primary);">⚡</span> NPR ${balanceNpr}
+      </a>
+      <a href="/dashboard.html#sec-referrals" class="btn btn-outline btn-sm" title="Refer & Earn Free Wallet Balance" style="border-color: rgba(52, 211, 153, 0.4); color: #34d399; background: rgba(52, 211, 153, 0.08); padding: 0.4rem 0.65rem;">
+        🎁
       </a>
       <a href="/dashboard.html" class="btn btn-outline btn-sm">
         ${isReseller ? '<span class="badge badge-reseller" style="margin-right:4px;">RESELLER</span>' : ''}

@@ -22,7 +22,8 @@ export default async function handler(req, res) {
         user_type: user.user_type,
         reseller_discount: Number(user.reseller_discount) || 0,
         wallet_balance: Number(user.wallet_balance) || 0,
-        status: user.status
+        status: user.status,
+        referral_code: user.referral_code || null
       }
     });
   } catch (err) {

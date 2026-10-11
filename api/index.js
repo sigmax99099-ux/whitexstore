@@ -74,12 +74,21 @@ import publicSocialLinks from '../server/social-links.js';
 import redeemValidate from '../server/redeem/validate.js';
 import publicBanners from '../server/banners.js';
 
+// Referrals
+import referralValidate from '../server/referrals/validate.js';
+import referralMyInfo from '../server/referrals/my-info.js';
+import adminReferrals from '../server/admin/referrals.js';
+
 const routes = {
   // Public Settings, Social Links & Banners
   '/api/settings': publicSettings,
   '/api/banners': publicBanners,
   '/api/social-links': publicSocialLinks,
   '/api/redeem/validate': redeemValidate,
+
+  // Referrals (Public & Client)
+  '/api/referrals/validate': referralValidate,
+  '/api/referrals/my-info': referralMyInfo,
 
   // Auth
   '/api/auth/register': authRegister,
@@ -152,6 +161,8 @@ const routes = {
   '/api/admin/social-links': adminSocialLinks,
   '/api/admin/redeem-codes': adminRedeemCodes,
   '/api/admin/banners': adminBanners,
+  '/api/admin/referrals': adminReferrals,
+  '/api/admin/referrals/settings': adminReferrals,
 };
 
 export default async function handler(req, res) {

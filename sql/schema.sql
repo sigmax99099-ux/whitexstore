@@ -21,6 +21,8 @@ CREATE TABLE IF NOT EXISTS users (
   reseller_discount NUMERIC NOT NULL DEFAULT 0,
   wallet_balance NUMERIC NOT NULL DEFAULT 0, -- Stored in NPR
   status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'blocked')),
+  referral_code TEXT UNIQUE,
+  referred_by UUID REFERENCES users(id) ON DELETE SET NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -271,6 +273,20 @@ CREATE TABLE IF NOT EXISTS redeem_codes (
 CREATE INDEX IF NOT EXISTS idx_redeem_codes_code ON redeem_codes(code);
 CREATE INDEX IF NOT EXISTS idx_redeem_codes_active ON redeem_codes(status, valid_until);
 
+-- 20. REFERRALS TABLE (Client Referral Program & Monthly Limit Tracking)
+CREATE TABLE IF NOT EXISTS referrals (
+  id SERIAL PRIMARY KEY,
+  referrer_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  referred_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  referral_code TEXT NOT NULL,
+  reward_referrer_npr NUMERIC NOT NULL DEFAULT 50,
+  reward_referee_npr NUMERIC NOT NULL DEFAULT 50,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_referrals_referrer_month ON referrals (referrer_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_users_referral_code ON users (referral_code);
+
 CREATE INDEX idx_hwid_reset_key ON hwid_reset_log(key_code);
 CREATE INDEX idx_hwid_reset_user ON hwid_reset_log(requested_by);
 CREATE INDEX idx_hwid_reset_created ON hwid_reset_log(created_at);
@@ -309,7 +325,11 @@ INSERT INTO settings (setting_key, setting_value) VALUES
 ('inr_usd_rate', '84.00'),
 ('whatsapp_number', '+9779800000000'),
 ('min_topup_npr', '200'),
-('site_notice', '⚡ Instant 24/7 Automated Key Delivery Active. 100% Undetected on Latest Game Patches.')
+('site_notice', '⚡ Instant 24/7 Automated Key Delivery Active. 100% Undetected on Latest Game Patches.'),
+('referral_reward_referrer_npr', '50'),
+('referral_reward_referee_npr', '50'),
+('referral_monthly_limit', '1'),
+('referral_system_enabled', 'true')
 ON CONFLICT (setting_key) DO NOTHING;
 
 -- Supplier Settings (singleton)

@@ -576,6 +576,7 @@
         <li class="admin-nav-item"><button data-tab="tab-settings">⚙️ Settings & API</button></li>
         <li class="admin-nav-item"><button data-tab="tab-hero-banners">🖼️ Banner Board & Slider</button></li>
         <li class="admin-nav-item"><button data-tab="tab-social-links">🌐 Social Links</button></li>
+        <li class="admin-nav-item"><button data-tab="tab-referrals">🤝 Referrals & Prizes</button></li>
         <li class="admin-nav-item"><button data-tab="tab-redeem-codes">🎁 Redeem Codes</button></li>
         <li class="admin-nav-item"><button data-tab="tab-admin-account">👤 Admin Account</button></li>
         <li class="admin-nav-item"><button data-tab="tab-resets">🔄 Password Resets</button></li>
@@ -590,6 +591,7 @@
         <button type="button" class="m-quick-tab" data-quick-tab="tab-orders" onclick="switchAdminTab('tab-orders')">📦 Orders</button>
         <button type="button" class="m-quick-tab" data-quick-tab="tab-wallets" onclick="switchAdminTab('tab-wallets')">💳 Wallets</button>
         <button type="button" class="m-quick-tab" data-quick-tab="tab-products" onclick="switchAdminTab('tab-products')">🎮 Products</button>
+        <button type="button" class="m-quick-tab" data-quick-tab="tab-referrals" onclick="switchAdminTab('tab-referrals')">🤝 Referrals</button>
         <button type="button" class="m-quick-tab" data-quick-tab="tab-keys" onclick="switchAdminTab('tab-keys')">🔑 Keys</button>
         <button type="button" class="m-quick-tab" data-quick-tab="tab-hero-banners" onclick="switchAdminTab('tab-hero-banners')">🖼️ Banners</button>
         <button type="button" class="m-quick-tab" data-quick-tab="tab-redeem-codes" onclick="switchAdminTab('tab-redeem-codes')">🎁 Redeem</button>
@@ -1141,6 +1143,34 @@
               <input type="text" id="setting-notice" class="form-input" placeholder="⚡ Instant 24/7 Auto Delivery Active...">
             </div>
 
+            <h3 style="color: #34d399; margin-bottom: 0.5rem; margin-top: 1.5rem;">🎁 Client Referral Program & Prizes</h3>
+            <div style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 1rem;">
+              Configure wallet balance bonuses (NPR) awarded to both users when a client registers with a referral code. Enforces 1 referral per month limit per user.
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div class="form-group">
+                <label class="form-label" for="setting-ref-referrer">Referrer Prize Bonus (NPR)</label>
+                <input type="number" id="setting-ref-referrer" class="form-input" min="0" step="any" placeholder="50">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="setting-ref-referee">New User Prize Bonus (NPR)</label>
+                <input type="number" id="setting-ref-referee" class="form-input" min="0" step="any" placeholder="50">
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+              <div class="form-group">
+                <label class="form-label" for="setting-ref-limit">Monthly Limit per User (Referrals/Month)</label>
+                <input type="number" id="setting-ref-limit" class="form-input" min="1" step="1" value="1" placeholder="1">
+              </div>
+              <div class="form-group" style="display: flex; align-items: center; padding-top: 1.5rem;">
+                <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.88rem; cursor: pointer;">
+                  <input type="checkbox" id="setting-ref-enabled" checked> 🟢 Referral System Enabled
+                </label>
+              </div>
+            </div>
+
             <button type="submit" class="btn btn-primary btn-lg btn-glow">
               Save All Settings 💾
             </button>
@@ -1650,6 +1680,119 @@
         </div>
       </section>
 
+      <!-- TAB: REFERRAL PROGRAM & PRIZE CONTROLLER -->
+      <section id="tab-referrals" class="admin-tab-content">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <h2 style="color: #fff; margin: 0 0 0.35rem 0;">// REFERRAL PROGRAM & PRIZE CONTROLLER</h2>
+            <p style="color: var(--text-dim); margin: 0; font-size: 0.88rem;">
+              Set the bonus amounts (NPR) given to both the referrer and the new customer, enforce the 1-referral-per-month limit, and track all referral signups.
+            </p>
+          </div>
+          <button type="button" class="btn btn-outline btn-sm" onclick="loadAdminReferrals()">
+            🔄 Refresh Referrals
+          </button>
+        </div>
+
+        <!-- 3 KPI Metric Cards -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+          <div class="admin-card" style="padding: 1.25rem; margin-bottom: 0;">
+            <div style="font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">Total Referral Signups</div>
+            <div id="adm-stat-ref-total" style="font-size: 1.85rem; font-weight: 800; color: #fff; margin-top: 0.25rem;">0</div>
+            <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 0.2rem;">Completed invitations</div>
+          </div>
+          <div class="admin-card" style="padding: 1.25rem; margin-bottom: 0;">
+            <div style="font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">Total Bonuses Distributed</div>
+            <div id="adm-stat-ref-paid" style="font-size: 1.85rem; font-weight: 800; color: #34d399; margin-top: 0.25rem;">NPR 0.00</div>
+            <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 0.2rem;">Credited to user wallets</div>
+          </div>
+          <div class="admin-card" style="padding: 1.25rem; margin-bottom: 0;">
+            <div style="font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">Active Referrers</div>
+            <div id="adm-stat-ref-users" style="font-size: 1.85rem; font-weight: 800; color: #38bdf8; margin-top: 0.25rem;">0</div>
+            <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 0.2rem;">Clients who invited friends</div>
+          </div>
+        </div>
+
+        <!-- Referral Prize Configuration Card -->
+        <div class="admin-card" style="padding: 1.5rem; margin-bottom: 1.75rem; border-color: rgba(52, 211, 153, 0.35); background: radial-gradient(ellipse at 85% 20%, rgba(52, 211, 153, 0.08) 0%, rgba(10, 14, 23, 0.95) 70%), #070a12;">
+          <h3 style="color: #34d399; margin: 0 0 0.5rem 0; font-size: 1.15rem;">⚙️ Set Referral Prizes & Monthly Quotas</h3>
+          <p style="font-size: 0.82rem; color: var(--text-dim); margin: 0 0 1.25rem 0;">
+            When a new user registers with a client's referral code, both users instantly receive the bonus set below into their wallet balances.
+          </p>
+
+          <form id="form-adm-referral-settings">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.25rem; margin-bottom: 1.25rem;">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label" for="tab-ref-referrer-reward">Referrer Prize Bonus (NPR)</label>
+                <input type="number" id="tab-ref-referrer-reward" class="form-input" min="0" step="any" placeholder="50" required>
+                <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: 0.25rem;">
+                  Amount credited to the referring user's wallet
+                </div>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label" for="tab-ref-referee-reward">New Customer Prize Bonus (NPR)</label>
+                <input type="number" id="tab-ref-referee-reward" class="form-input" min="0" step="any" placeholder="50" required>
+                <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: 0.25rem;">
+                  Amount credited to the newly registered client
+                </div>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label" for="tab-ref-monthly-limit">Monthly Limit per User</label>
+                <input type="number" id="tab-ref-monthly-limit" class="form-input" min="1" step="1" value="1" placeholder="1" required>
+                <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: 0.25rem;">
+                  Max successful referrals allowed per month (Default: 1)
+                </div>
+              </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 1rem;">
+              <label style="display: flex; align-items: center; gap: 0.6rem; font-size: 0.88rem; cursor: pointer;">
+                <input type="checkbox" id="tab-ref-enabled" checked style="width: 18px; height: 18px;">
+                <span style="font-weight: 600; color: #fff;">🟢 Enable Referral Rewards System</span>
+              </label>
+
+              <button type="submit" id="btn-save-ref-prizes" class="btn btn-primary btn-glow" style="padding: 0.6rem 1.6rem;">
+                Save Referral Prizes & Rules 💾
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Referral Conversion Table -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
+          <h3 style="color: #fff; margin: 0; font-size: 1.1rem;">// REFERRAL CONVERSIONS & WALLET PAYOUT AUDIT</h3>
+          <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <input type="text" id="adm-ref-search-input" class="form-input" placeholder="Search by name, email, or code..." style="width: 260px; height: 36px; font-size: 0.82rem;">
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table-custom">
+            <thead>
+              <tr>
+                <th style="width: 50px;">#</th>
+                <th>REFERRER</th>
+                <th>CODE USED</th>
+                <th>NEW CLIENT (REFEREE)</th>
+                <th>REFERRER PRIZE</th>
+                <th>REFEREE PRIZE</th>
+                <th>TOTAL NPR</th>
+                <th>DATE & TIME</th>
+                <th>STATUS</th>
+              </tr>
+            </thead>
+            <tbody id="admin-referrals-tbody">
+              <tr>
+                <td colspan="9" style="text-align: center; padding: 2.5rem; color: var(--text-dim);">
+                  Loading referral records...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
 
       <!-- TAB: HERO BANNER BOARD & ADVERTISED SLIDER -->
       <section id="tab-hero-banners" class="admin-tab-content">
@@ -3063,6 +3206,7 @@
           if (tabId === 'tab-admin-account') loadAdminAccountDetails();
           if (tabId === 'tab-social-links') loadAdminSocialLinks();
           if (tabId === 'tab-redeem-codes') loadAdminRedeemCodes();
+          if (tabId === 'tab-referrals') loadAdminReferrals();
           if (tabId === 'tab-resets') loadAdminResets();
           if (tabId === 'tab-download-links') loadAdminDownloadLinks();
           if (tabId === 'tab-hero-banners') loadHeroBannersAdmin();
@@ -3078,6 +3222,7 @@
       document.getElementById('keys-search-input').addEventListener('input', loadAdminKeys);
       document.getElementById('users-filter-type').addEventListener('change', loadAdminUsers);
       document.getElementById('users-search-input').addEventListener('input', loadAdminUsers);
+      document.getElementById('adm-ref-search-input')?.addEventListener('input', filterAdminReferrals);
 
       // Forms
       document.getElementById('form-add-product').addEventListener('submit', handleAddProductSubmit);
@@ -3091,6 +3236,7 @@
       document.getElementById('form-approve-order').addEventListener('submit', handleApproveOrderSubmit);
       document.getElementById('form-reject-order').addEventListener('submit', handleRejectOrderSubmit);
       document.getElementById('admin-settings-form').addEventListener('submit', handleSettingsSubmit);
+      document.getElementById('form-adm-referral-settings')?.addEventListener('submit', handleAdminReferralSettingsSubmit);
       document.getElementById('form-admin-change-credentials')?.addEventListener('submit', handleAdminChangeCredentialsSubmit);
       document.getElementById('form-admin-stealth-key')?.addEventListener('submit', handleAdminStealthKeySubmit);
       document.getElementById('form-add-category').addEventListener('submit', handleAddCategorySubmit);
@@ -5693,6 +5839,15 @@
           document.getElementById('setting-min-topup').value = s.min_topup_npr || '200';
           document.getElementById('setting-whatsapp').value = s.whatsapp_number || '+9779800000000';
           document.getElementById('setting-notice').value = s.site_notice || '';
+          
+          const refRef = document.getElementById('setting-ref-referrer');
+          if (refRef) refRef.value = s.referral_reward_referrer_npr || '50';
+          const refFee = document.getElementById('setting-ref-referee');
+          if (refFee) refFee.value = s.referral_reward_referee_npr || '50';
+          const refLim = document.getElementById('setting-ref-limit');
+          if (refLim) refLim.value = s.referral_monthly_limit || '1';
+          const refEn = document.getElementById('setting-ref-enabled');
+          if (refEn) refEn.checked = s.referral_system_enabled !== 'false';
         }
       } catch (err) {}
     }
@@ -5707,7 +5862,11 @@
         inr_usd_rate: document.getElementById('setting-inr-rate').value.trim(),
         min_topup_npr: document.getElementById('setting-min-topup').value.trim(),
         whatsapp_number: document.getElementById('setting-whatsapp').value.trim(),
-        site_notice: document.getElementById('setting-notice').value.trim()
+        site_notice: document.getElementById('setting-notice').value.trim(),
+        referral_reward_referrer_npr: document.getElementById('setting-ref-referrer') ? document.getElementById('setting-ref-referrer').value.trim() : '50',
+        referral_reward_referee_npr: document.getElementById('setting-ref-referee') ? document.getElementById('setting-ref-referee').value.trim() : '50',
+        referral_monthly_limit: document.getElementById('setting-ref-limit') ? document.getElementById('setting-ref-limit').value.trim() : '1',
+        referral_system_enabled: document.getElementById('setting-ref-enabled') ? document.getElementById('setting-ref-enabled').checked : true
       };
 
       try {
@@ -5743,6 +5902,7 @@
         if (content) content.classList.add('active');
         if (targetTabId === 'tab-admin-account') loadAdminAccountDetails();
         if (targetTabId === 'tab-social-links') loadAdminSocialLinks();
+        if (targetTabId === 'tab-referrals') loadAdminReferrals();
       }
     }
     window.switchAdminTab = switchAdminTab;
@@ -6831,6 +6991,185 @@
         });
       } else {
         showToast('Copied: ' + code, 'info');
+      }
+    }
+
+    /* ==============================================================
+       REFERRAL PROGRAM & PRIZE CONTROLLER
+       ============================================================== */
+    let globalAdminReferrals = [];
+
+    async function loadAdminReferrals() {
+      const tbody = document.getElementById('admin-referrals-tbody');
+      if (tbody) {
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 2.5rem; color: var(--text-dim);">Loading referral records...</td></tr>`;
+      }
+
+      try {
+        const res = await fetch('/api/admin/referrals', { credentials: 'include' });
+        const data = await res.json();
+        if (!data.success) {
+          showToast(data.message || 'Failed to load referrals', 'error');
+          return;
+        }
+
+        const settings = data.settings || {};
+        const refRewardInput = document.getElementById('tab-ref-referrer-reward');
+        const refNewInput = document.getElementById('tab-ref-referee-reward');
+        const refLimitInput = document.getElementById('tab-ref-monthly-limit');
+        const refEnabledCheck = document.getElementById('tab-ref-enabled');
+
+        if (refRewardInput) refRewardInput.value = settings.reward_referrer_npr != null ? settings.reward_referrer_npr : 50;
+        if (refNewInput) refNewInput.value = settings.reward_referee_npr != null ? settings.reward_referee_npr : 50;
+        if (refLimitInput) refLimitInput.value = settings.monthly_limit || 1;
+        if (refEnabledCheck) refEnabledCheck.checked = settings.enabled !== false;
+
+        // Stats
+        const stats = data.stats || {};
+        const statTotal = document.getElementById('adm-stat-ref-total');
+        const statPaid = document.getElementById('adm-stat-ref-paid');
+        const statUsers = document.getElementById('adm-stat-ref-users');
+
+        if (statTotal) statTotal.textContent = stats.total_referrals || 0;
+        if (statPaid) statPaid.textContent = `NPR ${parseFloat(stats.total_rewards_paid_npr || 0).toLocaleString()}`;
+        if (statUsers) statUsers.textContent = stats.active_referrers_count || 0;
+
+        globalAdminReferrals = data.referrals || [];
+        renderAdminReferrals(globalAdminReferrals);
+
+      } catch (err) {
+        console.error('Error loading referrals:', err);
+        if (tbody) {
+          tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 2rem; color: #f87171;">Failed to load referrals: ${escapeHtml(err.message)}</td></tr>`;
+        }
+      }
+    }
+
+    function renderAdminReferrals(list) {
+      const tbody = document.getElementById('admin-referrals-tbody');
+      if (!tbody) return;
+
+      if (!list || list.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="9" style="text-align: center; padding: 2.5rem; color: var(--text-dim);">
+              <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">🤝</div>
+              <div>No referral signups found. When clients invite friends with their unique code or link, records will appear here.</div>
+            </td>
+          </tr>`;
+        return;
+      }
+
+      tbody.innerHTML = list.map((r, idx) => {
+        const refName = r.referrer_name ? escapeHtml(r.referrer_name) : 'Unknown User';
+        const refEmail = r.referrer_email ? escapeHtml(r.referrer_email) : 'N/A';
+        const code = r.referral_code ? escapeHtml(r.referral_code) : '-';
+        const newName = r.referee_name ? escapeHtml(r.referee_name) : 'New Gamer';
+        const newEmail = r.referee_email ? escapeHtml(r.referee_email) : 'N/A';
+        const referrerReward = parseFloat(r.reward_referrer_npr || 0);
+        const refereeReward = parseFloat(r.reward_referee_npr || 0);
+        const totalPaid = (referrerReward + refereeReward);
+        const dateStr = formatDate(r.created_at);
+
+        return `
+          <tr>
+            <td style="color: var(--text-dim); font-size: 0.82rem;">${idx + 1}</td>
+            <td>
+              <div style="font-weight: 700; color: #fff;">${refName}</div>
+              <div style="font-size: 0.76rem; color: var(--text-dim);">${refEmail}</div>
+            </td>
+            <td>
+              <span class="license-key-pill" style="font-family: monospace; font-size: 0.85rem; font-weight: 700; color: #34d399; letter-spacing: 1px;">
+                ${code}
+              </span>
+            </td>
+            <td>
+              <div style="font-weight: 700; color: #38bdf8;">${newName}</div>
+              <div style="font-size: 0.76rem; color: var(--text-dim);">${newEmail}</div>
+            </td>
+            <td><strong style="color: #34d399;">NPR ${referrerReward.toFixed(2)}</strong></td>
+            <td><strong style="color: #38bdf8;">NPR ${refereeReward.toFixed(2)}</strong></td>
+            <td><strong style="color: #fff; font-family: var(--font-heading);">NPR ${totalPaid.toFixed(2)}</strong></td>
+            <td style="font-size: 0.82rem; color: var(--text-dim);">${dateStr}</td>
+            <td>
+              <span class="badge badge-undetected" style="font-size: 0.72rem; padding: 2px 7px;">
+                SUCCESS 🟢
+              </span>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function filterAdminReferrals() {
+      const q = (document.getElementById('adm-ref-search-input')?.value || '').toLowerCase().trim();
+      if (!q) {
+        renderAdminReferrals(globalAdminReferrals);
+        return;
+      }
+      const filtered = globalAdminReferrals.filter(r => {
+        const refName = (r.referrer_name || '').toLowerCase();
+        const refEmail = (r.referrer_email || '').toLowerCase();
+        const code = (r.referral_code || '').toLowerCase();
+        const newName = (r.referee_name || '').toLowerCase();
+        const newEmail = (r.referee_email || '').toLowerCase();
+        return refName.includes(q) || refEmail.includes(q) || code.includes(q) || newName.includes(q) || newEmail.includes(q);
+      });
+      renderAdminReferrals(filtered);
+    }
+
+    async function handleAdminReferralSettingsSubmit(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btn-save-ref-prizes');
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Saving Rules...';
+      }
+
+      const referrerReward = parseFloat(document.getElementById('tab-ref-referrer-reward').value) || 0;
+      const refereeReward = parseFloat(document.getElementById('tab-ref-referee-reward').value) || 0;
+      const monthlyLimit = parseInt(document.getElementById('tab-ref-monthly-limit').value, 10) || 1;
+      const isEnabled = document.getElementById('tab-ref-enabled').checked;
+
+      try {
+        const res = await fetch('/api/admin/referrals/settings', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            referral_reward_referrer_npr: referrerReward,
+            referral_reward_referee_npr: refereeReward,
+            referral_monthly_limit: monthlyLimit,
+            referral_system_enabled: isEnabled
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          showToast(data.message || 'Failed to update referral prizes', 'error');
+          return;
+        }
+
+        showToast('Referral program prizes & monthly limits updated successfully! 🎁', 'success');
+        loadAdminReferrals();
+
+        // Also sync fields in tab-settings if present
+        const sRef = document.getElementById('setting-ref-referrer');
+        const sFee = document.getElementById('setting-ref-referee');
+        const sLim = document.getElementById('setting-ref-limit');
+        const sEn = document.getElementById('setting-ref-enabled');
+        if (sRef) sRef.value = referrerReward;
+        if (sFee) sFee.value = refereeReward;
+        if (sLim) sLim.value = monthlyLimit;
+        if (sEn) sEn.checked = isEnabled;
+
+      } catch (err) {
+        showToast('Network error saving referral settings: ' + err.message, 'error');
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = 'Save Referral Prizes & Rules 💾';
+        }
       }
     }
 

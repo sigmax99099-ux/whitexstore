@@ -35,7 +35,7 @@ export default async function handler(req, res) {
 
     // Query user by email
     const userRes = await query(
-      `SELECT id, name, email, phone, password_hash, user_type, reseller_discount, wallet_balance, status 
+      `SELECT id, name, email, phone, password_hash, user_type, reseller_discount, wallet_balance, status, referral_code 
        FROM users WHERE email = $1 LIMIT 1`,
       [cleanEmail]
     );
@@ -82,7 +82,8 @@ export default async function handler(req, res) {
         phone: user.phone,
         user_type: user.user_type,
         reseller_discount: user.reseller_discount,
-        wallet_balance: user.wallet_balance
+        wallet_balance: user.wallet_balance,
+        referral_code: user.referral_code || null
       },
       token
     });

@@ -34,6 +34,7 @@
         <li><a href="/products.html" class="nav-link">Cheats & Keys</a></li>
         <li><a href="/wallet.html" class="nav-link">Wallet Topup</a></li>
         <li><a href="/dashboard.html" class="nav-link active">Dashboard</a></li>
+        <li><a href="#sec-referrals" class="nav-link" style="color: #34d399; font-weight: 600;">🎁 Refer & Earn</a></li>
       </ul>
 
       <div class="nav-actions">
@@ -65,13 +66,17 @@
             </div>
           </div>
 
-          <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+          <div style="display: flex; align-items: center; gap: 0.85rem; flex-wrap: wrap;">
             <div style="background: #0d0d15; border: 1px solid var(--bg-card-border); border-radius: var(--radius-md); padding: 0.75rem 1.4rem; text-align: right;">
               <div style="font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase;">Wallet Balance</div>
               <div id="dash-wallet-bal" style="font-family: var(--font-heading); font-size: 1.6rem; color: var(--primary); font-weight: 800; line-height: 1.1;">
                 NPR 0.00
               </div>
             </div>
+
+            <a href="#sec-referrals" class="btn btn-outline btn-sm" style="border-color: rgba(52, 211, 153, 0.45); color: #34d399; background: rgba(52, 211, 153, 0.08); font-weight: 600;">
+              🎁 Invite & Earn
+            </a>
 
             <a href="/wallet.html" class="btn btn-primary btn-sm btn-glow">
               + Topup Balance
@@ -110,6 +115,122 @@
           <div style="text-align: center; padding: 2rem; color: var(--text-dim);">
             Loading keys...
           </div>
+        </div>
+      <!-- Referral Program Section (Invite & Earn) -->
+      <div id="sec-referrals" class="product-card" style="padding: 2rem; margin-bottom: 2rem; border-color: rgba(52, 211, 153, 0.3); background: radial-gradient(ellipse at 90% 10%, rgba(52, 211, 153, 0.08) 0%, rgba(13, 13, 21, 0.95) 70%), #0a0e17; box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 20px rgba(52, 211, 153, 0.05);">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+          <div>
+            <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.35rem;">
+              <span style="font-size: 1.5rem;">🎁</span>
+              <h3 style="color: #fff; margin: 0; font-size: 1.35rem;">// REFERRAL PROGRAM — INVITE & EARN</h3>
+              <span id="ref-reward-tag" class="badge" style="background: rgba(52, 211, 153, 0.2); border: 1px solid #34d399; color: #34d399; font-weight: 700; letter-spacing: 0.5px;">
+                BOTH GET REWARDED
+              </span>
+            </div>
+            <p style="font-size: 0.88rem; color: var(--text-muted); margin: 0; max-width: 720px;">
+              Share your exclusive referral code or link with other gamers. When someone registers an account using your referral, <strong style="color: #34d399;">BOTH of you immediately receive free NPR balance</strong> added directly to your White X Store wallet!
+            </p>
+          </div>
+          <div id="ref-quota-pill" style="padding: 0.5rem 1rem; border-radius: 999px; background: rgba(52, 211, 153, 0.12); border: 1px solid rgba(52, 211, 153, 0.35); color: #34d399; font-size: 0.82rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+            <span>🟢</span> <span id="ref-quota-text">Monthly Quota: 1 / 1 Available</span>
+          </div>
+        </div>
+
+        <!-- Referral Link & Code Share Boxes -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.25rem; margin-bottom: 1.75rem;">
+          <!-- Card 1: Unique Code -->
+          <div style="background: #060913; border: 1px solid rgba(255, 255, 255, 0.09); border-radius: var(--radius-md); padding: 1.25rem;">
+            <div style="font-size: 0.76rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700; letter-spacing: 0.8px; margin-bottom: 0.5rem;">
+              Your Unique Referral Code
+            </div>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+              <input type="text" id="dash-ref-code" readonly value="..." style="flex: 1; height: 42px; background: #0c1020; border: 1px solid rgba(52, 211, 153, 0.4); color: #34d399; font-family: var(--font-mono); font-size: 1.2rem; font-weight: 800; letter-spacing: 2px; text-align: center; border-radius: 6px; outline: none; cursor: pointer;" onclick="copyReferralCode()" title="Click to copy code">
+              <button type="button" id="btn-copy-ref-code" class="btn btn-primary btn-sm btn-glow" onclick="copyReferralCode()" style="height: 42px; white-space: nowrap; padding: 0 1.2rem;">
+                📋 Copy Code
+              </button>
+            </div>
+            <div style="font-size: 0.73rem; color: var(--text-dim); margin-top: 0.45rem;">
+              Friends can paste this code during sign-up to unlock your bonus.
+            </div>
+          </div>
+
+          <!-- Card 2: Unique Link & Quick Share -->
+          <div style="background: #060913; border: 1px solid rgba(255, 255, 255, 0.09); border-radius: var(--radius-md); padding: 1.25rem;">
+            <div style="font-size: 0.76rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700; letter-spacing: 0.8px; margin-bottom: 0.5rem;">
+              Your Direct Registration Link
+            </div>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+              <input type="text" id="dash-ref-link" readonly value="..." style="flex: 1; height: 42px; background: #0c1020; border: 1px solid rgba(56, 189, 248, 0.35); color: #38bdf8; font-family: var(--font-mono); font-size: 0.84rem; padding: 0 0.75rem; border-radius: 6px; outline: none; cursor: pointer;" onclick="copyReferralLink()" title="Click to copy link">
+              <button type="button" id="btn-copy-ref-link" class="btn btn-outline btn-sm" onclick="copyReferralLink()" style="height: 42px; white-space: nowrap; padding: 0 1.2rem; border-color: #38bdf8; color: #38bdf8;">
+                🔗 Copy Link
+              </button>
+            </div>
+            <div style="display: flex; gap: 0.6rem; align-items: center; margin-top: 0.55rem; flex-wrap: wrap;">
+              <span style="font-size: 0.73rem; color: var(--text-dim);">Share:</span>
+              <a id="ref-share-wa" href="#" target="_blank" class="btn btn-outline btn-sm" style="padding: 2px 8px; font-size: 0.72rem; border-color: #25d366; color: #25d366;">
+                💬 WhatsApp
+              </a>
+              <a id="ref-share-tg" href="#" target="_blank" class="btn btn-outline btn-sm" style="padding: 2px 8px; font-size: 0.72rem; border-color: #0088cc; color: #0088cc;">
+                ✈️ Telegram
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3 Metric Statistics Cards -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.75rem;">
+          <div style="background: rgba(13, 13, 21, 0.75); border: 1px solid var(--bg-card-border); border-radius: var(--radius-md); padding: 1rem 1.25rem;">
+            <div style="font-size: 0.74rem; color: var(--text-dim); text-transform: uppercase;">This Month's Limit</div>
+            <div id="stat-ref-month" style="font-family: var(--font-heading); font-size: 1.45rem; color: #fff; font-weight: 800; margin-top: 0.25rem;">
+              1 Person / Month
+            </div>
+            <div id="stat-ref-remaining" style="font-size: 0.73rem; color: #34d399; margin-top: 0.2rem;">
+              1 remaining this month
+            </div>
+          </div>
+
+          <div style="background: rgba(13, 13, 21, 0.75); border: 1px solid var(--bg-card-border); border-radius: var(--radius-md); padding: 1rem 1.25rem;">
+            <div style="font-size: 0.74rem; color: var(--text-dim); text-transform: uppercase;">Total Bonus Earned</div>
+            <div id="stat-ref-earned" style="font-family: var(--font-heading); font-size: 1.45rem; color: #34d399; font-weight: 800; margin-top: 0.25rem;">
+              NPR 0.00
+            </div>
+            <div style="font-size: 0.73rem; color: var(--text-dim); margin-top: 0.2rem;">
+              Credited automatically
+            </div>
+          </div>
+
+          <div style="background: rgba(13, 13, 21, 0.75); border: 1px solid var(--bg-card-border); border-radius: var(--radius-md); padding: 1rem 1.25rem;">
+            <div style="font-size: 0.74rem; color: var(--text-dim); text-transform: uppercase;">Friends Referred</div>
+            <div id="stat-ref-total" style="font-family: var(--font-heading); font-size: 1.45rem; color: var(--primary); font-weight: 800; margin-top: 0.25rem;">
+              0 Players
+            </div>
+            <div style="font-size: 0.73rem; color: var(--text-dim); margin-top: 0.2rem;">
+              All-time completed referrals
+            </div>
+          </div>
+        </div>
+
+        <!-- Referral History Table -->
+        <h4 style="color: #fff; font-size: 0.95rem; margin-bottom: 0.75rem;">// YOUR REFERRED FRIENDS</h4>
+        <div class="table-responsive">
+          <table class="table-custom">
+            <thead>
+              <tr>
+                <th>Friend</th>
+                <th>Email</th>
+                <th>Bonus Earned</th>
+                <th>Date Joined</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="referral-history-tbody">
+              <tr>
+                <td colspan="5" style="text-align: center; padding: 1.5rem; color: var(--text-dim);">
+                  Loading referral records...
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -177,6 +298,7 @@
       document.body.classList.add('user-authenticated');
       renderUserInfo(authData.user);
       loadUserOrders();
+      loadUserReferrals();
       startDeliveryPolling();
     });
 
@@ -482,6 +604,141 @@
     window.addEventListener('beforeunload', () => {
       if (pollingInterval) clearInterval(pollingInterval);
     });
+
+    // ==============================================================
+    // REFERRAL PROGRAM FUNCTIONS
+    // ==============================================================
+    async function loadUserReferrals() {
+      try {
+        const res = await fetch('/api/referrals/my-info', { credentials: 'include' });
+        const data = await res.json();
+        if (!data.success) return;
+
+        const code = data.referral_code || '';
+        const origin = window.location.origin;
+        const link = `${origin}/register.html?ref=${encodeURIComponent(code)}`;
+
+        const codeInput = document.getElementById('dash-ref-code');
+        const linkInput = document.getElementById('dash-ref-link');
+        if (codeInput) codeInput.value = code;
+        if (linkInput) linkInput.value = link;
+
+        // Share links
+        const waBtn = document.getElementById('ref-share-wa');
+        const tgBtn = document.getElementById('ref-share-tg');
+        const refereeReward = (data.settings && data.settings.reward_referee_npr) || 50;
+        const shareText = encodeURIComponent(`🎮 Join White X Store using my referral code ${code} and get NPR ${refereeReward} free wallet bonus instantly! Register here: ${link}`);
+        if (waBtn) waBtn.href = `https://wa.me/?text=${shareText}`;
+        if (tgBtn) tgBtn.href = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(`Join White X Store and get NPR ${refereeReward} free balance!`)}`;
+
+        // Reward tag
+        const rewardTag = document.getElementById('ref-reward-tag');
+        if (rewardTag) {
+          rewardTag.textContent = `BOTH GET NPR ${refereeReward} FREE`;
+        }
+
+        // Stats
+        const stats = data.stats || {};
+        const earnedEl = document.getElementById('stat-ref-earned');
+        const totalEl = document.getElementById('stat-ref-total');
+        const monthEl = document.getElementById('stat-ref-month');
+
+        if (earnedEl) earnedEl.textContent = `NPR ${parseFloat(stats.total_earned_npr || 0).toLocaleString()}`;
+        if (totalEl) totalEl.textContent = `${stats.total_referrals || 0} Player${stats.total_referrals === 1 ? '' : 's'}`;
+        if (monthEl) monthEl.textContent = `${stats.monthly_limit || 1} Person / Month`;
+
+        // Quota status pill
+        const quotaPill = document.getElementById('ref-quota-pill');
+        const statRemaining = document.getElementById('stat-ref-remaining');
+
+        if (stats.is_limit_reached) {
+          if (quotaPill) {
+            quotaPill.style.background = 'rgba(239, 68, 68, 0.15)';
+            quotaPill.style.borderColor = 'rgba(239, 68, 68, 0.4)';
+            quotaPill.style.color = '#f87171';
+            quotaPill.innerHTML = `<span>🔴</span> <span>Monthly Limit Reached (${stats.referrals_this_month}/${stats.monthly_limit} Used)</span>`;
+          }
+          if (statRemaining) {
+            statRemaining.style.color = '#f87171';
+            statRemaining.textContent = `0 remaining (Resets 1st of next month)`;
+          }
+        } else {
+          if (quotaPill) {
+            quotaPill.style.background = 'rgba(52, 211, 153, 0.12)';
+            quotaPill.style.borderColor = 'rgba(52, 211, 153, 0.35)';
+            quotaPill.style.color = '#34d399';
+            quotaPill.innerHTML = `<span>🟢</span> <span>Monthly Quota: ${stats.remaining_this_month} / ${stats.monthly_limit} Available</span>`;
+          }
+          if (statRemaining) {
+            statRemaining.style.color = '#34d399';
+            statRemaining.textContent = `${stats.remaining_this_month} available this month`;
+          }
+        }
+
+        // History Table
+        const tbody = document.getElementById('referral-history-tbody');
+        if (!tbody) return;
+        if (!data.history || data.history.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="5" style="text-align: center; padding: 2.2rem; color: var(--text-dim);">
+                <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">🎁</div>
+                <div>No friends referred yet. Share your code or link above to start earning rewards!</div>
+              </td>
+            </tr>`;
+          return;
+        }
+
+        tbody.innerHTML = data.history.map(h => `
+          <tr>
+            <td><strong style="color: #fff;">${escapeHtml(h.referee_name)}</strong></td>
+            <td><span style="font-family: var(--font-mono); font-size: 0.85rem; color: #94a3b8;">${escapeHtml(h.referee_email)}</span></td>
+            <td><span style="color: #34d399; font-weight: 700; font-family: var(--font-heading);">+ NPR ${parseFloat(h.reward_npr).toFixed(2)}</span></td>
+            <td style="color: var(--text-dim); font-size: 0.84rem;">${formatDate(h.created_at)}</td>
+            <td><span class="badge badge-undetected">SUCCESS / REWARDED</span></td>
+          </tr>
+        `).join('');
+
+      } catch (err) {
+        console.error('Error loading referrals:', err);
+      }
+    }
+
+    function copyReferralCode() {
+      const codeInput = document.getElementById('dash-ref-code');
+      if (!codeInput || !codeInput.value) return;
+      navigator.clipboard.writeText(codeInput.value).then(() => {
+        showToast(`Referral Code ${codeInput.value} copied to clipboard! 📋`, 'success');
+        const btn = document.getElementById('btn-copy-ref-code');
+        if (btn) {
+          const orig = btn.textContent;
+          btn.textContent = '✓ Copied!';
+          setTimeout(() => { btn.textContent = orig; }, 1800);
+        }
+      }).catch(() => {
+        codeInput.select();
+        document.execCommand('copy');
+        showToast('Copied to clipboard!', 'success');
+      });
+    }
+
+    function copyReferralLink() {
+      const linkInput = document.getElementById('dash-ref-link');
+      if (!linkInput || !linkInput.value) return;
+      navigator.clipboard.writeText(linkInput.value).then(() => {
+        showToast('Referral invite link copied to clipboard! 🔗', 'success');
+        const btn = document.getElementById('btn-copy-ref-link');
+        if (btn) {
+          const orig = btn.textContent;
+          btn.textContent = '✓ Copied!';
+          setTimeout(() => { btn.textContent = orig; }, 1800);
+        }
+      }).catch(() => {
+        linkInput.select();
+        document.execCommand('copy');
+        showToast('Copied to clipboard!', 'success');
+      });
+    }
   </script>
 </body>
 </html>

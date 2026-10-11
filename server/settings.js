@@ -7,7 +7,7 @@ export default async function handler(req, res) {
 
   try {
     const settingsRes = await query(
-      "SELECT setting_key, setting_value FROM settings WHERE setting_key IN ('whatsapp_number', 'npr_usd_rate', 'inr_usd_rate', 'min_topup_npr', 'site_notice', 'hero_banners_config')"
+      "SELECT setting_key, setting_value FROM settings WHERE setting_key IN ('whatsapp_number', 'npr_usd_rate', 'inr_usd_rate', 'min_topup_npr', 'site_notice', 'hero_banners_config', 'referral_reward_referrer_npr', 'referral_reward_referee_npr', 'referral_monthly_limit', 'referral_system_enabled')"
     );
 
     const settings = {
@@ -16,7 +16,11 @@ export default async function handler(req, res) {
       inr_usd_rate: '84.00',
       min_topup_npr: '200',
       site_notice: '',
-      hero_banners_config: ''
+      hero_banners_config: '',
+      referral_reward_referrer_npr: '50',
+      referral_reward_referee_npr: '50',
+      referral_monthly_limit: '1',
+      referral_system_enabled: 'true'
     };
 
     settingsRes.rows.forEach(r => {

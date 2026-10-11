@@ -72,6 +72,23 @@
             <input type="password" id="reg-confirm-password" class="form-input" placeholder="••••••••" required autocomplete="new-password">
           </div>
 
+          <!-- Referral Code Input Field (Optional) -->
+          <div class="form-group" style="position: relative;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+              <label class="form-label" for="reg-referral-code" style="margin-bottom: 0;">🎁 Referral Code (Optional)</label>
+              <span id="ref-bonus-badge" style="font-size: 0.72rem; color: #34d399; background: rgba(52, 211, 153, 0.1); border: 1px solid rgba(52, 211, 153, 0.25); border-radius: 4px; padding: 1px 6px; font-weight: 600;">
+                + Both Get Wallet Bonus
+              </span>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+              <input type="text" id="reg-referral-code" class="form-input" placeholder="e.g. WX-A1B2C3" style="text-transform: uppercase; font-family: var(--font-mono); font-weight: 700; letter-spacing: 1px;" autocomplete="off">
+              <button type="button" id="btn-verify-referral" class="btn btn-outline btn-sm" style="padding: 0.5rem 0.85rem; font-size: 0.8rem; white-space: nowrap;">
+                Verify Code
+              </button>
+            </div>
+            <div id="referral-status-msg" style="font-size: 0.75rem; margin-top: 0.35rem; display: none;"></div>
+          </div>
+
           <!-- Fake Captcha Widget -->
           <div id="captcha-slot"></div>
 
@@ -96,6 +113,70 @@
     document.addEventListener('DOMContentLoaded', () => {
       setupCaptcha('captcha-slot');
 
+      // Check and pre-fill referral code from URL query parameter (e.g. ?ref=CODE or ?referral=CODE)
+      const urlParams = new URLSearchParams(window.location.search);
+      const refParam = urlParams.get('ref') || urlParams.get('referral');
+      const refInput = document.getElementById('reg-referral-code');
+      const refMsg = document.getElementById('referral-status-msg');
+      const refBtn = document.getElementById('btn-verify-referral');
+
+      // Load dynamic public settings for exact prize amount
+      fetch('/api/settings').then(r => r.json()).then(data => {
+        if (data.settings && data.settings.referral_reward_referee_npr) {
+          const badge = document.getElementById('ref-bonus-badge');
+          if (badge) {
+            badge.textContent = `🎁 Both Get NPR ${data.settings.referral_reward_referee_npr} Bonus`;
+          }
+        }
+      }).catch(() => {});
+
+      async function verifyCode(codeVal) {
+        if (!codeVal || !codeVal.trim()) {
+          refMsg.style.display = 'none';
+          return;
+        }
+        refMsg.style.display = 'block';
+        refMsg.style.color = 'var(--text-dim)';
+        refMsg.textContent = 'Verifying referral code...';
+
+        try {
+          const res = await fetch(`/api/referrals/validate?code=${encodeURIComponent(codeVal.trim())}`);
+          const data = await res.json();
+          if (data.valid) {
+            refMsg.style.color = '#34d399';
+            refMsg.innerHTML = `🟢 <strong>Valid code from ${escapeHtml(data.referrer_name)}!</strong> Both you and your friend will receive <strong>NPR ${data.reward_referee_npr}</strong> free wallet balance upon registration!`;
+          } else if (data.limit_reached) {
+            refMsg.style.color = '#f87171';
+            refMsg.innerHTML = `🔴 <strong>Monthly Limit Reached:</strong> This referrer has already completed their limit of 1 referral this month. You can still register without this code.`;
+          } else {
+            refMsg.style.color = '#f87171';
+            refMsg.textContent = `🔴 ${data.message || 'Invalid referral code.'}`;
+          }
+        } catch (e) {
+          refMsg.style.color = '#f87171';
+          refMsg.textContent = 'Could not verify referral code right now.';
+        }
+      }
+
+      if (refBtn) {
+        refBtn.addEventListener('click', () => {
+          verifyCode(refInput.value);
+        });
+      }
+
+      if (refInput) {
+        refInput.addEventListener('blur', () => {
+          if (refInput.value.trim().length >= 4) {
+            verifyCode(refInput.value);
+          }
+        });
+      }
+
+      if (refParam && refInput) {
+        refInput.value = refParam.toUpperCase().trim();
+        verifyCode(refInput.value);
+      }
+
       const form = document.getElementById('register-form');
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -110,6 +191,7 @@
         const phone = document.getElementById('reg-phone').value.trim();
         const password = document.getElementById('reg-password').value;
         const confirmPass = document.getElementById('reg-confirm-password').value;
+        const referralCode = refInput ? refInput.value.trim().toUpperCase() : '';
         const btn = document.getElementById('btn-register-submit');
 
         if (password !== confirmPass) {
@@ -130,7 +212,13 @@
             method: 'POST',
             credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, email, phone, password })
+            body: JSON.stringify({
+              name,
+              email,
+              phone,
+              password,
+              referral_code: referralCode || undefined
+            })
           });
 
           const data = await res.json();
@@ -139,6 +227,13 @@
             showToast(data.message || 'Registration failed.', 'error');
             btn.disabled = false;
             btn.textContent = 'Create Free Account ⚡';
+            if (data.referral_invalid) {
+              if (refMsg) {
+                refMsg.style.display = 'block';
+                refMsg.style.color = '#f87171';
+                refMsg.textContent = `🔴 ${data.message}`;
+              }
+            }
             return;
           }
 
@@ -146,11 +241,15 @@
             localStorage.setItem('wx_token', data.token);
           }
 
-          showToast('Account registered successfully! Welcome to White X.', 'success');
+          if (data.referral_applied) {
+            showToast(`Account created! NPR ${data.bonus_amount} referral bonus added to your wallet 🎁`, 'success');
+          } else {
+            showToast('Account registered successfully! Welcome to White X.', 'success');
+          }
 
           setTimeout(() => {
             window.location.href = '/dashboard.html';
-          }, 700);
+          }, 800);
 
         } catch (err) {
           console.error('Registration error:', err);
