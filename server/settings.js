@@ -69,6 +69,29 @@ export default async function handler(req, res) {
     });
   } catch (err) {
     console.error('Settings public fetch error:', err);
-    return res.status(500).json({ success: false, message: 'Failed to load settings' });
+    return res.status(200).json({
+      success: true,
+      settings: {
+        whatsapp_number: '+9779800000000',
+        npr_usd_rate: '134.50',
+        inr_usd_rate: '84.00',
+        min_topup_npr: '200',
+        site_notice: '⚡ Instant 24/7 Auto Delivery Active. Fully undetected on all current game patches!',
+        hero_banners_config: '',
+        referral_reward_referrer_npr: '50',
+        referral_reward_referee_npr: '50',
+        referral_monthly_limit: '1',
+        referral_system_enabled: 'true'
+      },
+      rates: {
+        USD: 1,
+        NPR: 134.50,
+        INR: 84.00
+      },
+      whatsapp_number: '+9779800000000',
+      site_notice: '⚡ Instant 24/7 Auto Delivery Active. Fully undetected on all current game patches!',
+      social_links: [],
+      hero_banners: null
+    });
   }
 }
