@@ -564,7 +564,16 @@ window.loadHeroBanners = loadHeroBanners;
    ============================================================== */
 async function checkAuth() {
   try {
-    const res = await fetch('/api/auth/me');
+    const userToken = localStorage.getItem('wx_token');
+    const headers = {};
+    if (userToken) {
+      headers['Authorization'] = 'Bearer ' + userToken;
+    }
+
+    const res = await fetch('/api/auth/me', {
+      credentials: 'include',
+      headers
+    });
 
     if (res.ok) {
       const data = await res.json();
@@ -579,10 +588,14 @@ async function checkAuth() {
       }
     }
 
+    // Only clear token if server explicitly responded with 401
+    if (res.status === 401) {
+      localStorage.removeItem('wx_token');
+    }
+
     Store.user = null;
     document.body.classList.remove('user-authenticated');
     document.body.classList.add('auth-checked');
-    localStorage.removeItem('wx_token');
     renderGuestNav();
     updateDrawerWithUser(null);
   } catch (err) {
@@ -655,19 +668,19 @@ function renderLoggedInNav(user) {
         <span class="theme-icon-3d">${Store.theme === 'light' ? '🌙' : '☀️'}</span>
       </button>
 
-      <!-- Client Profile Badge: Logo + Name (Login & Register are removed) -->
+      <!-- Live Wallet Balance Pill (Direct replacement for Login / Register) -->
+      <a href="/wallet.html" class="wallet-pill-btn" id="nav-wallet-pill" title="Topup / View Wallet Balance">
+        <span class="wallet-pill-icon">💳</span>
+        <span id="hdr-wallet-bal">${walletFormatted}</span>
+      </a>
+
+      <!-- Client Profile Badge: Avatar Ring + Name -->
       <a href="${location.pathname.includes('dashboard') ? 'javascript:void(0)' : '/dashboard.html'}" onclick="${location.pathname.includes('dashboard') ? "switchDashTab('profile')" : ''}" class="nav-user-profile-badge" id="nav-avatar-btn" title="Dashboard & Profile: ${escapeHtml(user.name)}">
         <div class="nav-user-avatar-ring">
           <span>${escapeHtml(initials)}</span>
           <span class="user-avatar-online-dot"></span>
         </div>
         <span class="nav-user-name-text">${escapeHtml(user.name)}</span>
-      </a>
-
-      <!-- Live Wallet Balance Pill -->
-      <a href="/wallet.html" class="wallet-pill-btn" id="nav-wallet-pill" title="Topup / View Wallet Balance">
-        <span class="wallet-pill-icon">💳</span>
-        <span id="hdr-wallet-bal">${walletFormatted}</span>
       </a>
     </div>
   `;
