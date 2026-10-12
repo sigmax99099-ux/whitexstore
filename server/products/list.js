@@ -7,9 +7,6 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Proactively ensure schema & starter plan discounts in background
-    ensureProductCascadeSchema().catch(() => {});
-
     const { cat, featured } = req.query || {};
 
     let sql = `

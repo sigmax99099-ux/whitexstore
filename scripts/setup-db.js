@@ -1,44 +1,46 @@
-import dotenv from 'dotenv';
 import pg from 'pg';
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
 
-dotenv.config();
+const { Pool } = pg;
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const { Client } = pg;
+async function setup() {
+  const connectionString = process.argv[2] || process.env.DATABASE_URL;
 
-const client = new Client({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
-});
+  if (!connectionString) {
+    console.error('❌ Please provide your database connection string:');
+    console.error('Usage: node scripts/setup-db.js "postgres://avnadmin:password@host:port/defaultdb?sslmode=require"');
+    process.exit(1);
+  }
 
-async function main() {
+  let cleanConnectionString = connectionString.replace(/[?&]sslmode=[^&]*/g, '');
+  if (cleanConnectionString.endsWith('?')) cleanConnectionString = cleanConnectionString.slice(0, -1);
+
+  console.log('🔄 Connecting to target PostgreSQL database...');
+  const pool = new Pool({
+    connectionString: cleanConnectionString,
+    ssl: { rejectUnauthorized: false }
+  });
+
   try {
-    console.log('Connecting to Neon PostgreSQL...');
-    await client.connect();
-    console.log('Connected successfully!');
+    const client = await pool.connect();
+    console.log('✅ Connected successfully!');
 
-    // Check existing tables
-    const res = await client.query("SELECT table_name FROM information_schema.tables WHERE table_schema='public'");
-    console.log('Current tables in DB:', res.rows.map(r => r.table_name));
+    const sqlPath = path.resolve('sql', 'schema.sql');
+    console.log(`📄 Reading ${sqlPath}...`);
+    const sqlContent = fs.readFileSync(sqlPath, 'utf8');
 
-    const schemaPath = path.join(__dirname, '..', 'sql', 'schema.sql');
-    if (fs.existsSync(schemaPath)) {
-      console.log('Applying sql/schema.sql...');
-      const schemaSql = fs.readFileSync(schemaPath, 'utf8');
-      await client.query(schemaSql);
-      console.log('Schema and seed data applied successfully!');
+    console.log('🚀 Executing database schema & data migration...');
+    await client.query(sqlContent);
 
-      const updatedRes = await client.query("SELECT table_name FROM information_schema.tables WHERE table_schema='public'");
-      console.log('Tables now in DB:', updatedRes.rows.map(r => r.table_name));
-    }
+    console.log('🎉 SUCCESS! All tables, data, products, plans, and settings have been safely migrated!');
+    client.release();
+    await pool.end();
   } catch (err) {
-    console.error('Database setup error:', err);
-  } finally {
-    await client.end();
+    console.error('❌ Migration error:', err.message);
+    await pool.end();
+    process.exit(1);
   }
 }
 
-main();
+setup();

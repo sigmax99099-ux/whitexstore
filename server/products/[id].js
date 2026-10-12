@@ -8,8 +8,6 @@ export default async function handler(req, res) {
   }
 
   try {
-    ensureProductCascadeSchema().catch(() => {});
-
     const { id } = req.query;
 
     if (!id || isNaN(parseInt(id, 10))) {
