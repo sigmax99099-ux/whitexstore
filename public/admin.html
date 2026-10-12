@@ -6384,7 +6384,7 @@ X-API-Key: wx_live_YOUR_KEY</pre>
       console.log('[SVC] Loading dropdown data...');
       await ensureProductsLoaded(true);
       await loadAdminPlans();
-      await ensureSupplierApisLoaded();
+      await ensureSupplierApisLoaded(true);
       console.log('[SVC] Products loaded:', globalProducts?.length, 'Plans loaded:', globalPlans?.length, 'APIs:', globalSupplierApis?.length);
       
       // Populate Supplier dropdowns
@@ -6392,21 +6392,33 @@ X-API-Key: wx_live_YOUR_KEY</pre>
       const formSupplierSelect = document.getElementById('svm-supplier');
       const filterSupplierSelect = document.getElementById('sv-mappings-filter-supplier');
 
-      if (catSupplierSelect && globalSupplierApis && globalSupplierApis.length > 0) {
-        catSupplierSelect.innerHTML = globalSupplierApis.map((a, idx) => 
-          `<option value="${a.id}" ${idx === 0 || a.name.toLowerCase().includes('keylicense') ? 'selected' : ''}>${escapeHtml(a.name)} (${escapeHtml(a.api_type)})</option>`
-        ).join('');
+      if (catSupplierSelect) {
+        if (globalSupplierApis && globalSupplierApis.length > 0) {
+          catSupplierSelect.innerHTML = globalSupplierApis.map((a, idx) => 
+            `<option value="${a.id}" ${idx === 0 || a.name.toLowerCase().includes('keylicense') ? 'selected' : ''}>${escapeHtml(a.name)} (${escapeHtml(a.api_type)})</option>`
+          ).join('');
+        } else {
+          catSupplierSelect.innerHTML = '<option value="">-- No Suppliers Configured --</option>';
+        }
       }
 
-      if (formSupplierSelect && globalSupplierApis && globalSupplierApis.length > 0) {
-        formSupplierSelect.innerHTML = '<option value="">-- Select Supplier Gateway --</option>' + 
-          globalSupplierApis.map(a => `<option value="${a.id}">${escapeHtml(a.name)} (${escapeHtml(a.api_type)})</option>`).join('');
-        if (globalSupplierApis[0]) formSupplierSelect.value = globalSupplierApis[0].id;
+      if (formSupplierSelect) {
+        if (globalSupplierApis && globalSupplierApis.length > 0) {
+          formSupplierSelect.innerHTML = '<option value="">-- Select Supplier Gateway --</option>' + 
+            globalSupplierApis.map(a => `<option value="${a.id}">${escapeHtml(a.name)} (${escapeHtml(a.api_type)})</option>`).join('');
+          if (globalSupplierApis[0]) formSupplierSelect.value = globalSupplierApis[0].id;
+        } else {
+          formSupplierSelect.innerHTML = '<option value="">-- No Suppliers Configured --</option>';
+        }
       }
 
-      if (filterSupplierSelect && globalSupplierApis && globalSupplierApis.length > 0) {
-        filterSupplierSelect.innerHTML = '<option value="all">All Suppliers</option>' + 
-          globalSupplierApis.map(a => `<option value="${a.id}">${escapeHtml(a.name)}</option>`).join('');
+      if (filterSupplierSelect) {
+        if (globalSupplierApis && globalSupplierApis.length > 0) {
+          filterSupplierSelect.innerHTML = '<option value="all">All Suppliers</option>' + 
+            globalSupplierApis.map(a => `<option value="${a.id}">${escapeHtml(a.name)}</option>`).join('');
+        } else {
+          filterSupplierSelect.innerHTML = '<option value="all">All Suppliers</option>';
+        }
       }
 
       // Populate product dropdown
