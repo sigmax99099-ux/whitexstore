@@ -450,16 +450,19 @@ function renderLoggedInNav(user) {
         <span class="theme-icon-3d">${Store.theme === 'light' ? '🌙' : '☀️'}</span>
       </button>
 
-      <!-- Live Wallet Balance Pill (Screenshot 2 Style: 💳 Rs0.00) -->
+      <!-- Client Profile Badge: Logo + Name (Login & Register are removed) -->
+      <a href="${location.pathname.includes('dashboard') ? 'javascript:void(0)' : '/dashboard.html'}" onclick="${location.pathname.includes('dashboard') ? "switchDashTab('profile')" : ''}" class="nav-user-profile-badge" id="nav-avatar-btn" title="Dashboard & Profile: ${escapeHtml(user.name)}">
+        <div class="nav-user-avatar-ring">
+          <span>${escapeHtml(initials)}</span>
+          <span class="user-avatar-online-dot"></span>
+        </div>
+        <span class="nav-user-name-text">${escapeHtml(user.name)}</span>
+      </a>
+
+      <!-- Live Wallet Balance Pill -->
       <a href="/wallet.html" class="wallet-pill-btn" id="nav-wallet-pill" title="Topup / View Wallet Balance">
         <span class="wallet-pill-icon">💳</span>
         <span id="hdr-wallet-bal">${walletFormatted}</span>
-      </a>
-
-      <!-- User Avatar Circle (Screenshot 2 Style: gradient circle with initial W) -->
-      <a href="${location.pathname.includes('dashboard') ? 'javascript:void(0)' : '/dashboard.html'}" onclick="${location.pathname.includes('dashboard') ? "switchDashTab('profile')" : ''}" class="user-avatar-badge-btn" id="nav-avatar-btn" title="My Profile (${escapeHtml(user.name)})">
-        <span>${escapeHtml(initials)}</span>
-        <span class="user-avatar-online-dot"></span>
       </a>
     </div>
   `;
@@ -736,18 +739,22 @@ function mountDrawerAndBars() {
 
     <!-- Scrollable Drawer Body -->
     <div class="drawer-content">
-      <!-- Profile Card (Figure 1) -->
-      <div class="drawer-profile-card" id="drawer-profile-card">
-        <button type="button" class="drawer-profile-x-btn" id="drawer-profile-card-close" title="Close Drawer">✕</button>
-        <div class="drawer-avatar-ring">
-          <span id="drawer-user-initials">WX</span>
-          <span class="drawer-avatar-online"></span>
+      <!-- Profile Ring HUD (Ring Design - Square Card Removed) -->
+      <div class="drawer-profile-card drawer-ring-design" id="drawer-profile-card">
+        <div class="drawer-ring-assembly">
+          <div class="drawer-ring-halo"></div>
+          <div class="drawer-ring-orbit"></div>
+          <div class="drawer-ring-glow"></div>
+          <div class="drawer-avatar-ring">
+            <span id="drawer-user-initials">WX</span>
+            <span class="drawer-avatar-online"></span>
+          </div>
         </div>
         <div class="drawer-user-name-row">
           <span class="drawer-user-name" id="drawer-user-name">Guest Player</span>
-          <span class="drawer-verified-badge" id="drawer-user-badge">VERIFIED</span>
+          <span class="drawer-verified-badge" id="drawer-user-badge">UNVERIFIED</span>
         </div>
-        <div class="drawer-user-email" id="drawer-user-email">guest@whitexstore.com</div>
+        <div class="drawer-user-email" id="drawer-user-email">Login to view license keys</div>
         <div class="drawer-level-wrap">
           <div class="drawer-level-header">
             <span class="drawer-level-badge">⚡ VIP STATUS</span>

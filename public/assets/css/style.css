@@ -2213,7 +2213,7 @@ a:hover {
 
 @media (max-width: 768px) {
   .mobile-toggle {
-    display: block;
+    display: none !important;
   }
   .nav-links {
     position: fixed;
@@ -3484,11 +3484,7 @@ a:hover {
     font-size: 0.95rem !important;
   }
   .mobile-toggle {
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    padding: 5px 9px !important;
-    font-size: 1.15rem !important;
+    display: none !important;
   }
   .nav-links {
     position: fixed !important;
@@ -4212,10 +4208,11 @@ a:hover {
   width: 100%;
 }
 
+/* High-Visibility Brand Neon Left Hamburger Toggle */
 .drawer-hamburger-btn {
-  background: #060a14;
-  border: 1.5px solid rgba(0, 240, 255, 0.4);
-  border-radius: 10px;
+  background: rgba(255, 0, 85, 0.14);
+  border: 2px solid #ff0055;
+  border-radius: 11px;
   width: 42px;
   height: 42px;
   display: flex;
@@ -4225,36 +4222,38 @@ a:hover {
   gap: 5px;
   cursor: pointer;
   transition: all 0.25s ease;
-  box-shadow: 0 0 12px rgba(0, 240, 255, 0.2);
+  box-shadow: 0 0 16px rgba(255, 0, 85, 0.45);
   padding: 0;
   flex-shrink: 0;
 }
 
 .drawer-hamburger-btn:hover {
-  border-color: #00f0ff;
-  box-shadow: 0 0 20px rgba(0, 240, 255, 0.45);
-  transform: scale(1.04);
+  background: rgba(255, 0, 85, 0.28);
+  border-color: #ff007f;
+  box-shadow: 0 0 24px rgba(255, 0, 127, 0.7);
+  transform: scale(1.06);
 }
 
 .drawer-hamburger-btn span {
   display: block;
-  width: 20px;
-  height: 2.5px;
-  background: #00f0ff;
+  width: 22px;
+  height: 3px;
+  background: #ffffff;
   border-radius: 3px;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 0 6px #00f0ff;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.95);
 }
 
 .drawer-hamburger-btn.active {
-  border-color: #ff0055;
-  box-shadow: 0 0 16px rgba(255, 0, 85, 0.5);
+  border-color: #00f0ff;
+  box-shadow: 0 0 18px rgba(0, 240, 255, 0.7);
+  background: rgba(0, 240, 255, 0.18);
 }
 
 .drawer-hamburger-btn.active span:nth-child(1) {
-  transform: translateY(7.5px) rotate(45deg);
-  background: #ff0055;
-  box-shadow: 0 0 8px #ff0055;
+  transform: translateY(8px) rotate(45deg);
+  background: #00f0ff;
+  box-shadow: 0 0 10px #00f0ff;
 }
 
 .drawer-hamburger-btn.active span:nth-child(2) {
@@ -4263,9 +4262,31 @@ a:hover {
 }
 
 .drawer-hamburger-btn.active span:nth-child(3) {
-  transform: translateY(-7.5px) rotate(-45deg);
-  background: #ff0055;
-  box-shadow: 0 0 8px #ff0055;
+  transform: translateY(-8px) rotate(-45deg);
+  background: #00f0ff;
+  box-shadow: 0 0 10px #00f0ff;
+}
+
+/* Day Mode High-Visibility Contrast for Left Hamburger Toggle */
+[data-theme="light"] .drawer-hamburger-btn {
+  background: #ffffff !important;
+  border: 2px solid #ff0055 !important;
+  box-shadow: 0 2px 10px rgba(255, 0, 85, 0.3) !important;
+}
+
+[data-theme="light"] .drawer-hamburger-btn span {
+  background: #ff0055 !important;
+  box-shadow: 0 0 4px rgba(255, 0, 85, 0.4) !important;
+}
+
+[data-theme="light"] .drawer-hamburger-btn.active {
+  background: #fff0f5 !important;
+  border-color: #ff0055 !important;
+}
+
+[data-theme="light"] .drawer-hamburger-btn.active span {
+  background: #ff0055 !important;
+  box-shadow: none !important;
 }
 
 /* Header Right Pills */
@@ -4539,78 +4560,109 @@ a:hover {
   gap: 1.1rem;
 }
 
-/* Figure 1 Profile Card */
-.drawer-profile-card {
-  background: radial-gradient(ellipse at 50% 20%, rgba(0, 240, 255, 0.15) 0%, rgba(9, 14, 26, 0.96) 75%), #050812;
-  border: 1.5px solid rgba(0, 240, 255, 0.4);
-  border-radius: 18px;
-  padding: 1.25rem;
-  position: relative;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6), inset 0 0 20px rgba(0, 240, 255, 0.1);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
+/* Cyber Ring HUD Profile - Pure Ring Design (Square Box Removed) */
+.drawer-profile-card,
+.drawer-profile-card.drawer-ring-design {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 1.25rem 0.75rem 0.75rem !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  text-align: center !important;
+  position: relative !important;
+  margin-bottom: 0.25rem !important;
 }
 
 .drawer-profile-x-btn {
-  position: absolute;
-  top: 10px;
-  right: 12px;
-  background: rgba(255, 255, 255, 0.08);
-  border: none;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  color: #94a3b8;
+  display: none !important; /* Redundant close button removed */
+}
+
+/* Concentric Cyber Ring Assembly */
+.drawer-ring-assembly {
+  position: relative;
+  width: 110px;
+  height: 110px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.75rem;
-  cursor: pointer;
-  transition: all 0.2s;
+  margin-bottom: 0.85rem;
 }
 
-.drawer-profile-x-btn:hover {
-  background: rgba(255, 0, 85, 0.2);
-  color: #ff0055;
-}
-
-.drawer-avatar-ring {
-  width: 68px;
-  height: 68px;
+/* Ambient Radial Glow Halo */
+.drawer-ring-halo {
+  position: absolute;
+  width: 120px;
+  height: 120px;
   border-radius: 50%;
-  background: #090e1c;
-  border: 3px solid #00f0ff;
-  box-shadow: 0 0 20px rgba(0, 240, 255, 0.7), inset 0 0 12px rgba(0, 240, 255, 0.4);
+  background: radial-gradient(circle, rgba(0, 240, 255, 0.22) 0%, rgba(255, 0, 85, 0.12) 50%, transparent 72%);
+  pointer-events: none;
+  animation: cyberHaloPulse 4s ease-in-out infinite alternate;
+}
+
+/* Outer Spinning Dashed Orbit Ring */
+.drawer-ring-orbit {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px dashed rgba(0, 240, 255, 0.7);
+  box-shadow: 0 0 16px rgba(0, 240, 255, 0.4), inset 0 0 12px rgba(0, 240, 255, 0.2);
+  animation: cyberRingRotate 12s linear infinite;
+}
+
+/* Middle Neon Pulsing Energy Ring */
+.drawer-ring-glow {
+  position: absolute;
+  inset: 7px;
+  border-radius: 50%;
+  border: 2.5px solid #00f0ff;
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.85), inset 0 0 12px rgba(0, 240, 255, 0.45);
+  animation: cyberRingPulse 3s ease-in-out infinite alternate;
+}
+
+/* Inner Avatar Core Disc */
+.drawer-avatar-ring {
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #15253e 0%, #050812 85%);
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.8);
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: var(--font-heading);
-  font-size: 1.6rem;
-  font-weight: 800;
+  font-size: 1.7rem;
+  font-weight: 900;
   color: #ffffff;
   position: relative;
-  margin-bottom: 0.65rem;
+  z-index: 3;
+  letter-spacing: 0.5px;
+  text-shadow: 0 0 12px rgba(0, 240, 255, 0.7);
+  margin-bottom: 0 !important;
 }
 
+/* Online Indicator Dot on the Ring */
 .drawer-avatar-online {
   position: absolute;
   bottom: 2px;
   right: 2px;
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
   background: #10b981;
-  border: 2px solid #050812;
+  border: 2.5px solid #050812;
   border-radius: 50%;
-  box-shadow: 0 0 8px #10b981;
+  box-shadow: 0 0 10px #10b981;
+  z-index: 4;
 }
 
 .drawer-user-name-row {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
-  margin-bottom: 0.2rem;
+  margin-bottom: 0.25rem;
 }
 
 .drawer-user-name {
@@ -4618,6 +4670,7 @@ a:hover {
   font-size: 1.25rem;
   font-weight: 800;
   color: #ffffff;
+  letter-spacing: 0.5px;
 }
 
 .drawer-verified-badge {
@@ -4625,36 +4678,39 @@ a:hover {
   border: 1px solid #00f0ff;
   color: #00f0ff;
   font-family: var(--font-cyber);
-  font-size: 0.62rem;
+  font-size: 0.65rem;
   font-weight: 800;
-  padding: 0.15rem 0.45rem;
-  border-radius: 4px;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
   letter-spacing: 0.5px;
-  box-shadow: 0 0 8px rgba(0, 240, 255, 0.3);
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.35);
 }
 
 .drawer-user-email {
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   color: #94a3b8;
   margin-bottom: 0.85rem;
-  word-break: break-all;
 }
 
 .drawer-level-wrap {
-  width: 100%;
-  background: rgba(0, 0, 0, 0.45);
-  border: 1px solid rgba(0, 240, 255, 0.2);
-  border-radius: 10px;
-  padding: 0.4rem 0.65rem;
+  width: auto;
+  min-width: 200px;
+  background: rgba(0, 240, 255, 0.08);
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  border-radius: 999px;
+  padding: 0.35rem 1rem;
   display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.15);
 }
 
 .drawer-level-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  width: 100%;
+  gap: 1rem;
   font-size: 0.72rem;
   font-weight: 700;
 }
@@ -4670,6 +4726,150 @@ a:hover {
 .drawer-xp-text {
   color: #94a3b8;
   font-family: var(--font-mono);
+}
+
+/* Animations for Cyber Ring */
+@keyframes cyberRingRotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes cyberRingPulse {
+  0% {
+    box-shadow: 0 0 12px rgba(0, 240, 255, 0.6), inset 0 0 8px rgba(0, 240, 255, 0.3);
+    border-color: #00f0ff;
+  }
+  100% {
+    box-shadow: 0 0 26px rgba(0, 240, 255, 0.95), inset 0 0 16px rgba(0, 240, 255, 0.6);
+    border-color: #38bdf8;
+  }
+}
+
+@keyframes cyberHaloPulse {
+  0% { transform: scale(0.95); opacity: 0.7; }
+  100% { transform: scale(1.05); opacity: 1; }
+}
+
+/* Day Mode Styling for Ring Design */
+[data-theme="light"] .drawer-ring-halo {
+  background: radial-gradient(circle, rgba(255, 0, 85, 0.18) 0%, rgba(0, 240, 255, 0.1) 50%, transparent 72%) !important;
+}
+
+[data-theme="light"] .drawer-ring-orbit {
+  border-color: rgba(255, 0, 85, 0.65) !important;
+  box-shadow: 0 0 14px rgba(255, 0, 85, 0.25) !important;
+}
+
+[data-theme="light"] .drawer-ring-glow {
+  border-color: #ff0055 !important;
+  box-shadow: 0 0 18px rgba(255, 0, 85, 0.5), inset 0 0 10px rgba(255, 0, 85, 0.25) !important;
+}
+
+[data-theme="light"] .drawer-avatar-ring {
+  background: radial-gradient(circle at 35% 30%, #ffffff 0%, #f1f5f9 85%) !important;
+  border-color: rgba(255, 0, 85, 0.4) !important;
+  color: #0f172a !important;
+  text-shadow: none !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+[data-theme="light"] .drawer-user-name {
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .drawer-user-email {
+  color: #475569 !important;
+}
+
+[data-theme="light"] .drawer-level-wrap {
+  background: #ffffff !important;
+  border-color: rgba(255, 0, 85, 0.35) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Client Logged-In Profile Badge with Logo & Name in Navbar */
+.nav-user-profile-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.7rem 0.25rem 0.3rem;
+  background: rgba(0, 240, 255, 0.1);
+  border: 1.5px solid rgba(0, 240, 255, 0.45);
+  border-radius: 999px;
+  text-decoration: none;
+  transition: all 0.25s ease;
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.25);
+  flex-shrink: 0;
+}
+
+.nav-user-profile-badge:hover {
+  background: rgba(0, 240, 255, 0.2);
+  border-color: #00f0ff;
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.5);
+  transform: translateY(-1px);
+}
+
+.nav-user-avatar-ring {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #00f0ff, #ff0055);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-heading);
+  font-size: 0.78rem;
+  font-weight: 900;
+  color: #ffffff;
+  position: relative;
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.7);
+  flex-shrink: 0;
+  border: 1.5px solid #ffffff;
+}
+
+.nav-user-avatar-ring .user-avatar-online-dot {
+  position: absolute;
+  bottom: -1px;
+  right: -1px;
+  width: 9px;
+  height: 9px;
+  background: #10b981;
+  border: 1.5px solid #050812;
+  border-radius: 50%;
+  box-shadow: 0 0 6px #10b981;
+}
+
+.nav-user-name-text {
+  font-family: var(--font-heading);
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: #ffffff;
+  white-space: nowrap;
+  max-width: 105px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: 0.3px;
+}
+
+[data-theme="light"] .nav-user-profile-badge {
+  background: #ffffff !important;
+  border-color: rgba(255, 0, 85, 0.4) !important;
+  box-shadow: 0 2px 8px rgba(255, 0, 85, 0.15) !important;
+}
+
+[data-theme="light"] .nav-user-name-text {
+  color: #0f172a !important;
+}
+
+@media (max-width: 520px) {
+  .nav-user-name-text {
+    max-width: 65px;
+    font-size: 0.78rem;
+  }
+  .nav-user-profile-badge {
+    padding: 0.2rem 0.5rem 0.2rem 0.25rem;
+    gap: 0.35rem;
+  }
 }
 
 .drawer-level-bar {
