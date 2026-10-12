@@ -7,7 +7,7 @@ export default async function handler(req, res) {
 
   try {
     const settingsRes = await query(
-      "SELECT setting_key, setting_value FROM settings WHERE setting_key IN ('whatsapp_number', 'npr_usd_rate', 'inr_usd_rate', 'min_topup_npr', 'site_notice', 'hero_banners_config', 'referral_reward_referrer_npr', 'referral_reward_referee_npr', 'referral_monthly_limit', 'referral_system_enabled', 'maintenance_mode', 'maintenance_title', 'maintenance_message', 'maintenance_eta', 'maintenance_discord')"
+      "SELECT setting_key, setting_value FROM settings WHERE setting_key IN ('whatsapp_number', 'npr_usd_rate', 'inr_usd_rate', 'min_topup_npr', 'site_notice', 'hero_banners_config', 'referral_reward_referrer_npr', 'referral_reward_referee_npr', 'referral_monthly_limit', 'referral_system_enabled', 'maintenance_mode', 'maintenance_title', 'maintenance_message', 'maintenance_eta', 'maintenance_discord', 'maintenance_until')"
     );
 
     const settings = {
@@ -25,7 +25,8 @@ export default async function handler(req, res) {
       maintenance_title: 'White X Store — Scheduled Maintenance',
       maintenance_message: 'We are currently performing scheduled maintenance to upgrade security and server performance. Store orders and instant key deliveries will resume shortly.',
       maintenance_eta: '30 Minutes',
-      maintenance_discord: ''
+      maintenance_discord: '',
+      maintenance_until: ''
     };
 
     settingsRes.rows.forEach(r => {
@@ -68,7 +69,8 @@ export default async function handler(req, res) {
       title: settings.maintenance_title || 'White X Store — Scheduled Maintenance',
       message: settings.maintenance_message || 'We are currently performing scheduled maintenance to upgrade security and server performance. Store orders and instant key deliveries will resume shortly.',
       eta: settings.maintenance_eta || '30 Minutes',
-      discord_url: settings.maintenance_discord || ''
+      discord_url: settings.maintenance_discord || '',
+      until: settings.maintenance_until || ''
     };
 
     return res.status(200).json({
@@ -111,7 +113,8 @@ export default async function handler(req, res) {
         title: '',
         message: '',
         eta: '',
-        discord_url: ''
+        discord_url: '',
+        until: ''
       }
     });
   }

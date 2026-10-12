@@ -7186,5 +7186,103 @@ body.maintenance-active-lock {
   text-decoration: underline;
 }
 
+/* ==============================================================
+   CYBER HUD LIVE COUNTDOWN TIMER
+   ============================================================== */
+.cyber-countdown-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  margin: 1.5rem 0 2rem;
+  padding: 1.25rem 1.5rem;
+  background: rgba(10, 12, 22, 0.75);
+  border: 1px solid rgba(0, 240, 255, 0.25);
+  border-radius: 16px;
+  box-shadow: 0 0 30px rgba(0, 240, 255, 0.08), inset 0 0 15px rgba(0, 240, 255, 0.03);
+}
+
+.countdown-segment {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 65px;
+}
+
+.countdown-num {
+  font-family: var(--font-heading, monospace);
+  font-size: 2.2rem;
+  font-weight: 900;
+  color: #ffffff;
+  line-height: 1;
+  background: linear-gradient(180deg, #ffffff 0%, #00f0ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 10px rgba(0, 240, 255, 0.5));
+  letter-spacing: 1px;
+}
+
+.countdown-label {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: #64748b;
+  text-transform: uppercase;
+  margin-top: 0.4rem;
+}
+
+.countdown-colon {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #ff0055;
+  margin-bottom: 0.8rem;
+  animation: colonBlink 1s infinite;
+  text-shadow: 0 0 10px #ff0055;
+}
+
+@keyframes colonBlink {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.2; transform: scale(0.9); }
+}
+
+.countdown-finished-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.75rem 1.5rem;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #10b981;
+  border-radius: 12px;
+  font-weight: 800;
+  font-size: 0.95rem;
+  letter-spacing: 0.5px;
+  margin: 1.5rem 0 2rem;
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.25);
+  animation: pulseGreen 2s infinite;
+}
+
+@keyframes pulseGreen {
+  0%, 100% { box-shadow: 0 0 15px rgba(16, 185, 129, 0.2); }
+  50% { box-shadow: 0 0 25px rgba(16, 185, 129, 0.5); }
+}
+
+@media (max-width: 500px) {
+  .cyber-countdown-box {
+    gap: 0.35rem;
+    padding: 1rem 0.75rem;
+  }
+  .countdown-segment {
+    min-width: 48px;
+  }
+  .countdown-num {
+    font-size: 1.65rem;
+  }
+  .countdown-colon {
+    font-size: 1.3rem;
+  }
+}
+
+
 
 

@@ -1482,8 +1482,36 @@ X-API-Key: wx_live_YOUR_KEY</pre>
               <input type="text" id="setting-maintenance-title" class="form-input" placeholder="White X Store — Scheduled Maintenance">
             </div>
             <div class="form-group" style="margin: 0;">
-              <label class="form-label" for="setting-maintenance-eta">Estimated Return Time (ETA)</label>
+              <label class="form-label" for="setting-maintenance-eta">Estimated Return Time Label (ETA)</label>
               <input type="text" id="setting-maintenance-eta" class="form-input" placeholder="e.g. 30 Minutes or 2:00 PM UTC">
+            </div>
+          </div>
+
+          <!-- LIVE COUNTDOWN TIMER CONTROLLER -->
+          <div class="form-group" style="margin-bottom: 1.25rem; background: rgba(0, 240, 255, 0.04); border: 1px solid rgba(0, 240, 255, 0.2); padding: 1rem; border-radius: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.5rem;">
+              <label class="form-label" for="setting-maintenance-until" style="color: #00f0ff; margin: 0; font-weight: 700;">
+                ⏱️ Client-Side Live Countdown Target Date & Time
+              </label>
+              <span style="font-size: 0.72rem; color: #94a3b8;">Shows animated real-time ticker on customer screen</span>
+            </div>
+            
+            <div style="display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center; margin-bottom: 0.6rem;">
+              <input type="datetime-local" id="setting-maintenance-until" class="form-input" style="max-width: 280px; color-scheme: dark;">
+              
+              <div style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
+                <button type="button" class="btn btn-outline btn-sm" onclick="setCountdownPreset(15)" style="font-size: 0.75rem; padding: 0.25rem 0.6rem;">+15m</button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="setCountdownPreset(30)" style="font-size: 0.75rem; padding: 0.25rem 0.6rem;">+30m</button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="setCountdownPreset(60)" style="font-size: 0.75rem; padding: 0.25rem 0.6rem;">+1h</button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="setCountdownPreset(120)" style="font-size: 0.75rem; padding: 0.25rem 0.6rem;">+2h</button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="setCountdownPreset(360)" style="font-size: 0.75rem; padding: 0.25rem 0.6rem;">+6h</button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="clearCountdownPreset()" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; color: #ef4444; border-color: rgba(239, 68, 68, 0.4);">Clear</button>
+              </div>
+            </div>
+
+            <div id="admin-maint-countdown-preview" style="font-size: 0.8rem; color: #38bdf8; display: none;">
+              <span>⚡ Live Client Preview: </span>
+              <strong id="admin-maint-countdown-preview-text" style="font-family: monospace; letter-spacing: 1px;">00:00:00</strong>
             </div>
           </div>
 
@@ -7488,11 +7516,86 @@ X-API-Key: wx_live_YOUR_KEY</pre>
           if (maintMsg) maintMsg.value = s.maintenance_message || 'We are currently performing scheduled maintenance to upgrade security and server performance. Store orders and instant key deliveries will resume shortly.';
           const maintDiscord = document.getElementById('setting-maintenance-discord');
           if (maintDiscord) maintDiscord.value = s.maintenance_discord || '';
+          const maintUntil = document.getElementById('setting-maintenance-until');
+          if (maintUntil) {
+            maintUntil.value = s.maintenance_until || '';
+            updateAdminCountdownPreview();
+            maintUntil.oninput = updateAdminCountdownPreview;
+          }
           
           updateAdminMaintenanceUI(isMaint);
         }
       } catch (err) {}
     }
+
+    function setCountdownPreset(mins) {
+      const now = new Date();
+      now.setMinutes(now.getMinutes() + mins);
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const formatted = `${year}-${month}-${day}T${hours}:${minutes}`;
+      const input = document.getElementById('setting-maintenance-until');
+      if (input) {
+        input.value = formatted;
+        updateAdminCountdownPreview();
+      }
+      const etaInput = document.getElementById('setting-maintenance-eta');
+      if (etaInput) {
+        etaInput.value = mins >= 60 ? `${Math.round(mins/60)} Hour(s)` : `${mins} Minutes`;
+      }
+    }
+    window.setCountdownPreset = setCountdownPreset;
+
+    function clearCountdownPreset() {
+      const input = document.getElementById('setting-maintenance-until');
+      if (input) {
+        input.value = '';
+        updateAdminCountdownPreview();
+      }
+    }
+    window.clearCountdownPreset = clearCountdownPreset;
+
+    let adminCountdownTimer = null;
+    function updateAdminCountdownPreview() {
+      const input = document.getElementById('setting-maintenance-until');
+      const previewWrap = document.getElementById('admin-maint-countdown-preview');
+      const previewText = document.getElementById('admin-maint-countdown-preview-text');
+      if (!input || !previewWrap || !previewText) return;
+
+      if (!input.value) {
+        previewWrap.style.display = 'none';
+        if (adminCountdownTimer) clearInterval(adminCountdownTimer);
+        return;
+      }
+
+      previewWrap.style.display = 'block';
+
+      function tick() {
+        const target = new Date(input.value).getTime();
+        const diff = target - Date.now();
+        if (diff <= 0) {
+          previewText.textContent = '00:00:00 (TIMER ENDED)';
+          previewText.style.color = '#10b981';
+          return;
+        }
+        previewText.style.color = '#00f0ff';
+        const totalSecs = Math.floor(diff / 1000);
+        const d = Math.floor(totalSecs / 86400);
+        const h = Math.floor((totalSecs % 86400) / 3600);
+        const m = Math.floor((totalSecs % 3600) / 60);
+        const s = totalSecs % 60;
+        const pad = (n) => String(n).padStart(2, '0');
+        previewText.textContent = `${d > 0 ? d + 'd ' : ''}${pad(h)}h ${pad(m)}m ${pad(s)}s remaining`;
+      }
+
+      tick();
+      if (adminCountdownTimer) clearInterval(adminCountdownTimer);
+      adminCountdownTimer = setInterval(tick, 1000);
+    }
+    window.updateAdminCountdownPreview = updateAdminCountdownPreview;
 
     function updateAdminMaintenanceUI(isMaint) {
       // Topbar Badge
@@ -7558,13 +7661,15 @@ X-API-Key: wx_live_YOUR_KEY</pre>
       const eta = document.getElementById('setting-maintenance-eta')?.value.trim() || '30 Minutes';
       const message = document.getElementById('setting-maintenance-message')?.value.trim() || 'We are currently performing scheduled maintenance to upgrade security and server performance. Store orders and instant key deliveries will resume shortly.';
       const discord = document.getElementById('setting-maintenance-discord')?.value.trim() || '';
+      const until = document.getElementById('setting-maintenance-until')?.value || '';
 
       const payload = {
         maintenance_mode: isEnabled ? 'true' : 'false',
         maintenance_title: title,
         maintenance_eta: eta,
         maintenance_message: message,
-        maintenance_discord: discord
+        maintenance_discord: discord,
+        maintenance_until: until
       };
 
       try {
@@ -7577,7 +7682,7 @@ X-API-Key: wx_live_YOUR_KEY</pre>
         const data = await res.json();
         if (data.success) {
           updateAdminMaintenanceUI(isEnabled);
-          showToast(isEnabled ? '🔒 Maintenance Mode ACTIVATED! Public storefront is locked.' : '🟢 Store REOPENED! Maintenance Mode is OFF.', 'success');
+          showToast(isEnabled ? '🔒 Maintenance Mode ACTIVATED! Public storefront is locked with live countdown.' : '🟢 Store REOPENED! Maintenance Mode is OFF.', 'success');
         } else {
           showToast(data.message || 'Failed to update maintenance mode', 'error');
         }
@@ -7607,7 +7712,8 @@ X-API-Key: wx_live_YOUR_KEY</pre>
         maintenance_title: document.getElementById('setting-maintenance-title') ? document.getElementById('setting-maintenance-title').value.trim() : 'White X Store — Scheduled Maintenance',
         maintenance_eta: document.getElementById('setting-maintenance-eta') ? document.getElementById('setting-maintenance-eta').value.trim() : '30 Minutes',
         maintenance_message: document.getElementById('setting-maintenance-message') ? document.getElementById('setting-maintenance-message').value.trim() : '',
-        maintenance_discord: document.getElementById('setting-maintenance-discord') ? document.getElementById('setting-maintenance-discord').value.trim() : ''
+        maintenance_discord: document.getElementById('setting-maintenance-discord') ? document.getElementById('setting-maintenance-discord').value.trim() : '',
+        maintenance_until: document.getElementById('setting-maintenance-until') ? document.getElementById('setting-maintenance-until').value : ''
       };
 
       try {

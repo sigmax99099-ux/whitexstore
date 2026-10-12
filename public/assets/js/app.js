@@ -340,8 +340,118 @@ async function loadRatesAndSettings() {
 }
 
 /* ==============================================================
-   CYBER HUD MAINTENANCE SCREEN HANDLER
+   CYBER HUD MAINTENANCE SCREEN HANDLER (WITH LIVE COUNTDOWN)
    ============================================================== */
+let maintenanceTimerInterval = null;
+
+function startMaintenanceCountdown(targetDateStr) {
+  if (maintenanceTimerInterval) {
+    clearInterval(maintenanceTimerInterval);
+    maintenanceTimerInterval = null;
+  }
+
+  const container = document.getElementById('white-x-maintenance-countdown-wrap');
+  if (!container) return;
+
+  const targetTime = new Date(targetDateStr).getTime();
+  if (isNaN(targetTime)) {
+    container.style.display = 'none';
+    return;
+  }
+
+  container.style.display = 'block';
+
+  function update() {
+    const now = Date.now();
+    const diff = targetTime - now;
+
+    if (diff <= 0) {
+      if (maintenanceTimerInterval) {
+        clearInterval(maintenanceTimerInterval);
+        maintenanceTimerInterval = null;
+      }
+      container.innerHTML = `
+        <div class="countdown-finished-badge">
+          <span>⚡</span>
+          <span>UPGRADES COMPLETE — REOPENING MOMENTARILY...</span>
+        </div>
+      `;
+      setTimeout(() => loadRatesAndSettings(), 5000);
+      return;
+    }
+
+    const totalSeconds = Math.floor(diff / 1000);
+    const days = Math.floor(totalSeconds / 86400);
+    const hours = Math.floor((totalSeconds % 86400) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    const pad = (n) => String(n).padStart(2, '0');
+
+    container.innerHTML = `
+      <div class="cyber-countdown-box">
+        ${days > 0 ? `
+          <div class="countdown-segment">
+            <span class="countdown-num">${pad(days)}</span>
+            <span class="countdown-label">DAYS</span>
+          </div>
+          <span class="countdown-colon">:</span>
+        ` : ''}
+        <div class="countdown-segment">
+          <span class="countdown-num">${pad(hours)}</span>
+          <span class="countdown-label">HOURS</span>
+        </div>
+        <span class="countdown-colon">:</span>
+        <div class="countdown-segment">
+          <span class="countdown-num">${pad(minutes)}</span>
+          <span class="countdown-label">MINS</span>
+        </div>
+        <span class="countdown-colon">:</span>
+        <div class="countdown-segment">
+          <span class="countdown-num">${pad(seconds)}</span>
+          <span class="countdown-label">SECS</span>
+        </div>
+      </div>
+    `;
+  }
+
+  update();
+  maintenanceTimerInterval = setInterval(update, 1000);
+}
+
+function resolveMaintenanceTarget(maint) {
+  if (!maint) return null;
+  if (maint.until) {
+    const t = new Date(maint.until).getTime();
+    if (!isNaN(t)) return maint.until;
+  }
+  if (maint.eta) {
+    const minMatch = String(maint.eta).match(/(\d+)\s*(m|min|minute)/i);
+    const hrMatch = String(maint.eta).match(/(\d+)\s*(h|hr|hour)/i);
+    if (minMatch) {
+      const minutes = parseInt(minMatch[1], 10);
+      const sessionKey = 'wx_maint_timer_min_' + minutes;
+      let stored = sessionStorage.getItem(sessionKey);
+      if (!stored || isNaN(new Date(stored).getTime())) {
+        stored = new Date(Date.now() + minutes * 60 * 1000).toISOString();
+        sessionStorage.setItem(sessionKey, stored);
+      }
+      return stored;
+    }
+    if (hrMatch) {
+      const hours = parseInt(hrMatch[1], 10);
+      const sessionKey = 'wx_maint_timer_hr_' + hours;
+      let stored = sessionStorage.getItem(sessionKey);
+      if (!stored || isNaN(new Date(stored).getTime())) {
+        stored = new Date(Date.now() + hours * 3600 * 1000).toISOString();
+        sessionStorage.setItem(sessionKey, stored);
+      }
+      return stored;
+    }
+  }
+  return null;
+}
+
 function handleMaintenanceMode(maint) {
   // Do not block admin dashboard or admin pages
   if (window.location.pathname.includes('admin')) {
@@ -354,11 +464,17 @@ function handleMaintenanceMode(maint) {
     if (existingOverlay) {
       existingOverlay.remove();
       document.body.classList.remove('maintenance-active-lock');
+      if (maintenanceTimerInterval) {
+        clearInterval(maintenanceTimerInterval);
+        maintenanceTimerInterval = null;
+      }
     }
     return;
   }
 
-  // If already rendered, update text in place
+  const targetDate = resolveMaintenanceTarget(maint);
+
+  // If already rendered, update in place
   if (existingOverlay) {
     const titleEl = existingOverlay.querySelector('.maint-title');
     const msgEl = existingOverlay.querySelector('.maint-message');
@@ -366,6 +482,7 @@ function handleMaintenanceMode(maint) {
     if (titleEl) titleEl.textContent = maint.title || 'White X Store — Scheduled Maintenance';
     if (msgEl) msgEl.textContent = maint.message || 'We are currently performing scheduled maintenance to upgrade security and server performance.';
     if (etaEl && maint.eta) etaEl.innerHTML = `<span class="maint-eta-icon">⏱️</span> <span>Estimated Return: <strong>${escapeHtml(maint.eta)}</strong></span>`;
+    if (targetDate) startMaintenanceCountdown(targetDate);
     return;
   }
 
@@ -393,7 +510,10 @@ function handleMaintenanceMode(maint) {
         ${escapeHtml(maint.message || 'We are currently performing scheduled maintenance to upgrade security and server performance. Store orders and instant key deliveries will resume shortly.')}
       </p>
 
-      ${maint.eta ? `<div class="maint-eta-tag"><span class="maint-eta-icon">⏱️</span> <span>Estimated Return: <strong>${escapeHtml(maint.eta)}</strong></span></div>` : ''}
+      <!-- LIVE COUNTDOWN TIMER HUD -->
+      <div id="white-x-maintenance-countdown-wrap"></div>
+
+      ${maint.eta ? `<div class="maint-eta-tag"><span class="maint-eta-icon">⏱️</span> <span>Target Window: <strong>${escapeHtml(maint.eta)}</strong></span></div>` : ''}
 
       <div class="maint-actions">
         ${maint.discord_url ? `
@@ -415,6 +535,10 @@ function handleMaintenanceMode(maint) {
     </div>
   `;
   document.body.appendChild(overlay);
+
+  if (targetDate) {
+    startMaintenanceCountdown(targetDate);
+  }
 }
 
 async function loadHeroBanners() {
