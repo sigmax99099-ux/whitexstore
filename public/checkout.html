@@ -290,8 +290,12 @@
         // Render Product Info
         document.getElementById('item-image').src = productData.image;
         document.getElementById('item-category').textContent = productData.category;
-        document.getElementById('item-name').textContent = productData.name;
-        document.getElementById('item-plan').textContent = `${planData.plan_name} (${planData.days} ${planData.duration_type})`;
+        const durCount = parseInt(planData.days, 10) || 1;
+        const isHours = (planData.duration_type || '').toLowerCase() === 'hours' || (planData.duration_type || '').toLowerCase() === 'hour';
+        const durationText = isHours 
+          ? `${durCount} Hour${durCount === 1 ? '' : 's'}` 
+          : `${durCount} Day${durCount === 1 ? '' : 's'}`;
+        document.getElementById('item-plan').textContent = `${planData.plan_name} (${durationText})`;
 
         nprExchangeRate = data.rates?.NPR || 134.50;
         originalPlanPriceUsd = parseFloat(planData.original_price_usd || planData.price_usd || planData.final_price_usd);

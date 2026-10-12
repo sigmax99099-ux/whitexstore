@@ -2049,7 +2049,12 @@ function render7SProductCardHtml(p) {
 
   let durationList = [];
   if (Array.isArray(p.plans) && p.plans.length > 0) {
-    durationList = p.plans.map(pl => pl.plan_name || `${pl.days} Days`);
+    durationList = p.plans.map(pl => {
+      if (pl.plan_name) return pl.plan_name;
+      const c = parseInt(pl.days, 10) || 1;
+      const isHours = (pl.duration_type || '').toLowerCase() === 'hours' || (pl.duration_type || '').toLowerCase() === 'hour';
+      return isHours ? `${c} Hour${c === 1 ? '' : 's'}` : `${c} Day${c === 1 ? '' : 's'}`;
+    });
   } else if (Array.isArray(p.plan_names) && p.plan_names.length > 0) {
     durationList = p.plan_names;
   } else {

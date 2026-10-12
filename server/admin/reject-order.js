@@ -32,7 +32,7 @@ export default async function handler(req, res) {
        JOIN users u ON o.user_id = u.id
        LEFT JOIN products p ON o.product_id = p.id
        WHERE o.id = $1
-       FOR UPDATE`,
+       FOR UPDATE OF o`,
       [order_id]
     );
 

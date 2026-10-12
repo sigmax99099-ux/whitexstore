@@ -399,6 +399,15 @@
       }
     }
 
+    function formatPlanDuration(p) {
+      if (!p) return '';
+      const durCount = parseInt(p.days, 10) || 1;
+      const isHours = (p.duration_type || '').toLowerCase() === 'hours' || (p.duration_type || '').toLowerCase() === 'hour';
+      return isHours 
+        ? `${durCount} Hour${durCount === 1 ? '' : 's'}` 
+        : `${durCount} Day${durCount === 1 ? '' : 's'}`;
+    }
+
     function renderPlans() {
       const container = document.getElementById('plans-container');
       if (!currentProduct.plans || currentProduct.plans.length === 0) {
@@ -412,12 +421,18 @@
         const origUsd = parseFloat(p.original_price_usd || p.price_usd || p.final_price_usd);
         const finalUsd = parseFloat(p.final_price_usd);
         const hasDiscount = p.discount_percent > 0 && origUsd > finalUsd;
+        const durationText = formatPlanDuration(p);
 
         return `
           <div class="plan-item ${isSelected ? 'selected' : ''}" onclick="selectPlanById(${p.id})">
             ${p.discount_percent > 0 ? `<div class="plan-discount-tag">-${Math.round(p.discount_percent)}%</div>` : ''}
             ${p.custom_reseller_applied ? `<div class="plan-discount-tag" style="background:#f59e0b;">RESELLER</div>` : ''}
             <div class="plan-duration">${escapeHtml(p.plan_name)}</div>
+            <div style="margin: 4px 0 6px;">
+              <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.74rem; font-weight: 700; color: #38bdf8; background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.28); border-radius: 4px; padding: 2px 7px;">
+                ⏱️ ${durationText}
+              </span>
+            </div>
             <div class="plan-price" style="display: flex; align-items: baseline; justify-content: center; gap: 6px;">
               ${hasDiscount ? `<span style="text-decoration: line-through; opacity: 0.55; font-size: 0.85em; color: var(--text-dim);">${formatPrice(origUsd)}</span>` : ''}
               <span>${formatted}</span>
@@ -439,7 +454,11 @@
 
     function updateSummary() {
       if (!selectedPlan) return;
-      document.getElementById('summary-plan-name').textContent = selectedPlan.plan_name;
+      const durationText = formatPlanDuration(selectedPlan);
+      document.getElementById('summary-plan-name').innerHTML = `
+        <span>${escapeHtml(selectedPlan.plan_name)}</span>
+        <span style="display: inline-block; font-size: 0.76rem; color: #38bdf8; font-weight: 700; background: rgba(56, 189, 248, 0.14); border: 1px solid rgba(56, 189, 248, 0.28); padding: 2px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle;">⏱️ ${durationText}</span>
+      `;
 
       const origUsd = parseFloat(selectedPlan.original_price_usd || selectedPlan.price_usd || selectedPlan.final_price_usd);
       const finalUsd = parseFloat(selectedPlan.final_price_usd);

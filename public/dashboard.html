@@ -1369,11 +1369,14 @@
           deliveredOrders.forEach(o => {
             const expiry = o.delivery_expires_at ? formatDate(o.delivery_expires_at) : 'N/A';
             const instructions = getUsageInstructions(o.product_name);
+            const durCount = parseInt(o.days, 10) || 1;
+            const isHours = (o.duration_type || '').toLowerCase() === 'hours' || (o.duration_type || '').toLowerCase() === 'hour';
+            const durLabel = isHours ? `${durCount} Hour${durCount === 1 ? '' : 's'}` : `${durCount} Day${durCount === 1 ? '' : 's'}`;
             html += `
               <div class="card-inner-box" style="background: var(--bg-card, #0d0d15); border: 1px solid var(--bg-card-border); border-radius: var(--radius-md); padding: 1.25rem;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
                   <strong style="color: var(--text-main, #fff); font-size: 1.05rem;">${escapeHtml(o.product_name)}</strong>
-                  <span class="badge badge-undetected">${escapeHtml(o.plan_name)}</span>
+                  <span class="badge badge-undetected">${escapeHtml(o.plan_name)} (${durLabel})</span>
                 </div>
                 <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-dim); margin-bottom: 0.5rem;">
                   <span>Expires: ${expiry}</span>
@@ -1436,6 +1439,9 @@
             const isPending = o.delivery_display_status === 'pending';
             const isFailed = o.delivery_display_status === 'failed';
             const isFlagged = o.delivery_display_status === 'flagged';
+            const durCount = parseInt(o.days, 10) || 1;
+            const isHours = (o.duration_type || '').toLowerCase() === 'hours' || (o.duration_type || '').toLowerCase() === 'hour';
+            const durLabel = isHours ? `${durCount} Hour${durCount === 1 ? '' : 's'}` : `${durCount} Day${durCount === 1 ? '' : 's'}`;
             
             html += `
               <div class="card-inner-box" style="background: var(--bg-card, #0d0d15); border: 1px solid ${isFailed || isFlagged ? 'var(--danger)' : 'var(--warning)'}; border-radius: var(--radius-md); padding: 1.25rem;">
@@ -1446,7 +1452,7 @@
                   </span>
                 </div>
                 <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-dim); margin-bottom: 0.5rem;">
-                  <span>Plan: ${escapeHtml(o.plan_name)} (${o.days} days)</span>
+                  <span>Plan: ${escapeHtml(o.plan_name)} (${durLabel})</span>
                   <span>Attempts: ${o.delivery_attempts || 0}/${o.delivery_max_attempts || 5}</span>
                 </div>
                 ${o.delivery_last_error ? `
@@ -1506,11 +1512,15 @@
             else if (o.delivery_display_status === 'failed') deliveryBadge = '<span class="badge badge-danger">❌ Failed</span>';
             else if (o.delivery_display_status === 'flagged') deliveryBadge = '<span class="badge badge-danger">🔴 Flagged</span>';
 
+            const durCount = parseInt(o.days, 10) || 1;
+            const isHours = (o.duration_type || '').toLowerCase() === 'hours' || (o.duration_type || '').toLowerCase() === 'hour';
+            const durLabel = isHours ? `${durCount} Hour${durCount === 1 ? '' : 's'}` : `${durCount} Day${durCount === 1 ? '' : 's'}`;
+
             return `
               <tr>
                 <td><strong>#${escapeHtml(o.order_code)}</strong></td>
                 <td>${escapeHtml(o.product_name)}</td>
-                <td>${escapeHtml(o.plan_name)} (${o.days} ${o.duration_type})</td>
+                <td>${escapeHtml(o.plan_name)} <span style="font-size: 0.78rem; color: #38bdf8; font-weight: 600;">(${durLabel})</span></td>
                 <td>$${parseFloat(o.amount_usd).toFixed(2)}</td>
                 <td>${statusBadge}</td>
                 <td>${deliveryBadge}</td>
@@ -1834,7 +1844,7 @@
               <div style="font-size: 0.72rem; color: var(--text-dim);">${escapeHtml(pl.category || 'Cheat')}</div>
             </td>
             <td>
-              <span class="badge badge-undetected" style="font-size: 0.72rem;">${escapeHtml(pl.plan_name)} (${pl.days}d)</span>
+              <span class="badge badge-undetected" style="font-size: 0.72rem;">${escapeHtml(pl.plan_name)} (${(pl.duration_type || '').toLowerCase() === 'hours' ? pl.days + 'h' : pl.days + 'd'})</span>
             </td>
             <td>
               <div style="display: flex; align-items: center; gap: 0.35rem;">
@@ -1979,9 +1989,12 @@
             const stockNote = plan.stock?.local_keys_available > 0
               ? ` (${plan.stock.local_keys_available} in stock)`
               : (plan.stock?.supplier_auto_delivery ? ' (Auto-Delivery)' : ' (Out of stock)');
+            const durCount = parseInt(plan.days, 10) || 1;
+            const isHours = (plan.duration_type || '').toLowerCase() === 'hours' || (plan.duration_type || '').toLowerCase() === 'hour';
+            const durUnit = isHours ? `${durCount}h` : `${durCount}d`;
             options.push({
               id: plan.plan_id,
-              label: `${prod.name} - ${plan.plan_name} (${plan.days}d) — NPR ${plan.pricing.reseller_price_npr}${stockNote}`,
+              label: `${prod.name} - ${plan.plan_name} (${durUnit}) — NPR ${plan.pricing.reseller_price_npr}${stockNote}`,
               priceNpr: plan.pricing.reseller_price_npr
             });
           });
