@@ -527,6 +527,10 @@
         <span class="admin-user-pill admin-hide-mobile">
           Logged in as: <strong id="admin-name-display" style="color: #fff;">admin</strong>
         </span>
+        <div id="admin-topbar-maint-badge" onclick="switchAdminTab('tab-settings')" style="display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.35rem 0.8rem; border-radius: 999px; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.4); font-size: 0.78rem; font-weight: 700; color: #10b981; cursor: pointer; transition: all 0.2s ease;" title="Click to configure Maintenance Mode in Settings">
+          <span id="admin-topbar-maint-dot" style="width: 7px; height: 7px; border-radius: 50%; background: #10b981; box-shadow: 0 0 6px #10b981;"></span>
+          <span id="admin-topbar-maint-text">Store Online</span>
+        </div>
         <button type="button" onclick="switchAdminTab('tab-admin-account')" class="btn btn-outline btn-sm admin-top-btn" title="Change Admin Username & Password">👤 <span class="btn-label-mobile-hide">Account</span></button>
         <a href="/index.html" class="btn btn-outline btn-sm admin-top-btn admin-hide-mobile" target="_blank" title="View Store">View Store ↗</a>
         <button onclick="handleAdminLogout()" class="btn btn-outline btn-sm admin-top-btn" style="color: var(--danger);" title="Logout">🚪 <span class="btn-label-mobile-hide">Logout</span></button>
@@ -1446,6 +1450,65 @@ X-API-Key: wx_live_YOUR_KEY</pre>
       <!-- TAB 9: SETTINGS -->
       <section id="tab-settings" class="admin-tab-content">
         <h2 style="color: #fff; margin-bottom: 1.5rem;">// STORE & INTEGRATION SETTINGS</h2>
+
+        <!-- DEDICATED SYSTEM MAINTENANCE MODE CONTROLLER -->
+        <div class="admin-card" style="max-width: 780px; margin-bottom: 2rem; border: 1.5px solid rgba(255, 0, 85, 0.4); background: linear-gradient(135deg, rgba(255, 0, 85, 0.08) 0%, rgba(13, 13, 21, 0.95) 100%); box-shadow: 0 0 35px rgba(255, 0, 85, 0.15);">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;">
+            <div>
+              <div style="display: flex; align-items: center; gap: 0.6rem;">
+                <span style="font-size: 1.5rem;">🛡️</span>
+                <h3 style="color: #ff0055; margin: 0; font-size: 1.2rem; font-family: var(--font-heading); letter-spacing: 0.5px;">SYSTEM MAINTENANCE MODE</h3>
+                <span id="maint-panel-status-pill" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.3rem 0.8rem; border-radius: 999px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); color: #10b981; font-size: 0.76rem; font-weight: 800;">
+                  <span id="maint-panel-status-dot" style="width: 7px; height: 7px; border-radius: 50%; background: #10b981; box-shadow: 0 0 6px #10b981;"></span>
+                  <span id="maint-panel-status-text">STORE ONLINE</span>
+                </span>
+              </div>
+              <p style="color: var(--text-dim); margin: 0.4rem 0 0 0; font-size: 0.84rem;">
+                When active, all customer pages display a futuristic Cyber HUD maintenance lockdown screen. Admins still have full access.
+              </p>
+            </div>
+            
+            <div style="display: flex; align-items: center; gap: 0.75rem; background: rgba(0,0,0,0.3); padding: 0.5rem 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08);">
+              <label style="display: flex; align-items: center; gap: 0.6rem; cursor: pointer; margin: 0; font-weight: 700; font-size: 0.9rem;">
+                <input type="checkbox" id="setting-maintenance-toggle" style="width: 22px; height: 22px; accent-color: #ff0055; cursor: pointer;">
+                <span id="maint-toggle-label" style="color: #fff;">Activate Lockdown</span>
+              </label>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+            <div class="form-group" style="margin: 0;">
+              <label class="form-label" for="setting-maintenance-title">Maintenance Headline / Title</label>
+              <input type="text" id="setting-maintenance-title" class="form-input" placeholder="White X Store — Scheduled Maintenance">
+            </div>
+            <div class="form-group" style="margin: 0;">
+              <label class="form-label" for="setting-maintenance-eta">Estimated Return Time (ETA)</label>
+              <input type="text" id="setting-maintenance-eta" class="form-input" placeholder="e.g. 30 Minutes or 2:00 PM UTC">
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label class="form-label" for="setting-maintenance-message">Custom Notice Message for Visitors</label>
+            <textarea id="setting-maintenance-message" class="form-input" rows="2" placeholder="We are currently performing scheduled maintenance to upgrade security and server performance. Store orders and instant key deliveries will resume shortly."></textarea>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 1.25rem;">
+            <label class="form-label" for="setting-maintenance-discord">Discord Invite URL (Optional for live updates)</label>
+            <input type="url" id="setting-maintenance-discord" class="form-input" placeholder="https://discord.gg/yourserver">
+          </div>
+
+          <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+            <button type="button" class="btn btn-primary" onclick="saveMaintenanceSettings(true)" style="background: linear-gradient(135deg, #ff0055, #cc0044); border: none; font-weight: 700;">
+              🔒 Save & Lock Store (Maintenance ON)
+            </button>
+            <button type="button" class="btn btn-outline" onclick="saveMaintenanceSettings(false)" style="border-color: #10b981; color: #10b981; font-weight: 700;">
+              🟢 Save & Reopen Store (Maintenance OFF)
+            </button>
+            <a href="/index.html" target="_blank" class="btn btn-outline" style="border-color: #00f0ff; color: #00f0ff; text-decoration: none;">
+              👁️ Preview Storefront ↗
+            </a>
+          </div>
+        </div>
 
         <div class="admin-card" style="max-width: 780px;">
           <form id="admin-settings-form">
@@ -3750,6 +3813,7 @@ X-API-Key: wx_live_YOUR_KEY</pre>
           document.getElementById('admin-name-display').textContent = data.admin.username;
           startAdminInactivityTracker();
           loadDashboardData();
+          loadAdminSettings();
         } else {
           document.body.classList.remove('admin-authenticated');
           localStorage.removeItem('admin_token');
@@ -7411,9 +7475,118 @@ X-API-Key: wx_live_YOUR_KEY</pre>
           if (refLim) refLim.value = s.referral_monthly_limit || '1';
           const refEn = document.getElementById('setting-ref-enabled');
           if (refEn) refEn.checked = s.referral_system_enabled !== 'false';
+
+          // Maintenance Mode Controls
+          const isMaint = s.maintenance_mode === 'true';
+          const maintToggle = document.getElementById('setting-maintenance-toggle');
+          if (maintToggle) maintToggle.checked = isMaint;
+          const maintTitle = document.getElementById('setting-maintenance-title');
+          if (maintTitle) maintTitle.value = s.maintenance_title || 'White X Store — Scheduled Maintenance';
+          const maintEta = document.getElementById('setting-maintenance-eta');
+          if (maintEta) maintEta.value = s.maintenance_eta || '30 Minutes';
+          const maintMsg = document.getElementById('setting-maintenance-message');
+          if (maintMsg) maintMsg.value = s.maintenance_message || 'We are currently performing scheduled maintenance to upgrade security and server performance. Store orders and instant key deliveries will resume shortly.';
+          const maintDiscord = document.getElementById('setting-maintenance-discord');
+          if (maintDiscord) maintDiscord.value = s.maintenance_discord || '';
+          
+          updateAdminMaintenanceUI(isMaint);
         }
       } catch (err) {}
     }
+
+    function updateAdminMaintenanceUI(isMaint) {
+      // Topbar Badge
+      const topBadge = document.getElementById('admin-topbar-maint-badge');
+      const topDot = document.getElementById('admin-topbar-maint-dot');
+      const topText = document.getElementById('admin-topbar-maint-text');
+      if (topBadge && topDot && topText) {
+        if (isMaint) {
+          topBadge.style.background = 'rgba(255, 0, 85, 0.18)';
+          topBadge.style.borderColor = 'rgba(255, 0, 85, 0.55)';
+          topBadge.style.color = '#ff3377';
+          topDot.style.background = '#ff0055';
+          topDot.style.boxShadow = '0 0 8px #ff0055';
+          topText.textContent = 'Maintenance Active';
+        } else {
+          topBadge.style.background = 'rgba(16, 185, 129, 0.12)';
+          topBadge.style.borderColor = 'rgba(16, 185, 129, 0.4)';
+          topBadge.style.color = '#10b981';
+          topDot.style.background = '#10b981';
+          topDot.style.boxShadow = '0 0 6px #10b981';
+          topText.textContent = 'Store Online';
+        }
+      }
+
+      // Settings Card Pill & Toggle Label
+      const panelPill = document.getElementById('maint-panel-status-pill');
+      const panelDot = document.getElementById('maint-panel-status-dot');
+      const panelText = document.getElementById('maint-panel-status-text');
+      const toggleLabel = document.getElementById('maint-toggle-label');
+      const toggle = document.getElementById('setting-maintenance-toggle');
+      if (toggle) toggle.checked = isMaint;
+
+      if (panelPill && panelDot && panelText) {
+        if (isMaint) {
+          panelPill.style.background = 'rgba(255, 0, 85, 0.2)';
+          panelPill.style.borderColor = 'rgba(255, 0, 85, 0.6)';
+          panelPill.style.color = '#ff3377';
+          panelDot.style.background = '#ff0055';
+          panelDot.style.boxShadow = '0 0 8px #ff0055';
+          panelText.textContent = 'MAINTENANCE ACTIVE';
+        } else {
+          panelPill.style.background = 'rgba(16, 185, 129, 0.15)';
+          panelPill.style.borderColor = 'rgba(16, 185, 129, 0.4)';
+          panelPill.style.color = '#10b981';
+          panelDot.style.background = '#10b981';
+          panelDot.style.boxShadow = '0 0 6px #10b981';
+          panelText.textContent = 'STORE ONLINE';
+        }
+      }
+
+      if (toggleLabel) {
+        toggleLabel.textContent = isMaint ? 'Lockdown Active 🔴' : 'Activate Lockdown';
+        toggleLabel.style.color = isMaint ? '#ff0055' : '#fff';
+      }
+    }
+
+    async function saveMaintenanceSettings(forceState) {
+      const toggle = document.getElementById('setting-maintenance-toggle');
+      const isEnabled = forceState !== undefined ? forceState : (toggle ? toggle.checked : false);
+      if (toggle) toggle.checked = isEnabled;
+
+      const title = document.getElementById('setting-maintenance-title')?.value.trim() || 'White X Store — Scheduled Maintenance';
+      const eta = document.getElementById('setting-maintenance-eta')?.value.trim() || '30 Minutes';
+      const message = document.getElementById('setting-maintenance-message')?.value.trim() || 'We are currently performing scheduled maintenance to upgrade security and server performance. Store orders and instant key deliveries will resume shortly.';
+      const discord = document.getElementById('setting-maintenance-discord')?.value.trim() || '';
+
+      const payload = {
+        maintenance_mode: isEnabled ? 'true' : 'false',
+        maintenance_title: title,
+        maintenance_eta: eta,
+        maintenance_message: message,
+        maintenance_discord: discord
+      };
+
+      try {
+        const res = await fetch('/api/admin/settings', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+          updateAdminMaintenanceUI(isEnabled);
+          showToast(isEnabled ? '🔒 Maintenance Mode ACTIVATED! Public storefront is locked.' : '🟢 Store REOPENED! Maintenance Mode is OFF.', 'success');
+        } else {
+          showToast(data.message || 'Failed to update maintenance mode', 'error');
+        }
+      } catch (err) {
+        showToast('Error updating maintenance mode: ' + err.message, 'error');
+      }
+    }
+    window.saveMaintenanceSettings = saveMaintenanceSettings;
+    window.updateAdminMaintenanceUI = updateAdminMaintenanceUI;
 
     async function handleSettingsSubmit(e) {
       e.preventDefault();
@@ -7429,7 +7602,12 @@ X-API-Key: wx_live_YOUR_KEY</pre>
         referral_reward_referrer_npr: document.getElementById('setting-ref-referrer') ? document.getElementById('setting-ref-referrer').value.trim() : '50',
         referral_reward_referee_npr: document.getElementById('setting-ref-referee') ? document.getElementById('setting-ref-referee').value.trim() : '50',
         referral_monthly_limit: document.getElementById('setting-ref-limit') ? document.getElementById('setting-ref-limit').value.trim() : '1',
-        referral_system_enabled: document.getElementById('setting-ref-enabled') ? document.getElementById('setting-ref-enabled').checked : true
+        referral_system_enabled: document.getElementById('setting-ref-enabled') ? document.getElementById('setting-ref-enabled').checked : true,
+        maintenance_mode: document.getElementById('setting-maintenance-toggle') && document.getElementById('setting-maintenance-toggle').checked ? 'true' : 'false',
+        maintenance_title: document.getElementById('setting-maintenance-title') ? document.getElementById('setting-maintenance-title').value.trim() : 'White X Store — Scheduled Maintenance',
+        maintenance_eta: document.getElementById('setting-maintenance-eta') ? document.getElementById('setting-maintenance-eta').value.trim() : '30 Minutes',
+        maintenance_message: document.getElementById('setting-maintenance-message') ? document.getElementById('setting-maintenance-message').value.trim() : '',
+        maintenance_discord: document.getElementById('setting-maintenance-discord') ? document.getElementById('setting-maintenance-discord').value.trim() : ''
       };
 
       try {
@@ -7442,6 +7620,9 @@ X-API-Key: wx_live_YOUR_KEY</pre>
         const data = await res.json();
         if (data.success) {
           showToast('Settings saved successfully!', 'success');
+          if (payload.maintenance_mode) {
+            updateAdminMaintenanceUI(payload.maintenance_mode === 'true');
+          }
         } else {
           showToast('Failed to save settings', 'error');
         }

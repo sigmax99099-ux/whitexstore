@@ -330,10 +330,91 @@ async function loadRatesAndSettings() {
           `).join('') + `<li><a href="/dashboard.html">My License Keys</a></li>`;
         }
       }
+      if (data.maintenance) {
+        handleMaintenanceMode(data.maintenance);
+      }
     }
   } catch (err) {
     console.warn('Could not fetch settings:', err);
   }
+}
+
+/* ==============================================================
+   CYBER HUD MAINTENANCE SCREEN HANDLER
+   ============================================================== */
+function handleMaintenanceMode(maint) {
+  // Do not block admin dashboard or admin pages
+  if (window.location.pathname.includes('admin')) {
+    return;
+  }
+
+  const existingOverlay = document.getElementById('white-x-maintenance-overlay');
+
+  if (!maint || !maint.enabled) {
+    if (existingOverlay) {
+      existingOverlay.remove();
+      document.body.classList.remove('maintenance-active-lock');
+    }
+    return;
+  }
+
+  // If already rendered, update text in place
+  if (existingOverlay) {
+    const titleEl = existingOverlay.querySelector('.maint-title');
+    const msgEl = existingOverlay.querySelector('.maint-message');
+    const etaEl = existingOverlay.querySelector('.maint-eta-tag');
+    if (titleEl) titleEl.textContent = maint.title || 'White X Store — Scheduled Maintenance';
+    if (msgEl) msgEl.textContent = maint.message || 'We are currently performing scheduled maintenance to upgrade security and server performance.';
+    if (etaEl && maint.eta) etaEl.innerHTML = `<span class="maint-eta-icon">⏱️</span> <span>Estimated Return: <strong>${escapeHtml(maint.eta)}</strong></span>`;
+    return;
+  }
+
+  // Create Cyber HUD overlay
+  document.body.classList.add('maintenance-active-lock');
+  const overlay = document.createElement('div');
+  overlay.id = 'white-x-maintenance-overlay';
+  overlay.className = 'cyber-maintenance-screen';
+  overlay.innerHTML = `
+    <div class="cyber-maint-container">
+      <div class="cyber-maint-rings-wrapper">
+        <div class="maint-ring-pulse"></div>
+        <div class="maint-ring-orbit"></div>
+        <div class="maint-icon-badge">⚡</div>
+      </div>
+      
+      <div class="maint-status-pill">
+        <span class="maint-pulse-dot"></span>
+        <span>MAINTENANCE MODE ACTIVE</span>
+      </div>
+
+      <h1 class="maint-title">${escapeHtml(maint.title || 'White X Store — Scheduled Maintenance')}</h1>
+      
+      <p class="maint-message">
+        ${escapeHtml(maint.message || 'We are currently performing scheduled maintenance to upgrade security and server performance. Store orders and instant key deliveries will resume shortly.')}
+      </p>
+
+      ${maint.eta ? `<div class="maint-eta-tag"><span class="maint-eta-icon">⏱️</span> <span>Estimated Return: <strong>${escapeHtml(maint.eta)}</strong></span></div>` : ''}
+
+      <div class="maint-actions">
+        ${maint.discord_url ? `
+          <a href="${escapeHtml(maint.discord_url)}" target="_blank" rel="noopener noreferrer" class="maint-btn maint-btn-discord">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
+            Join Discord Updates
+          </a>
+        ` : ''}
+        ${maint.whatsapp ? `
+          <a href="https://wa.me/${maint.whatsapp.replace(/[^0-9]/g, '')}" target="_blank" rel="noopener noreferrer" class="maint-btn maint-btn-wa">
+            💬 WhatsApp Support
+          </a>
+        ` : ''}
+      </div>
+
+      <div class="maint-admin-shortcut">
+        <a href="/admin.html">Staff & Admin Login →</a>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
 }
 
 async function loadHeroBanners() {

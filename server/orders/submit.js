@@ -19,6 +19,17 @@ export default async function handler(req, res) {
 
   const { product_id, plan_id, redeem_code } = req.body || {};
 
+  // Check maintenance mode
+  try {
+    const maintCheck = await query("SELECT setting_value FROM settings WHERE setting_key = 'maintenance_mode' LIMIT 1");
+    if (maintCheck.rows[0]?.setting_value === 'true') {
+      return res.status(503).json({
+        success: false,
+        message: 'Store is temporarily under maintenance. Checkouts will resume shortly.'
+      });
+    }
+  } catch (mErr) {}
+
   if (!product_id || !plan_id) {
     return res.status(400).json({ success: false, message: 'Product ID and Plan ID are required.' });
   }

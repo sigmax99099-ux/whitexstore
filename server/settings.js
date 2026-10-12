@@ -7,7 +7,7 @@ export default async function handler(req, res) {
 
   try {
     const settingsRes = await query(
-      "SELECT setting_key, setting_value FROM settings WHERE setting_key IN ('whatsapp_number', 'npr_usd_rate', 'inr_usd_rate', 'min_topup_npr', 'site_notice', 'hero_banners_config', 'referral_reward_referrer_npr', 'referral_reward_referee_npr', 'referral_monthly_limit', 'referral_system_enabled')"
+      "SELECT setting_key, setting_value FROM settings WHERE setting_key IN ('whatsapp_number', 'npr_usd_rate', 'inr_usd_rate', 'min_topup_npr', 'site_notice', 'hero_banners_config', 'referral_reward_referrer_npr', 'referral_reward_referee_npr', 'referral_monthly_limit', 'referral_system_enabled', 'maintenance_mode', 'maintenance_title', 'maintenance_message', 'maintenance_eta', 'maintenance_discord')"
     );
 
     const settings = {
@@ -20,7 +20,12 @@ export default async function handler(req, res) {
       referral_reward_referrer_npr: '50',
       referral_reward_referee_npr: '50',
       referral_monthly_limit: '1',
-      referral_system_enabled: 'true'
+      referral_system_enabled: 'true',
+      maintenance_mode: 'false',
+      maintenance_title: 'White X Store — Scheduled Maintenance',
+      maintenance_message: 'We are currently performing scheduled maintenance to upgrade security and server performance. Store orders and instant key deliveries will resume shortly.',
+      maintenance_eta: '30 Minutes',
+      maintenance_discord: ''
     };
 
     settingsRes.rows.forEach(r => {
@@ -58,6 +63,14 @@ export default async function handler(req, res) {
       // Graceful fallback if social_links table is being initialized
     }
 
+    const maintenance = {
+      enabled: settings.maintenance_mode === 'true',
+      title: settings.maintenance_title || 'White X Store — Scheduled Maintenance',
+      message: settings.maintenance_message || 'We are currently performing scheduled maintenance to upgrade security and server performance. Store orders and instant key deliveries will resume shortly.',
+      eta: settings.maintenance_eta || '30 Minutes',
+      discord_url: settings.maintenance_discord || ''
+    };
+
     return res.status(200).json({
       success: true,
       settings,
@@ -65,7 +78,8 @@ export default async function handler(req, res) {
       whatsapp_number: settings.whatsapp_number,
       site_notice: settings.site_notice,
       social_links: socialLinks,
-      hero_banners: heroBanners
+      hero_banners: heroBanners,
+      maintenance
     });
   } catch (err) {
     console.error('Settings public fetch error:', err);
@@ -91,7 +105,14 @@ export default async function handler(req, res) {
       whatsapp_number: '+9779800000000',
       site_notice: '⚡ Instant 24/7 Auto Delivery Active. Fully undetected on all current game patches!',
       social_links: [],
-      hero_banners: null
+      hero_banners: null,
+      maintenance: {
+        enabled: false,
+        title: '',
+        message: '',
+        eta: '',
+        discord_url: ''
+      }
     });
   }
 }

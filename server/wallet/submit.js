@@ -14,6 +14,14 @@ export default async function handler(req, res) {
   }
 
   try {
+    const maintCheck = await query("SELECT setting_value FROM settings WHERE setting_key = 'maintenance_mode' LIMIT 1");
+    if (maintCheck.rows[0]?.setting_value === 'true') {
+      return res.status(503).json({
+        success: false,
+        message: 'Wallet top-ups are paused during scheduled maintenance. Please try again shortly!'
+      });
+    }
+
     const { amount, currency, payment_method_id, screenshot, transaction_ref } = req.body || {};
 
     if (!amount || !currency || !payment_method_id) {
