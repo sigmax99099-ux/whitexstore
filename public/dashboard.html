@@ -931,6 +931,10 @@
       const userPhoneEl = document.getElementById('dash-user-phone');
       if (userPhoneEl) userPhoneEl.textContent = user.phone || 'N/A';
 
+      // Instantly sync top navbar & mobile drawer with client/reseller profile
+      if (typeof renderLoggedInNav === 'function') renderLoggedInNav(user);
+      if (typeof updateDrawerWithUser === 'function') updateDrawerWithUser(user);
+
       const statEmail = document.getElementById('stat-row-email');
       if (statEmail) statEmail.textContent = user.email;
 

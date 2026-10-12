@@ -809,6 +809,7 @@ function setupCaptcha(containerId, onSuccess) {
    WHATSAPP FLOATING BUTTON (REAL-TIME SYNCED)
    ============================================================== */
 function initWhatsAppWidget() {
+  if (window.location.pathname.includes('admin')) return;
   const phone = Store.siteSettings.whatsapp_number || '+9779800000000';
   updateWhatsAppLinks(phone);
 
@@ -1126,7 +1127,9 @@ function mountDrawerAndBars() {
     </button>
   `;
 
-  document.body.appendChild(bottomNav);
+  if (!window.location.pathname.includes('admin')) {
+    document.body.appendChild(bottomNav);
+  }
 
   // --- C. USER & RESELLER PROFILE EDIT MODAL ---
   const profileModal = document.createElement('div');
@@ -1372,31 +1375,45 @@ function updateDrawerWithUser(user) {
   const badgeEl = document.getElementById('drawer-user-badge');
   const emailEl = document.getElementById('drawer-user-email');
   const logoutBtn = document.getElementById('drawer-logout-btn');
+  const levelBadge = document.querySelector('.drawer-level-badge');
+  const xpText = document.getElementById('drawer-xp-text');
 
   if (!card) return;
 
   if (user) {
-    if (initialsEl) initialsEl.textContent = getUserInitials(user.name);
+    const userInitials = getUserInitials(user.name);
+    if (initialsEl) initialsEl.textContent = userInitials;
     if (nameEl) nameEl.textContent = user.name;
     if (badgeEl) {
       if (user.user_type === 'reseller') {
-        badgeEl.textContent = 'RESELLER';
+        badgeEl.textContent = '👑 VERIFIED RESELLER';
         badgeEl.style.borderColor = '#fbbf24';
         badgeEl.style.color = '#fbbf24';
+        badgeEl.style.background = 'rgba(251, 191, 36, 0.16)';
+        badgeEl.style.boxShadow = '0 0 10px rgba(251, 191, 36, 0.35)';
       } else {
-        badgeEl.textContent = 'VERIFIED';
+        badgeEl.textContent = '✓ VERIFIED CLIENT';
         badgeEl.style.borderColor = '#00f0ff';
         badgeEl.style.color = '#00f0ff';
+        badgeEl.style.background = 'rgba(0, 240, 255, 0.16)';
+        badgeEl.style.boxShadow = '0 0 10px rgba(0, 240, 255, 0.35)';
       }
     }
     if (emailEl) emailEl.textContent = user.email;
     if (logoutBtn) logoutBtn.style.display = 'flex';
 
-    // Populate Drawer Header Wallet & Avatar (Screenshot 3)
+    if (levelBadge) {
+      levelBadge.textContent = user.user_type === 'reseller' ? '👑 RESELLER PRO' : '⚡ CLIENT ACCOUNT';
+    }
+    if (xpText) {
+      xpText.textContent = user.user_type === 'reseller' ? `${user.reseller_discount || 15}% VIP DISCOUNT` : 'VIP ACTIVE';
+    }
+
+    // Populate Drawer Header Wallet & Avatar
     const drwBal = document.getElementById('drawer-wallet-val');
     if (drwBal) drwBal.textContent = formatWalletBalance(user.wallet_balance, Store.currency);
     const drwAvatar = document.querySelector('#drawer-hdr-avatar-initials span');
-    if (drwAvatar) drwAvatar.textContent = initials;
+    if (drwAvatar) drwAvatar.textContent = userInitials;
   } else {
     if (initialsEl) initialsEl.textContent = 'WX';
     if (nameEl) nameEl.textContent = 'Guest Player';
@@ -1404,9 +1421,14 @@ function updateDrawerWithUser(user) {
       badgeEl.textContent = 'UNVERIFIED';
       badgeEl.style.borderColor = '#94a3b8';
       badgeEl.style.color = '#94a3b8';
+      badgeEl.style.background = 'transparent';
+      badgeEl.style.boxShadow = 'none';
     }
     if (emailEl) emailEl.textContent = 'Login to view license keys';
     if (logoutBtn) logoutBtn.style.display = 'none';
+
+    if (levelBadge) levelBadge.textContent = '⚡ VIP STATUS';
+    if (xpText) xpText.textContent = 'ACTIVE';
 
     const drwBal = document.getElementById('drawer-wallet-val');
     if (drwBal) drwBal.textContent = formatWalletBalance(0, Store.currency);
