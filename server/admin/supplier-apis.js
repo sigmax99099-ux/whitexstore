@@ -1,11 +1,40 @@
 import { query } from '../../lib/db.js';
 import { getAuthAdmin } from '../../lib/auth.js';
 
+let schemaEnsured = false;
+async function ensureSupplierApisSchema() {
+  if (schemaEnsured) return;
+  try {
+    await query(`
+      CREATE TABLE IF NOT EXISTS supplier_apis (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        api_url TEXT NOT NULL,
+        api_key TEXT DEFAULT '',
+        api_type TEXT DEFAULT 'keylicense',
+        status TEXT DEFAULT 'active',
+        notes TEXT DEFAULT '',
+        last_known_balance NUMERIC(10, 2) DEFAULT NULL,
+        last_checked_at TIMESTAMP WITH TIME ZONE DEFAULT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      );
+    `);
+    // Drop restrictive check constraints from legacy migrations
+    await query(`ALTER TABLE supplier_apis DROP CONSTRAINT IF EXISTS supplier_apis_api_type_check;`);
+    await query(`ALTER TABLE supplier_apis DROP CONSTRAINT IF EXISTS supplier_apis_status_check;`);
+    schemaEnsured = true;
+  } catch (err) {
+    // Non-blocking schema check
+  }
+}
+
 export default async function handler(req, res) {
   const admin = await getAuthAdmin(req);
   if (!admin) {
     return res.status(401).json({ success: false, message: 'Unauthorized' });
   }
+
+  await ensureSupplierApisSchema();
 
   // 1. GET ALL SUPPLIER APIS
   if (req.method === 'GET') {
@@ -34,16 +63,15 @@ export default async function handler(req, res) {
 
       const apisRes = await query(`
         SELECT sa.id, sa.name, sa.api_url, sa.api_key, sa.api_type, sa.status, sa.notes, sa.created_at,
-               (SELECT COUNT(*)::int FROM supplier_variants) as total_mapped_variants
+               COALESCE((SELECT COUNT(*)::int FROM supplier_variants sv WHERE sv.supplier_api_id = sa.id), 0) as total_mapped_variants
         FROM supplier_apis sa
         ORDER BY sa.id ASC
       `);
       console.log('[supplier-apis] Query result rows:', apisRes.rows.length);
-      console.log('[supplier-apis] First 3 rows:', apisRes.rows.slice(0,3).map(r => r.name));
       return res.status(200).json({ success: true, apis: apisRes.rows });
     } catch (err) {
       console.error('Admin get supplier APIs error:', err);
-      return res.status(500).json({ success: false, message: 'Failed to load supplier APIs' });
+      return res.status(500).json({ success: false, message: 'Failed to load supplier APIs: ' + err.message });
     }
   }
 
@@ -67,6 +95,9 @@ export default async function handler(req, res) {
         detectedType = 'authzen';
       }
 
+      const rawStatus = String(status || '').toLowerCase().trim();
+      const normalizedStatus = (rawStatus === 'inactive' || rawStatus === 'disabled') ? 'inactive' : 'active';
+
       const insertRes = await query(
         `INSERT INTO supplier_apis (name, api_url, api_key, api_type, status, notes)
          VALUES ($1, $2, $3, $4, $5, $6)
@@ -76,12 +107,16 @@ export default async function handler(req, res) {
           String(api_url).trim(),
           api_key ? String(api_key).trim() : '',
           detectedType,
-          status === 'inactive' ? 'inactive' : 'active',
+          normalizedStatus,
           notes ? String(notes).trim() : ''
         ]
       );
 
-      console.log('[supplier-apis] INSERT result:', insertRes.rows[0]?.api_type);
+      console.log('[supplier-apis] INSERT result:', insertRes.rows?.[0]);
+      if (!insertRes || !insertRes.rows || insertRes.rows.length === 0) {
+        return res.status(500).json({ success: false, message: 'Database failed to return inserted supplier API.' });
+      }
+
       return res.status(201).json({
         success: true,
         message: 'Supplier API added successfully!',
@@ -114,6 +149,9 @@ export default async function handler(req, res) {
         resolvedType = 'keylicense';
       }
 
+      const rawStatus = status !== undefined ? String(status).toLowerCase().trim() : null;
+      const normalizedStatus = rawStatus !== null ? ((rawStatus === 'inactive' || rawStatus === 'disabled') ? 'inactive' : 'active') : null;
+
       const updateRes = await query(
         `UPDATE supplier_apis
          SET name = COALESCE($1, name),
@@ -128,8 +166,8 @@ export default async function handler(req, res) {
           name ? String(name).trim() : null,
           api_url ? String(api_url).trim() : null,
           api_key !== undefined ? String(api_key).trim() : null,
-          resolvedType,
-          status !== undefined ? status : null,
+          resolvedType || null,
+          normalizedStatus,
           notes !== undefined ? String(notes).trim() : null,
           parseInt(id, 10)
         ]

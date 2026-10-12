@@ -46,12 +46,14 @@ async function migrate() {
         id SERIAL PRIMARY KEY,
         name TEXT NOT NULL,
         api_url TEXT NOT NULL,
-        api_key TEXT NOT NULL,
-        api_type TEXT NOT NULL DEFAULT 'keylicense' CHECK (api_type IN ('keylicense', 'generic_json', 'custom')),
-        status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'inactive')),
+        api_key TEXT NOT NULL DEFAULT '',
+        api_type TEXT NOT NULL DEFAULT 'keylicense',
+        status TEXT NOT NULL DEFAULT 'active',
         notes TEXT,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
       );
+      ALTER TABLE supplier_apis DROP CONSTRAINT IF EXISTS supplier_apis_api_type_check;
+      ALTER TABLE supplier_apis DROP CONSTRAINT IF EXISTS supplier_apis_status_check;
     `);
     console.log('✅ supplier_apis table ready.');
 
