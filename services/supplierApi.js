@@ -423,20 +423,20 @@ export async function getProductMapping(productId, planId) {
 
       // Detect supplier type
       const varIdStr = String(sv.supplier_variant_id || '').trim();
-      const isExplicitAuthzen = svApiType === 'authzen'
-        || svApiUrl.toLowerCase().includes('authzen')
-        || svApiKey.startsWith('sk_')
-        || svName.toLowerCase().includes('authzen')
-        || (String(sv.notes || '').toLowerCase().includes('authzen'))
-        || (supProdId > 0)
-        || (/^\d+$/.test(varIdStr));
-
       const isExplicitKeylicense = svApiType === 'keylicense'
         || svApiUrl.toLowerCase().includes('keylicense')
         || svName.toLowerCase().includes('keylicense')
         || (String(sv.notes || '').toLowerCase().includes('keylicense'));
 
-      const isAuthzen = isExplicitAuthzen || !isExplicitKeylicense;
+      const isExplicitAuthzen = !isExplicitKeylicense && (
+        svApiType === 'authzen'
+        || svApiUrl.toLowerCase().includes('authzen')
+        || svApiKey.startsWith('sk_')
+        || svName.toLowerCase().includes('authzen')
+        || (String(sv.notes || '').toLowerCase().includes('authzen'))
+      );
+
+      const isAuthzen = isExplicitAuthzen;
       const finalApiType = isAuthzen ? 'authzen' : 'keylicense';
 
       // Ensure API URL and Key are never empty
@@ -454,13 +454,13 @@ export async function getProductMapping(productId, planId) {
               svApiKey = process.env.SUPPLIER_API_KEY || fallbackAuthzenKey;
             }
           } else {
-            const klRes = await query("SELECT * FROM supplier_apis WHERE api_type = 'keylicense' OR LOWER(api_url) LIKE '%keylicense%' ORDER BY id ASC LIMIT 1");
+            const klRes = await query("SELECT * FROM supplier_apis WHERE (api_type = 'keylicense' OR LOWER(api_url) LIKE '%keylicense%') AND api_key != '' ORDER BY id DESC LIMIT 1");
             if (klRes.rows.length > 0) {
               svApiUrl = klRes.rows[0].api_url || svApiUrl;
               svApiKey = klRes.rows[0].api_key || svApiKey;
             }
             if (!svApiUrl) svApiUrl = 'https://keylicense.shop/api/v1';
-            if (!svApiKey) svApiKey = process.env.KL_API_TOKEN || '';
+            if (!svApiKey) svApiKey = process.env.KL_API_TOKEN || 'cad5ceaa1536004bc2cf9bcb272fd7045344a3fad038b0305d2350039eb5ed6f';
           }
         } catch (fetchSupErr) {}
       }

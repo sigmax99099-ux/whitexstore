@@ -1,6 +1,7 @@
 import { getAuthAdmin } from '../../lib/auth.js';
 import { query } from '../../lib/db.js';
 import { getAccountInfo } from '../../services/supplierApi.js';
+import { apiParse } from '../../lib/keylicense.js';
 
 let tableEnsured = false;
 async function ensureSupplierVariantsTable() {
@@ -163,12 +164,14 @@ export default async function handler(req, res) {
         'Accept': 'application/json'
       }
     });
-    if (!res.ok) {
-      const txt = await res.text();
-      throw new Error(`KeyLicense returned HTTP ${res.status}: ${txt.slice(0, 120)}`);
+    const parsed = await apiParse(res);
+    if (parsed.error === 'CLOUDFLARE_CHALLENGE') {
+      throw new Error(`Cloudflare challenge: ${parsed.help}`);
     }
-    const data = await res.json();
-    return data.products || [];
+    if (parsed.error && parsed.error !== false) {
+      throw new Error(parsed.error || parsed.message || 'KeyLicense returned error');
+    }
+    return parsed.products || [];
   }
 
   // 1. GET SUPPLIER CATALOG (filtered to 1 supplier if requested)

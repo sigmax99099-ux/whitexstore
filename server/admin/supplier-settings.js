@@ -1,7 +1,7 @@
 import { getAuthAdmin } from '../../lib/auth.js';
 import { query } from '../../lib/db.js';
 import { getAccountInfo, maskKey } from '../../services/supplierApi.js';
-import { getKeyLicenseToken } from '../../lib/keylicense.js';
+import { getKeyLicenseToken, callKeyLicense, KEYLICENSE_DEFAULT_TOKEN } from '../../lib/keylicense.js';
 
 // Safe table migration & seed helper
 async function ensureSupplierTables() {
@@ -113,59 +113,66 @@ async function testSupplierEndpoint(supplier) {
     // 2. KEYLICENSE API
     else if (apiType === 'keylicense' || apiUrl.includes('keylicense')) {
       let klToken = apiKey;
-      if (!klToken) {
-        klToken = await getKeyLicenseToken();
+      if (!klToken || klToken.includes('placeholder')) {
+        klToken = await getKeyLicenseToken() || KEYLICENSE_DEFAULT_TOKEN;
       }
 
-      if (!klToken || klToken.includes('placeholder')) {
+      if (!klToken) {
         result.latency_ms = Date.now() - start;
         result.status = 'unconfigured';
-        result.error = 'KeyLicense token not configured. Please enter your API token in the settings.';
+        result.error = 'KeyLicense token not configured. Please enter your API token in settings.';
         return result;
       }
 
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 7000);
-
       try {
-        const balRes = await fetch(`${apiUrl}/balance.php`, {
-          method: 'GET',
-          headers: {
-            'X-API-Token': klToken,
-            'Accept': 'application/json'
-          },
-          signal: controller.signal
-        });
-        clearTimeout(timeout);
+        const balData = await callKeyLicense('/balance.php', 'GET', null, klToken, apiUrl);
         result.latency_ms = Date.now() - start;
-        result.http_status = balRes.status;
 
-        if (balRes.ok) {
-          const balData = await balRes.json().catch(() => ({}));
-          result.ok = true;
-          result.status = 'connected';
-          const balVal = balData.balance ?? balData.account?.balance ?? balData.amount ?? balData.wallet_balance ?? 0;
-          result.balance = parseFloat(balVal || 0);
-          result.account_id = balData.id || balData.user_id || 'KL-1001';
-          result.username = balData.username || balData.email || 'KeyLicense Global';
-          result.details = balData;
-        } else {
-          result.error = `HTTP ${balRes.status}: ${balRes.statusText}`;
-        }
-      } catch (klErr) {
-        clearTimeout(timeout);
-        result.latency_ms = Date.now() - start;
-        if (klErr.message.includes('fetch failed') || klErr.message.includes('ENOTFOUND') || klErr.name === 'AbortError') {
+        if (balData && (balData.success === true || balData.status === 'success' || balData.balance !== undefined)) {
           result.ok = true;
           result.status = 'connected';
           result.http_status = 200;
-          result.balance = 150.00;
-          result.username = 'KeyLicense Vendor (Dev Gateway)';
-          result.products_count = 6;
-          result.details = { notice: 'Simulated KeyLicense response for local testing' };
+          const balVal = balData.balance ?? balData.account?.balance ?? balData.amount ?? balData.wallet_balance ?? 0;
+          result.balance = parseFloat(balVal || 0);
+          result.account_id = balData.email || balData.id || 'KL-1001';
+          result.username = balData.name ? `${balData.name} (${balData.email || 'Reseller'})` : (balData.email || 'KeyLicense Global');
+          result.currency = balData.currency || 'USD';
+          result.details = balData;
+
+          // Fetch products sample
+          try {
+            const prodsData = await callKeyLicense('/products.php', 'GET', null, klToken, apiUrl);
+            if (prodsData && Array.isArray(prodsData.products)) {
+              result.products_count = prodsData.products.length;
+              result.products_sample = prodsData.products.slice(0, 5).map(p => ({
+                id: p.variant_id,
+                name: `${p.product_name} - ${p.variant_name} (${p.validity_days || p.validity}d) · $${p.price}`
+              }));
+            }
+          } catch (pErr) {}
+
+          // Persist live balance to supplier_apis table
+          if (supplier?.id) {
+            try {
+              await query(
+                `UPDATE supplier_apis 
+                 SET last_known_balance = $1, last_checked_at = NOW() 
+                 WHERE id = $2`,
+                [result.balance, supplier.id]
+              );
+            } catch (updErr) {}
+          }
+        } else if (balData && balData.error === 'CLOUDFLARE_CHALLENGE') {
+          result.status = 'cf_challenge';
+          result.error = balData.help || 'Cloudflare challenge blocked connection';
+          result.details = balData;
         } else {
-          result.error = klErr.message;
+          result.error = balData?.error || balData?.message || 'KeyLicense API returned unsuccessful response';
+          result.details = balData;
         }
+      } catch (klErr) {
+        result.latency_ms = Date.now() - start;
+        result.error = klErr.message;
       }
     }
     // 3. GENERIC / CUSTOM REST SUPPLIER
@@ -262,11 +269,11 @@ export default async function handler(req, res) {
             id: 2,
             name: 'KeyLicense Shop Network',
             api_url: 'https://keylicense.shop/api/v1',
-            api_key: '',
+            api_key: process.env.KL_API_TOKEN || KEYLICENSE_DEFAULT_TOKEN,
             api_type: 'keylicense',
             status: 'active',
-            notes: 'KeyLicense multi-game VIP key vendor',
-            last_known_balance: 150.00,
+            notes: 'KeyLicense official live reseller gateway (XETTRYxCHEATS · maheshx00@gmail.com)',
+            last_known_balance: 31.49,
             last_checked_at: new Date()
           }
         ];
