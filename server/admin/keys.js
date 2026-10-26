@@ -18,6 +18,8 @@ export default async function handler(req, res) {
           lk.key_code,
           lk.duration_type,
           lk.days,
+          lk.plan_id,
+          pl.plan_name,
           lk.status,
           lk.assigned_order_id,
           lk.created_at,
@@ -27,6 +29,7 @@ export default async function handler(req, res) {
           u.email as user_email
         FROM license_keys lk
         JOIN products p ON lk.product_id = p.id
+        LEFT JOIN plans pl ON lk.plan_id = pl.id
         LEFT JOIN orders o ON lk.assigned_order_id = o.id
         LEFT JOIN users u ON lk.assigned_user_id = u.id
         WHERE 1=1

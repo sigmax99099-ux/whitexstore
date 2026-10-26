@@ -126,15 +126,20 @@ export async function deliverOrder(orderId) {
     
     // 2.5. Check if pre-stocked available key exists in license_keys for this product
     const orderDays = parseInt(order.days, 10) || 0;
+    const orderPlanId = order.plan_id ? parseInt(order.plan_id, 10) : null;
     const localStockRes = await client.query(
-      `SELECT id, key_code, days FROM license_keys 
+      `SELECT id, key_code, days, plan_id FROM license_keys 
        WHERE product_id = $1 
          AND status = 'available' 
-         AND (days = $2 OR days IS NULL OR days = 0 OR $2 = 0)
-       ORDER BY id ASC 
+         AND (
+           ($2::int IS NOT NULL AND plan_id = $2::int)
+           OR 
+           (days = $3 OR days IS NULL OR days = 0 OR $3 = 0)
+         )
+       ORDER BY (CASE WHEN $2::int IS NOT NULL AND plan_id = $2::int THEN 0 ELSE 1 END), id ASC 
        LIMIT 1 
        FOR UPDATE SKIP LOCKED`,
-      [order.product_id, orderDays]
+      [order.product_id, orderPlanId, orderDays]
     );
 
     if (localStockRes.rows.length > 0) {
@@ -416,11 +421,19 @@ async function attemptDelivery(client, order, mapping, deliveryId) {
     // If supplier API has an outage or error, check if local pre-stocked keys exist in license_keys!
     try {
       const targetDays = parseInt(mapping?.supplierPlanDays || order.days || 1, 10);
+      const fallbackPlanId = order.plan_id ? parseInt(order.plan_id, 10) : null;
       const localStockRes = await client.query(
         `SELECT id, key_code FROM license_keys 
-         WHERE product_id = $1 AND status = 'available' AND (days = $2 OR days IS NULL)
+         WHERE product_id = $1 
+           AND status = 'available' 
+           AND (
+             ($2::int IS NOT NULL AND plan_id = $2::int)
+             OR 
+             (days = $3 OR days IS NULL)
+           )
+         ORDER BY (CASE WHEN $2::int IS NOT NULL AND plan_id = $2::int THEN 0 ELSE 1 END), id ASC
          LIMIT 1 FOR UPDATE`,
-        [order.product_id, targetDays]
+        [order.product_id, fallbackPlanId, targetDays]
       );
 
       if (localStockRes.rows.length > 0) {

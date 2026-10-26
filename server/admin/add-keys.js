@@ -1,5 +1,6 @@
 import { query } from '../../lib/db.js';
 import { getAuthAdmin } from '../../lib/auth.js';
+import { ensureProductCascadeSchema } from '../../lib/schema-migration.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -12,7 +13,8 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { product_id, duration_type, days, keys_text } = req.body || {};
+    await ensureProductCascadeSchema();
+    const { product_id, plan_id, duration_type, days, keys_text } = req.body || {};
 
     if (!product_id || !days || !keys_text) {
       return res.status(400).json({
@@ -31,20 +33,23 @@ export default async function handler(req, res) {
       return res.status(400).json({ success: false, message: 'No valid keys provided in text.' });
     }
 
+    let parsedPlanId = plan_id && plan_id !== 'custom' && plan_id !== 'none' ? parseInt(plan_id, 10) : null;
+    if (isNaN(parsedPlanId)) parsedPlanId = null;
+
     let insertedCount = 0;
     let duplicateCount = 0;
 
     for (const key of lines) {
       try {
         const insertRes = await query(
-          `INSERT INTO license_keys (product_id, key_code, duration_type, days, status)
-           VALUES ($1, $2, $3, $4, 'available')
+          `INSERT INTO license_keys (product_id, plan_id, key_code, duration_type, days, status)
+           VALUES ($1, $2, $3, $4, $5, 'available')
            ON CONFLICT (key_code) DO NOTHING
            RETURNING id`,
-          [parseInt(product_id, 10), key, duration_type || 'days', parseInt(days, 10)]
+          [parseInt(product_id, 10), parsedPlanId, key, duration_type || 'days', parseInt(days, 10)]
         );
 
-        if (insertRes.rows.length > 0) {
+        if (insertRes.rows && insertRes.rows.length > 0) {
           insertedCount++;
         } else {
           duplicateCount++;

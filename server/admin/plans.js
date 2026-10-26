@@ -24,7 +24,7 @@ export default async function handler(req, res) {
             SELECT COUNT(*)::int 
             FROM license_keys lk 
             WHERE lk.product_id = pl.product_id 
-              AND lk.days = pl.days 
+              AND (lk.plan_id = pl.id OR (lk.plan_id IS NULL AND lk.days = pl.days))
               AND lk.status = 'available'
           ) as available_keys
         FROM plans pl

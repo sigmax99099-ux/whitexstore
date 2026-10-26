@@ -955,7 +955,7 @@
                 <th>ID</th>
                 <th>Product</th>
                 <th>License Key</th>
-                <th>Duration</th>
+                <th>Plan / Duration</th>
                 <th>Status</th>
                 <th>Assigned Order</th>
                 <th>Actions</th>
@@ -3060,7 +3060,16 @@ X-API-Key: wx_live_YOUR_KEY</pre>
       <form id="form-add-keys">
         <div class="form-group">
           <label class="form-label">Select Product *</label>
-          <select id="keys-import-product" class="form-select" required></select>
+          <select id="keys-import-product" class="form-select" required onchange="onKeysImportProductChange()"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Select Plan *</label>
+          <select id="keys-import-plan" class="form-select" required onchange="onKeysImportPlanChange()">
+            <option value="">-- Choose Product First --</option>
+          </select>
+          <small style="color: var(--text-dim); font-size: 0.78rem; margin-top: 4px; display: block;">
+            Selecting a plan automatically sets duration count and assigns keys to that plan's stock.
+          </small>
         </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
           <div class="form-group">
@@ -3079,7 +3088,7 @@ X-API-Key: wx_live_YOUR_KEY</pre>
           <label class="form-label">License Keys (One per line) *</label>
           <textarea id="keys-import-text" class="form-textarea" style="min-height: 160px; font-family: monospace;" required placeholder="WHITEX-KEY-1D-XXXX&#10;WHITEX-KEY-1D-YYYY&#10;WHITEX-KEY-1D-ZZZZ"></textarea>
         </div>
-        <button type="submit" class="btn btn-primary btn-block btn-lg btn-glow">Import License Keys ⚡</button>
+        <button type="submit" id="btn-import-keys" class="btn btn-primary btn-block btn-lg btn-glow">Import License Keys ⚡</button>
       </form>
     </div>
   </div>
@@ -5112,6 +5121,20 @@ X-API-Key: wx_live_YOUR_KEY</pre>
       }
     }
 
+    async function ensurePlansLoaded(force = false) {
+      if (force || !globalPlans || globalPlans.length === 0) {
+        try {
+          const res = await fetch('/api/admin/plans', { credentials: "include" });
+          const data = await res.json();
+          if (data && data.plans) {
+            globalPlans = data.plans;
+          }
+        } catch (err) {
+          console.warn('Could not load plans:', err);
+        }
+      }
+    }
+
     async function loadAdminProducts() {
       const tbody = document.getElementById('admin-products-tbody');
       try {
@@ -5821,7 +5844,8 @@ X-API-Key: wx_live_YOUR_KEY</pre>
             <td><code>${pl.supplier_variant_id || '-'}</code></td>
             <td><span class="badge badge-undetected">${pl.available_keys || 0}</span></td>
             <td>
-              <div style="display: flex; gap: 0.4rem; align-items: center;">
+              <div style="display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap;">
+                <button class="btn btn-primary btn-sm" onclick="openAddKeysModal(${pl.product_id}, ${pl.id})" style="padding: 4px 8px; font-size: 0.75rem;" title="Bulk import keys for this plan">+ Keys</button>
                 <button class="btn btn-outline btn-sm" onclick="openEditPlanModal(${pl.id})" style="border-color: rgba(56, 189, 248, 0.4); color: #38bdf8; padding: 4px 10px; font-size: 0.78rem;">Edit</button>
                 <button class="btn btn-outline btn-sm" onclick="deletePlan(${pl.id})" style="color:var(--danger); padding: 4px 10px; font-size: 0.78rem;">Delete</button>
               </div>
@@ -5982,13 +6006,16 @@ X-API-Key: wx_live_YOUR_KEY</pre>
           if (k.status === 'revoked') statusBadge = '<span class="badge badge-danger">Revoked</span>';
 
           const orderRef = k.order_code ? `#${escapeHtml(k.order_code)} (${escapeHtml(k.user_name || '')})` : '-';
+          const planDisplay = k.plan_name 
+            ? `<div><strong style="color:#fff;">${escapeHtml(k.plan_name)}</strong> <small style="color:var(--text-dim); display:block;">${k.days} ${k.duration_type}</small></div>`
+            : `${k.days} ${k.duration_type}`;
 
           return `
             <tr>
               <td>#${k.id}</td>
               <td>${escapeHtml(k.product_name)}</td>
               <td><div class="license-key-pill" style="font-size: 0.8rem;">${escapeHtml(k.key_code)}</div></td>
-              <td>${k.days} ${k.duration_type}</td>
+              <td>${planDisplay}</td>
               <td>${statusBadge}</td>
               <td>${orderRef}</td>
               <td>
@@ -6002,25 +6029,126 @@ X-API-Key: wx_live_YOUR_KEY</pre>
       }
     }
 
-    function openAddKeysModal() {
+    async function openAddKeysModal(preselectedProductId = null, preselectedPlanId = null) {
       document.getElementById('form-add-keys').reset();
-      updateProductDropdowns();
+      
+      const prodSelect = document.getElementById('keys-import-product');
+      const planSelect = document.getElementById('keys-import-plan');
+      
+      if (prodSelect) {
+        prodSelect.innerHTML = '<option value="">Loading products...</option>';
+        prodSelect.disabled = true;
+      }
+      if (planSelect) {
+        planSelect.innerHTML = '<option value="">-- Choose Product First --</option>';
+        planSelect.disabled = true;
+      }
+
       openModal('modal-add-keys');
+
+      // Make sure products and plans are guaranteed to be loaded
+      await Promise.all([
+        ensureProductsLoaded(true),
+        ensurePlansLoaded(true)
+      ]);
+
+      if (prodSelect) {
+        prodSelect.disabled = false;
+        if (globalProducts && globalProducts.length > 0) {
+          prodSelect.innerHTML = '<option value="">-- Choose Product --</option>' + 
+            globalProducts.map(p => `<option value="${p.id}">${escapeHtml(p.name)} (${escapeHtml(p.category || 'General')})</option>`).join('');
+        } else {
+          prodSelect.innerHTML = '<option value="">No products available (Add Product first)</option>';
+        }
+      }
+
+      if (preselectedProductId) {
+        if (prodSelect) prodSelect.value = preselectedProductId;
+        onKeysImportProductChange(preselectedPlanId);
+      } else {
+        onKeysImportProductChange();
+      }
+    }
+
+    function onKeysImportProductChange(preselectedPlanId = null) {
+      const prodSelect = document.getElementById('keys-import-product');
+      const planSelect = document.getElementById('keys-import-plan');
+      if (!planSelect) return;
+
+      const productId = prodSelect ? parseInt(prodSelect.value, 10) : null;
+      if (!productId) {
+        planSelect.innerHTML = '<option value="">-- Choose Product First --</option>';
+        planSelect.disabled = true;
+        return;
+      }
+
+      planSelect.disabled = false;
+      const plans = (globalPlans || []).filter(pl => pl.product_id === productId);
+
+      if (plans.length === 0) {
+        planSelect.innerHTML = '<option value="none">No plans configured for this product (Custom Duration)</option>';
+      } else {
+        let html = '<option value="">-- Choose Plan --</option>';
+        html += plans.map(pl => {
+          const price = parseFloat(pl.price_usd || 0).toFixed(2);
+          return `<option value="${pl.id}" data-days="${pl.days}" data-duration-type="${pl.duration_type}">${escapeHtml(pl.plan_name)} (${pl.days} ${pl.duration_type} - $${price})</option>`;
+        }).join('');
+        html += '<option value="custom">-- Custom Duration (No specific plan) --</option>';
+        planSelect.innerHTML = html;
+
+        if (preselectedPlanId) {
+          planSelect.value = preselectedPlanId;
+          onKeysImportPlanChange();
+        } else if (plans.length === 1) {
+          planSelect.value = plans[0].id;
+          onKeysImportPlanChange();
+        }
+      }
+    }
+
+    function onKeysImportPlanChange() {
+      const planSelect = document.getElementById('keys-import-plan');
+      const durationTypeSelect = document.getElementById('keys-import-duration-type');
+      const daysInput = document.getElementById('keys-import-days');
+      if (!planSelect) return;
+
+      const selectedOption = planSelect.options[planSelect.selectedIndex];
+      if (!selectedOption) return;
+
+      const planVal = planSelect.value;
+      if (planVal && planVal !== 'custom' && planVal !== 'none') {
+        const days = selectedOption.getAttribute('data-days');
+        const durationType = selectedOption.getAttribute('data-duration-type');
+        if (days && daysInput) daysInput.value = days;
+        if (durationType && durationTypeSelect) durationTypeSelect.value = durationType;
+      }
     }
 
     async function handleAddKeysSubmit(e) {
       e.preventDefault();
       const product_id = parseInt(document.getElementById('keys-import-product').value, 10);
+      const plan_id = document.getElementById('keys-import-plan')?.value || null;
       const duration_type = document.getElementById('keys-import-duration-type')?.value || 'days';
       const days = parseInt(document.getElementById('keys-import-days').value, 10);
       const keys_text = document.getElementById('keys-import-text').value;
+
+      if (!product_id) {
+        showToast('Please select a product first', 'warning');
+        return;
+      }
+
+      const btn = document.getElementById('btn-import-keys');
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Importing Keys...';
+      }
 
       try {
         const res = await fetch('/api/admin/add-keys', {
           method: 'POST',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ product_id, duration_type, days, keys_text })
+          body: JSON.stringify({ product_id, plan_id, duration_type, days, keys_text })
         });
         const data = await res.json();
         if (!res.ok || !data.success) {
@@ -6031,9 +6159,15 @@ X-API-Key: wx_live_YOUR_KEY</pre>
         showToast(data.message, 'success');
         closeModal('modal-add-keys');
         loadAdminKeys();
+        loadAdminPlans();
         loadDashboardData();
       } catch (err) {
-        showToast('Error importing keys', 'error');
+        showToast('Error importing keys: ' + err.message, 'error');
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = 'Import License Keys ⚡';
+        }
       }
     }
 
