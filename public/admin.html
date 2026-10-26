@@ -3838,7 +3838,7 @@ X-API-Key: wx_live_YOUR_KEY</pre>
         const meData = await meRes.json();
         if (meRes.ok && meData.authenticated && meData.admin) {
           liftCloak();
-          return true;
+          return { authorized: true, meData };
         }
       } catch (e) {}
 
@@ -3931,12 +3931,17 @@ X-API-Key: wx_live_YOUR_KEY</pre>
       }, 1000);
     }
 
-    async function initAdminAuth(gateAlreadyUnlocked = false) {
-      try {
-        const res = await fetch('/api/admin/me', { credentials: 'include' });
-        const data = await res.json();
+    async function initAdminAuth(authResult = false) {
+      const gateAlreadyUnlocked = typeof authResult === 'object' ? authResult.authorized : Boolean(authResult);
+      let data = typeof authResult === 'object' ? authResult.meData : null;
 
-        if (res.ok && data.authenticated && data.admin) {
+      try {
+        if (!data) {
+          const res = await fetch('/api/admin/me', { credentials: 'include' });
+          data = await res.json();
+        }
+
+        if (data && data.authenticated && data.admin) {
           liftCloak();
           document.body.classList.add('admin-authenticated');
           document.getElementById('admin-login-overlay').style.display = 'none';

@@ -124,10 +124,70 @@ export async function deliverOrder(orderId) {
       return { success: false, error: 'Auto-delivery is disabled globally', code: 'AUTO_DELIVERY_DISABLED' };
     }
     
+    // 2.5. Check if pre-stocked available key exists in license_keys for this product
+    const orderDays = parseInt(order.days, 10) || 0;
+    const localStockRes = await client.query(
+      `SELECT id, key_code, days FROM license_keys 
+       WHERE product_id = $1 
+         AND status = 'available' 
+         AND (days = $2 OR days IS NULL OR days = 0 OR $2 = 0)
+       ORDER BY id ASC 
+       LIMIT 1 
+       FOR UPDATE SKIP LOCKED`,
+      [order.product_id, orderDays]
+    );
+
+    if (localStockRes.rows.length > 0) {
+      const localKey = localStockRes.rows[0];
+      await client.query(
+        `UPDATE license_keys 
+         SET status = 'sold', assigned_order_id = $1, assigned_user_id = $2 
+         WHERE id = $3`,
+        [order.id, order.user_id, localKey.id]
+      );
+
+      const upsertRes = await client.query(
+        `INSERT INTO deliveries (order_id, status, keys, unit_price, total_cost, delivered_at)
+         VALUES ($1, 'delivered', $2, 0, 0, NOW())
+         ON CONFLICT (order_id) DO UPDATE SET
+           status = 'delivered',
+           keys = $2,
+           unit_price = 0,
+           total_cost = 0,
+           delivered_at = NOW(),
+           last_error = NULL,
+           next_retry_at = NULL
+         RETURNING id`,
+        [order.id, [localKey.key_code]]
+      );
+
+      await client.query(
+        "UPDATE orders SET status = 'approved', reject_reason = NULL WHERE id = $1",
+        [order.id]
+      );
+
+      try {
+        await processReferralRewardOnPurchase({
+          userId: order.user_id,
+          orderId: order.id,
+          orderCode: order.order_code
+        });
+      } catch (refErr) {}
+
+      await notifyDiscordDelivery(order, [localKey.key_code], order.product_name, order.plan_name);
+
+      return {
+        success: true,
+        keys: [localKey.key_code],
+        deliveryId: upsertRes.rows[0]?.id,
+        source: 'local_stock'
+      };
+    }
+    
     // 3. Get product mapping (checks supplier_variants first, then product_mappings)
     const mapping = await getProductMapping(order.product_id, order.plan_id);
     if (!mapping) {
-      return { success: false, error: 'No active product mapping found for this product/plan', code: 'NO_MAPPING' };
+      return { success: false, error: 'No available license keys in stock and no active supplier mapping found for this product/plan', code: 'NO_MAPPING' };
     }
     
     // 4. Idempotency: Upsert delivery record with FOR UPDATE to prevent race conditions
@@ -202,16 +262,18 @@ async function attemptDelivery(client, order, mapping, deliveryId) {
     let supplierResult = null;
 
     const isKeyLicense = mapping.supplierApiType === 'keylicense'
-      || (mapping.supplierApiUrl && mapping.supplierApiUrl.includes('keylicense'))
+      || (mapping.supplierApiUrl && mapping.supplierApiUrl.toLowerCase().includes('keylicense'))
+      || (mapping.supplierName && mapping.supplierName.toLowerCase().includes('keylicense'))
       || (mapping.supplierProductName && mapping.supplierProductName.toLowerCase().includes('keylicense'));
 
-    const isAuthZen = mapping.supplierApiType === 'authzen'
-      || (mapping.supplierApiUrl && mapping.supplierApiUrl.includes('authzen'))
+    const isAuthZen = !isKeyLicense && (
+      mapping.supplierApiType === 'authzen'
+      || (mapping.supplierApiUrl && mapping.supplierApiUrl.toLowerCase().includes('authzen'))
       || (mapping.supplierApiKey && mapping.supplierApiKey.startsWith('sk_'))
       || (mapping.supplierProductName && mapping.supplierProductName.toLowerCase().includes('authzen'))
-      || (!isKeyLicense && (supProdId > 0 || /^\d+$/.test(String(mapping.variantId || '').trim())));
+    );
 
-    if (isKeyLicense && !isAuthZen) {
+    if (isKeyLicense) {
       console.log(`[Delivery] Using KeyLicense API for Order #${order.id}, variant: ${mapping.variantId}`);
       const klRes = await callSupplierForKey(mapping.variantId, order.plan_id, {
         apiUrl: mapping.supplierApiUrl,

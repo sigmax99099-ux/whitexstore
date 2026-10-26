@@ -422,28 +422,22 @@ export async function getProductMapping(productId, planId) {
       }
 
       // Detect supplier type
-      const varIdStr = String(sv.supplier_variant_id || '').trim();
-      const isExplicitKeylicense = svApiType === 'keylicense'
-        || svApiUrl.toLowerCase().includes('keylicense')
-        || svName.toLowerCase().includes('keylicense')
-        || (String(sv.notes || '').toLowerCase().includes('keylicense'));
-
-      const isExplicitAuthzen = !isExplicitKeylicense && (
+      // Prioritize AuthZen based on explicit type, URL, and sk_ API key prefix so AuthZen is NEVER misidentified as KeyLicense
+      const isAuthzen = (
         svApiType === 'authzen'
-        || svApiUrl.toLowerCase().includes('authzen')
-        || svApiKey.startsWith('sk_')
-        || svName.toLowerCase().includes('authzen')
+        || (svApiUrl && svApiUrl.toLowerCase().includes('authzen'))
+        || (svApiKey && svApiKey.startsWith('sk_'))
+        || (svName && svName.toLowerCase().includes('authzen') && svApiType !== 'keylicense' && !svApiUrl.includes('keylicense'))
         || (String(sv.notes || '').toLowerCase().includes('authzen'))
       );
 
-      const isAuthzen = isExplicitAuthzen;
       const finalApiType = isAuthzen ? 'authzen' : 'keylicense';
 
       // Ensure API URL and Key are never empty
       if (!svApiUrl || !svApiKey) {
         try {
           if (isAuthzen) {
-            const azRes = await query("SELECT * FROM supplier_apis WHERE api_type = 'authzen' OR LOWER(api_url) LIKE '%authzen%' OR LOWER(name) LIKE '%authzen%' ORDER BY id ASC LIMIT 1");
+            const azRes = await query("SELECT * FROM supplier_apis WHERE (api_type = 'authzen' OR LOWER(api_url) LIKE '%authzen%') AND api_key != '' ORDER BY id ASC LIMIT 1");
             if (azRes.rows.length > 0) {
               svApiUrl = azRes.rows[0].api_url || svApiUrl;
               svApiKey = azRes.rows[0].api_key || svApiKey;

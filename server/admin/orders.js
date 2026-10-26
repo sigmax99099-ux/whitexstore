@@ -31,12 +31,13 @@ export default async function handler(req, res) {
         COALESCE(pl.plan_name, o.plan_name, 'Standard') as plan_name,
         COALESCE(pl.days, 0) as days,
         COALESCE(pl.duration_type, 'days') as duration_type,
-        lk.key_code
+        COALESCE(lk.key_code, d.keys[1]) as key_code
       FROM orders o
       JOIN users u ON o.user_id = u.id
       LEFT JOIN products p ON o.product_id = p.id
       LEFT JOIN plans pl ON o.plan_id = pl.id
       LEFT JOIN license_keys lk ON lk.assigned_order_id = o.id
+      LEFT JOIN deliveries d ON d.order_id = o.id
       WHERE 1=1
     `;
 

@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import url from 'url';
 import dotenv from 'dotenv';
+import apiHandler from './api/index.js';
 
 dotenv.config();
 
@@ -81,22 +82,7 @@ const server = http.createServer(async (req, res) => {
     req.query = { ...parsedUrl.query };
 
     try {
-      const modulePath = path.resolve('api', 'index.js');
-      // Clear module cache to avoid caching issues with dynamic import
-      const { createRequire } = await import('module');
-      const require = createRequire(import.meta.url);
-      for (const key of Object.keys(require.cache)) {
-        if (key.includes('api') || key.includes('server') || key.includes('lib')) {
-          delete require.cache[key];
-        }
-      }
-      const moduleUrl = url.pathToFileURL(modulePath).href + `?t=${Date.now()}&r=${Math.random()}`;
-      const { default: handler } = await import(moduleUrl);
-      if (typeof handler === 'function') {
-        await handler(req, res);
-      } else {
-        res.status(500).json({ success: false, message: 'Invalid API handler export' });
-      }
+      await apiHandler(req, res);
     } catch (err) {
       console.error(`[API Error] ${pathname}:`, err);
       if (!res.writableEnded) {

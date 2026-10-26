@@ -37,6 +37,11 @@
   }
 
   function startVantaGlobe() {
+    // Disable heavy 3D globe on admin command center to ensure 60fps performance and zero UI lag
+    if (window.location.pathname.includes('admin') || document.body.id === 'admin-body' || document.getElementById('admin-orders-tbody')) {
+      return true; // Mark as handled so fallback doesn't run
+    }
+
     const container = ensureVantaContainer();
     if (!container) return false;
 
@@ -44,22 +49,23 @@
     if (typeof window.VANTA !== 'undefined' && typeof window.VANTA.GLOBE === 'function') {
       try {
         const colors = getThemeColors();
+        const isMobile = window.innerWidth <= 768;
         vantaEffect = window.VANTA.GLOBE({
           el: container,
-          mouseControls: true,
-          touchControls: true,
+          mouseControls: !isMobile,
+          touchControls: false,
           gyroControls: false,
           minHeight: 200.0,
           minWidth: 200.0,
           scale: 1.0,
-          scaleMobile: 0.85,
+          scaleMobile: 0.65,
           color: colors.color,
           color2: colors.color2,
           backgroundColor: colors.backgroundColor,
-          size: 1.05,
-          points: 12.0,
-          maxDistance: 22.0,
-          spacing: 16.0,
+          size: isMobile ? 0.9 : 1.05,
+          points: isMobile ? 7.0 : 11.0,
+          maxDistance: isMobile ? 16.0 : 22.0,
+          spacing: isMobile ? 22.0 : 16.0,
           showDots: true
         });
 
